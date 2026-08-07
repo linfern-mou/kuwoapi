@@ -1,0 +1,7 @@
+kuwoapi
+kuwoapi.exe
+*.exe
+*.dll
+*.so
+.env
+node_modules/
