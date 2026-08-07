@@ -49,6 +49,19 @@ const KEY_CANDIDATE_1 = 'KoOtOiTvINGwd';
 /** 密钥候选 2，24字符（来源：KwLib.dll/KwMV.dll/KwMusicDLL.dll/PlayerCore.dll/lidx.dll） */
 const KEY_CANDIDATE_2 = '_Y8g2E6n0E1i7L5t2IoOoNk';
 
+/**
+ * 登录加密盐值（来源：KwMusicDLL.dll 登录参数区域）
+ *
+ * 在 strings 输出中位于登录参数模板之间：
+ *   from=pc&dev_id=
+ *   kw@#d09b          <-- 本常量
+ *   nSession = %d, nCode = %d
+ *
+ * 与 encryptlogin（加密登录标识）同区域，疑似密码加密盐值。
+ * [用途未确认] 具体参与 MD5 还是 Entrypt::Encrypt 未知，禁止推测。
+ */
+const LOGIN_SALT = 'kw@#d09b';
+
 // ============================================================
 // UTF-8 编解码辅助
 // ============================================================
@@ -222,6 +235,7 @@ module.exports = {
   YEELION_RAND,
   KEY_CANDIDATE_1,
   KEY_CANDIDATE_2,
+  LOGIN_SALT,
 
   // 压缩包确认的加密函数（已实现）
   cryptoMd5,

@@ -14,6 +14,7 @@ const {
   YEELION_RAND,
   KEY_CANDIDATE_1,
   KEY_CANDIDATE_2,
+  LOGIN_SALT,
   // 压缩包确认的加密函数（已实现）
   cryptoMd5,
   base64Encode,
@@ -43,6 +44,7 @@ module.exports = {
   YEELION_RAND,
   KEY_CANDIDATE_1,
   KEY_CANDIDATE_2,
+  LOGIN_SALT,
 
   // 已实现的加密函数
   cryptoMd5,

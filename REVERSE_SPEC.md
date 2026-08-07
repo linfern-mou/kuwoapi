@@ -196,26 +196,135 @@
 
 ### 3.4 登录与用户接口
 
-#### 3.4.1 登录
+> 登录相关字符串全部来源于 `KwMusicDLL.dll` 的 strings 分析（约第 18556-18700 行区域）。
+
+#### 3.4.1 酷我账号登录
 - **端点**: `http://pc.i.kuwo.cn/US_NEW/kuwo/login_kw`
 - **方法**: POST
+- **服务标识**: `encryptlogin`（加密登录）
+- **请求参数模板**（来源：KwMusicDLL.dll strings）:
+  ```
+  username=%s&password=%s&from=pc&dev_id=%s
+  &devType=devType&devResolution=devResolution
+  &src=mbox&sx=%s&version=%s&dev_name=%s
+  ```
+- **参数说明**:
 
-#### 3.4.2 用户信息
+| 参数 | 值/格式 | 说明 |
+|------|---------|------|
+| username | `%s` | 用户名 |
+| password | `%s` | 密码（可能加密，见下方加解密说明） |
+| from | `pc` | 固定值 |
+| dev_id | `%s` | 设备 ID |
+| devType | `devType` | 设备类型 |
+| devResolution | `devResolution` | 设备分辨率 |
+| src | `mbox` | 固定值 |
+| sx | `%s` | sx 参数 |
+| version | `%s` | 客户端版本 |
+| dev_name | `%s` | 设备名称 |
+
+- **加解密说明**:
+  - `encryptlogin` 标识确认存在（加密登录模式）
+  - `kw@#d09b` 盐值确认存在（登录参数区域，紧跟 `from=pc&dev_id=` 之后）
+  - `Entrypt::Encrypt` 函数确认存在
+  - **[算法未确认]**: 密码具体如何加密未知（MD5(pwd+kw@#d09b)？Entrypt::Encrypt？），禁止推测
+
+- **登录响应字段**（来源：KwMusicDLL.dll strings）:
+
+| 字段 | 说明 |
+|------|------|
+| `nickName` / `nick` | 用户昵称 |
+| `head` | 用户头像 |
+| `token` | 登录令牌 |
+| `level` | 用户等级 |
+| `score` | 用户积分 |
+| `mobile` | 绑定手机 |
+| `multi_dev` / `multi_devir` / `IsMultiDev` | 多设备登录检测 |
+| `result` / `succ` | 登录结果 |
+| `vSid` | 虚拟会话 ID |
+
+- **登录结果日志模板**: `LOGIN_TYPE:%s|LOGIN_RESULT:%s`、`nSession = %d, nCode = %d`
+
+#### 3.4.2 登录方式（来源：KwMusicDLL.dll strings）
+
+| 标识 | 登录方式 |
+|------|----------|
+| `kuwologin` | 酷我账号登录（用户名+密码） |
+| `qqlogin` | QQ 登录 |
+| `wblogin` | 微博登录 |
+| `weixinlogin` | 微信登录 |
+
+- 第三方登录标识：`IsThirdLogin`、`ThirdLoginImage`、`ThirdLoginName`
+
+#### 3.4.3 登录服务器（newlogin 方式）
+- **端点**: `http://loginserver.kuwo.cn`
+- **服务标识**: `newlogin`（新登录）、`ussvr`（用户服务）、`ussvrpc`（用户服务RPC）
+- **说明**: 新版登录走 loginserver，旧版走 pc.i.kuwo.cn/US_NEW/kuwo/login_kw
+
+#### 3.4.4 虚拟用户
 - **端点**: `http://pc.i.kuwo.cn/US_NEW/kuwo/vuser`
+- **服务标识**: `virtualsvr`（虚拟用户服务）
+- **函数**: `GetVirtualUsrId`（获取虚拟用户 ID）
+- **响应字段**: `vSid`（虚拟会话 ID）、`result`、`succ`
+- **错误模板**: `errcode_%d;url_%s`、`GetVirtualUsrId nCode:%d`
 
-#### 3.4.3 注册验证
+#### 3.4.5 登出
+- **端点**: `http://pc.i.kuwo.cn/u.s`
+- **URL 模板**（来源：DLL strings）:
+  ```
+  /u.s?type=logout&uid=%u&sid=%u&req_enc=gbk&res_enc=gbk
+  ```
+
+#### 3.4.6 获取会话
+- **端点**: `http://pc.i.kuwo.cn/u.s`
+- **URL 模板**（来源：DLL strings）:
+  ```
+  /u.s?type=getsessions&uid=%u&sid=%u&req_enc=gbk&res_enc=gbk
+  ```
+
+#### 3.4.7 踢人（强制下线其他设备）
+- **端点**: `http://pc.i.kuwo.cn/u.s`
+- **URL 模板**（来源：DLL strings）:
+  ```
+  /u.s?type=kick&uname=%s&pwd=%s&sid=%u&dev_id=%u&req_enc=gbk&res_enc=gbk
+  ```
+
+#### 3.4.8 注册验证
 - **端点**: `http://reg.kuwo.cn/regsvr.auth?%d&%s`
-- **参数**: 时间戳 + uid
+- **参数**: `%d` = 时间戳（Unix），`%s` = uid
 
-#### 3.4.4 VIP 信息
+#### 3.4.9 注册页面
+- **端点**: `http://pc.i.kuwo.cn/US/mbox/login2015new/reg.jsp?`
+
+#### 3.4.10 找回密码
+- **端点（新版）**: `http://pc.i.kuwo.cn/US/mbox/login2015new/findPwd.jsp`
+- **端点（旧版）**: `http://pc.i.kuwo.cn/US/mbox/login2015/findPwd.jsp`
+
+#### 3.4.11 歌单登录
+- **端点**: `http://pls.kuwo.cn/pl.svc`
+- **URL 模板**（来源：DLL strings）:
+  ```
+  op=login&uname=%s&pwd=%s
+  ```
+
+#### 3.4.12 专辑盒登录
+- **端点**: `http://album.kuwo.cn/album/mbox/login`
+- **方法**: POST
+- **URL 模板**（来源：DLL strings）:
+  ```
+  %s?uname=%s&pwd=%s&uid=%u&sid=%u&url=%s
+  ```
+- **标识**: `userloginjump`（用户登录跳转）
+
+#### 3.4.13 VIP 信息
 - **端点**: `http://vip1.kuwo.cn/vip/v2/user/vip`
 
-#### 3.4.5 找回密码
-- **端点**: `http://pc.i.kuwo.cn/US/mbox/login2015new/findPwd.jsp`
-- **备用**: `http://pc.i.kuwo.cn/US/mbox/login2015/findPwd.jsp`
-
-#### 3.4.6 注册页面
-- **端点**: `http://pc.i.kuwo.cn/US/mbox/login2015new/reg.jsp?`
+#### 3.4.14 登录导航
+- **URL 模板**（来源：KwMusicDLL.dll strings）:
+  ```
+  ?type=login&f=pc&q=
+  ```
+- **状态消息**: `msgtype=loginstatus&status=%s`
 
 ### 3.5 歌单接口
 
@@ -351,6 +460,13 @@ win.player.ri05.sycdn.kuwo.cn
 | `yeelion_rand` | KwMusicDLL.dll | 与搜索请求 URL 生成(`TYPE:CHANGEDNS`)、`/r.s?client=kt&` 相关 |
 | `KoOtOiTvINGwd` | KwLib.dll, KwMV.dll, KwMusicDLL.dll, PlayerCore.dll, lidx.dll | 13 字符，密钥候选，与播放核心相关 |
 | `_Y8g2E6n0E1i7L5t2IoOoNk` | KwLib.dll, KwMV.dll, KwMusicDLL.dll, PlayerCore.dll, lidx.dll | 24 字符，密钥候选，与 `.kwm` 格式相关 |
+| `kw@#d09b` | KwMusicDLL.dll | 8 字符，登录加密盐值，位于登录参数区域（`from=pc&dev_id=` 与 `nSession` 之间），与 `encryptlogin` 同区域 |
+| `encryptlogin` | KwMusicDLL.dll | 加密登录标识，与 `login_kw` 同区域 |
+| `newlogin` | KwMusicDLL.dll | 新登录标识，与 `loginserver.kuwo.cn` 同区域 |
+| `ussvr` / `ussvrpc` | KwMusicDLL.dll | 用户服务 / 用户服务RPC 标识 |
+| `virtualsvr` | KwMusicDLL.dll | 虚拟用户服务标识 |
+| `zonesvr` | KwMusicDLL.dll | 空间服务标识（kzone.kuwo.cn） |
+| `kuwologin` / `qqlogin` / `wblogin` / `weixinlogin` | KwMusicDLL.dll | 四种登录方式标识 |
 | `OOOOOOCCCCCCCCCCCCCCCCCGCC` | KwLib.dll | 模式/掩码字符串，用途 **[未确认]** |
 | `Yeelion_KuWo_Tools_2015-1-12` | 多个文件 | 版本标识 |
 | `Yeelion_Third_Lyric_2010-10-22` | KwLib.dll | 第三方歌词版本标识 |

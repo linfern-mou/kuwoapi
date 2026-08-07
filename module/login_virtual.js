@@ -1,25 +1,21 @@
 /**
- * @fileoverview 酷我音乐用户信息接口
+ * @fileoverview 酷我音乐虚拟用户接口
  *
- * 接口来源：default.zip 中 DLL strings 分析
+ * 接口来源：default.zip 中 KwMusicDLL.dll strings 分析
  * 端点：http://pc.i.kuwo.cn/US_NEW/kuwo/vuser
  *
  * 服务标识（来源：KwMusicDLL.dll strings）：
- * - ussvrpc  用户服务RPC
  * - virtualsvr  虚拟用户服务
+ * - GetVirtualUsrId  获取虚拟用户ID
  *
- * 登录响应字段（来源：KwMusicDLL.dll strings）：
- * - nickName / nick  昵称
- * - head  头像
- * - token  令牌
- * - level  等级
- * - score  积分
- * - mobile  手机
- * - multi_dev / multi_devir / IsMultiDev  多设备检测
+ * 响应字段（来源：KwMusicDLL.dll strings）：
+ * - vSid  虚拟会话ID
+ * - result / succ  结果
+ * - errcode_%d;url_%s  错误码和URL
  *
- * 路由: /user/info
+ * 路由: /login/virtual
  *
- * @module user_info
+ * @module login_virtual
  * @see REVERSE_SPEC.md 第三章第3.4节
  */
 
