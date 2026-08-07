@@ -92,49 +92,7 @@ func Download(params map[string]interface{}, r *http.Request) (map[string]interf
 		}
 	}
 
-	// Step 4: CDN 回退
-	log.Printf("[DOWN] Step4: CDN 回退...")
-	cdnHosts := []string{
-		"win.player.ra01.sycdn.kuwo.cn",
-		"win.player.ra05.sycdn.kuwo.cn",
-		"win.player.rc01.sycdn.kuwo.cn",
-		"win.player.rc05.sycdn.kuwo.cn",
-		"win.player.rg03.sycdn.kuwo.cn",
-		"win.player.rg05.sycdn.kuwo.cn",
-		"win.player.rh03.sycdn.kuwo.cn",
-		"win.player.rh05.sycdn.kuwo.cn",
-		"win.player.ri03.sycdn.kuwo.cn",
-		"win.player.ri05.sycdn.kuwo.cn",
-	}
-
-	numericRID := strings.TrimPrefix(rid, "MUSIC_")
-	for _, host := range cdnHosts {
-		cdnURL := fmt.Sprintf("http://%s/resource/n2/11/64/%s.mp3", host, numericRID)
-		client := &http.Client{Timeout: 30 * time.Second}
-		resp, err := client.Get(cdnURL)
-		if err != nil {
-			continue
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != 200 {
-			continue
-		}
-		data, err := io.ReadAll(resp.Body)
-		if err == nil && len(data) > 1000 && isValidAudio(data) {
-			log.Printf("[DOWN] CDN 下载成功: %d bytes", len(data))
-			return map[string]interface{}{
-				"code": 200,
-				"data": map[string]interface{}{
-					"rid":     rid,
-					"quality": quality,
-					"size":    len(data),
-					"data":    data,
-				},
-			}, nil
-		}
-	}
-
-	return map[string]interface{}{"code": 500, "msg": "所有下载方式均失败"}, nil
+	return map[string]interface{}{"code": 500, "msg": "P2P 下载失败"}, nil
 }
 
 func getSongMeta(rid, quality string) (*SongMeta, error) {
