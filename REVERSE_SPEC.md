@@ -488,7 +488,46 @@
 | fmt | `json` | 返回格式 |
 | src | `mbox` | 固定值 |
 
-### 3.11 CDN 域名（压缩包确认）
+### 3.11 签名刷新接口（来源：pd.dll strings）
+
+#### 3.11.1 SigServer 资源签名刷新
+- **端点**: `http://rid.kuwo.cn/sig.s`
+- **URL 模板**: `SigServer=http://rid.kuwo.cn/sig.s?w=`（来源：config.ini `[SigServer]` 段）
+- **完整请求**: `GET http://rid.kuwo.cn/sig.s?w={rid}&c=mbox HTTP/1.0`
+- **请求头**（来源：pd.dll `GetResourceSig` 函数 strings）:
+  ```
+  Host: {host}
+  Accept: */*
+  User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)
+  Pragma: no-cache
+  Cache-Control: no-cache
+  Connection: close
+  ```
+- **响应格式**: 文本，包含 `sig1=%u` 和 `sig2=%u` 两个字段
+- **用途**: P2P 下载前刷新资源签名（sig1/sig2 可能过期，需从服务器获取最新值）
+- **调用方**: `pd.dll` 的 `GetResourceSig` 函数
+
+#### 3.11.2 歌曲下载元数据（stype=musicinfo）
+- **端点**: `http://search.kuwo.cn/r.s`
+- **URL 模板**: `SecondSearch=http://search.kuwo.cn/r.s?stype=musicinfo&itemset=music_2014&alflac=1&pcmp4=1&ids=`（来源：config.ini `[serverlist]` 段）
+- **参数**: `ids` 需带 `MUSIC_` 前缀（如 `MUSIC_228908`），纯数字返回空 zlib
+- **响应格式**: 8 字节头 + zlib 压缩的 KV 文本
+- **KV 字段**:
+  ```
+  MUSICRID=MUSIC_{rid}
+  TAG={tag_url}
+  FORMATS={format1}|{format2}|...
+  {FORMAT_CODE}=S1:{sig1}|S2:{sig2}|SIZE:{filesize}|BT:{bitrate}
+  ```
+- **音质代码**: `MP3128`/`MP3H`(320kbps)/`ALFLAC`(无损FLAC)/`WMA96`/`WMA128`/`AAC48`/`OGGH`/`OGG192`/`EXMP4`/`EXMV500` 等
+- **字段映射**（来源：KwMusicDLL.dll + KwModDownload.dll `CNetResource` 类）:
+  - `S1` → `CNetResource::Sign.sig1`
+  - `S2` → `CNetResource::Sign.sig2`
+  - `SIZE` → `CNetResource::FileSize`
+  - `BT` → `CNetResource::Kpbs`
+- **用途**: 获取各音质的 sig1/sig2 元数据，供 P2P 客户端使用
+
+### 3.12 CDN 域名（压缩包确认）
 
 ```
 win.player.ra01.sycdn.kuwo.cn
@@ -503,6 +542,80 @@ win.player.ri03.sycdn.kuwo.cn
 win.player.ri05.sycdn.kuwo.cn
 ```
 - **CDN 资源路径模板**: `/resource/n2/11/64/{id}.mp3`
+
+---
+
+## 三点五、P2P 下载客户端架构（压缩包确认）
+
+### 3.5.1 核心组件
+
+| 文件 | 作用 | 导出函数 |
+|------|------|----------|
+| `bin/pd.dll` | P2P 下载代理层（90KB） | `StartDown`/`StopDown`/`DelRes`/`GetResInfo`/`CallEx`/`StartKWMV`/`CloseKWMV`/`SetMaxDownloadFile`/`AttachP2PListener`/`DetachP2PListener` |
+| `bin/KwService.exe` | P2P 服务进程管理器 | 启动 `pd.dll`，通过窗口消息 IPC 通信（窗口类 `kwcoreserviceclass2013`） |
+| `bin/KwMV.dll` | P2P 引擎（MV/歌曲下载内核） | 通过命名管道 `\\.\PIPE\Kwmv_In_%u` 与 `pd.dll` 通信 |
+| `bin/KwModDownload.dll` | 下载业务模块 | `CDownloadData`/`CDownloadCDData` 类，调用 `pd.dll` 的 `StartDown` |
+
+### 3.5.2 下载流程
+
+```
+1. 搜索接口获取元数据
+   search.kuwo.cn/r.s?stype=musicinfo&ids=MUSIC_{rid}
+   → 返回各音质的 sig1/sig2/filesize/bitrate
+
+2. [可选] 签名刷新
+   rid.kuwo.cn/sig.s?w={rid}&c=mbox
+   → 返回新的 sig1=%u, sig2=%u
+
+3. 发起 P2P 下载（pd.dll::InsertDownload）
+   InsertDownload RID:{rid}, Sign:{sig1},{sig2}, Priority:{priority},
+                   P2PObserver:{observer_ptr}, filetype={filetype}, downmode={downmode}
+   → 通过 PostMessage 发送给 KwService.exe 窗口
+   → KwService.exe 通过命名管道转发给 KwMV.dll
+   → KwMV.dll 执行 P2P 协议下载
+
+4. P2P 下载状态回调
+   IP2PPrivateOb_DownStart / DownProgress / DownFinish / DownFailed / SigChange
+```
+
+### 3.5.3 P2P 协议特征（来源：act.log 日志）
+
+```
+ACT:P2P_DOWN_FILE
+sip:{tracker_ip}              ← P2P tracker/种子服务器
+sig1:{sig1}                   ← 资源签名1
+sig2:{sig2}                   ← 资源签名2
+peernum:{peer_count}          ← peer 节点数量
+usedp:{used_peer}             ← 实际使用的 peer 数
+nconn:{connections}           ← 连接数
+resserver:{res_server_ip}     ← 资源超级节点 IP
+ressuccsvr:{res_succ_ip}      ← 成功的资源服务器 IP
+ressucway:{way}               ← 成功方式
+filetype:{filetype}           ← 文件类型代码
+useurl:0                      ← 不使用 HTTP URL 模式
+httpmode:0                    ← 不使用 HTTP 模式
+```
+
+### 3.5.4 代理配置（压缩包确认无代理）
+
+```ini
+# config.ini [Proxy] 段
+HTTPProxyUsed=0               ← 代理未启用
+HTTPProxyHost=                ← 空
+HTTPProxyPort=                ← 空
+HTTPProxyUser=                ← 空
+HTTPProxyPass=                ← 空
+```
+
+压缩包默认**不启用代理**，客户端直连酷我服务器。`[Proxy]` 段仅提供用户手动配置代理的设置界面（KwConfig.xml 中 `enabled="false"`）。
+
+### 3.5.5 关键约束
+
+- **P2P 协议是酷我私有二进制协议**，通过 Windows 命名管道 IPC 通信
+- **P2P 引擎 `KwMV.dll` 是 Windows DLL**，无法在 Linux/Node.js 环境直接运行
+- **下载不返回 HTTP CDN 地址**，而是通过 P2P 网络直接传输文件数据
+- **`song_url` 接口返回 sig1/sig2/quality 元数据**，供 P2P 客户端使用
+- **anti.s 的 `format=aac` 仅用于 AAC 试听播放**（PlayerCore.dll 的 `CPlayAAC` 类），不是下载接口
 
 ---
 
