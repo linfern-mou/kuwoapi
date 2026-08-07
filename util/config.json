@@ -1,9 +1,6 @@
 {
-  "appid": "kuwoplay",
-  "appver": "1.0.0",
   "clientver": "8.7.4.0",
-  "platform": "android",
-  "dev": "ANDROID_KUWO",
-  "uid": "",
-  "secret": "bf63b5e8b5e8b5e8"
+  "platform": "web_www",
+  "baseURL": "https://kuwo.cn",
+  "hmCookie": "Hm_Iuvt_cdb524f42f23cer9b268564v7y735ewrq2324"
 }

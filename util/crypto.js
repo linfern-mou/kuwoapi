@@ -206,6 +206,77 @@ function cryptoRSAEncrypt(data, publicKey) {
   return forge.util.bytesToHex(encrypted);
 }
 
+/**
+ * 酷我音乐网页端 Secret 生成算法
+ *
+ * 基于 cookie `Hm_Iuvt_cdb524f42f23cer9b268564v7y735ewrq2324` 的值，
+ * 通过线性同余生成器(LCG) + XOR 运算生成请求头 Secret。
+ *
+ * 算法步骤：
+ * 1. 将 cookie key 每个字符的 charCode 拼接成数字字符串 n
+ * 2. 从 n 中按位置 o,2o,3o,4o,5o 提取数字组成乘数 r
+ * 3. 生成随机数 d，将 n 折叠到 10 位以内
+ * 4. 用 LCG (n = (r*n+c) % l) 逐字符 XOR cookie value
+ * 5. 拼接十六进制结果 + d
+ *
+ * @param {string} cookieValue - Hm_Iuvt_cdb524f42f23cer9b268564v7y735ewrq2324 cookie 的值
+ * @param {string} hmKey - cookie key，默认使用内置常量
+ * @returns {string} Secret 字符串
+ */
+function generateKuwoSecret(cookieValue, hmKey) {
+  const e = hmKey || require('./config.json').hmCookie;
+  const t = cookieValue || '';
+
+  if (!e || e.length <= 0) return null;
+
+  let n = '';
+  for (let i = 0; i < e.length; i++) {
+    n += e.charCodeAt(i).toString();
+  }
+
+  const o = Math.floor(n.length / 5);
+  const r = parseInt(n.charAt(o) + n.charAt(2 * o) + n.charAt(3 * o) + n.charAt(4 * o) + n.charAt(5 * o));
+  const c = Math.ceil(e.length / 2);
+  const l = Math.pow(2, 31) - 1;
+
+  if (r < 2) return null;
+
+  let d = Math.round(1e9 * Math.random()) % 1e8;
+  n += d;
+  while (n.length > 10) {
+    n = (parseInt(n.substring(0, 10)) + parseInt(n.substring(10, n.length))).toString();
+  }
+  n = (r * n + c) % l;
+
+  let f = '';
+  let h = '';
+  for (let i = 0; i < t.length; i++) {
+    f = parseInt(t.charCodeAt(i) ^ Math.floor((n / l) * 255));
+    h += f < 16 ? '0' + f.toString(16) : f.toString(16);
+    n = (r * n + c) % l;
+  }
+
+  d = d.toString(16);
+  while (d.length < 8) {
+    d = '0' + d;
+  }
+
+  return h + d;
+}
+
+/**
+ * 生成酷我网页端请求 ID (reqId)
+ *
+ * 格式：{12位hex时间戳}-{4}-{4}-{4}-{8}
+ *
+ * @returns {string} reqId
+ */
+function generateReqId() {
+  const timestamp = Date.now().toString(16).padStart(12, '0');
+  const random = Array.from({ length: 20 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  return `${timestamp}-${random.substring(0, 4)}-${random.substring(4, 8)}-${random.substring(8, 12)}-${random.substring(12)}`;
+}
+
 module.exports = {
   cryptoAesDecrypt,
   cryptoAesEncrypt,
@@ -214,4 +285,6 @@ module.exports = {
   cryptoSha1,
   publicRsaKey,
   wordArrayFromBuffer,
+  generateKuwoSecret,
+  generateReqId,
 };
