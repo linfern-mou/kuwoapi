@@ -1,89 +1,70 @@
+/**
+ * @fileoverview 酷我音乐加密工具模块
+ *
+ * 严格遵守 REVERSE_SPEC.md 约束：
+ * - 仅实现压缩包中确认存在的加密函数
+ * - 未确认的算法标注 [算法未确认]，不推测实现
+ *
+ * 压缩包确认的加密函数（来源：KwLib.dll 导出表）：
+ * - CMD5 类（MD5 哈希）—— ??0CMD5@@QAE@PBD@Z 等构造函数确认
+ * - Base64 类（编解码）—— ?Base64Encode@Base64@KwLib@@ 确认
+ * - Entrypt::Encrypt/Decrypt —— ?Encrypt@Entrypt@KwLib@@YAXPADHH@Z 确认
+ *   [算法未确认] 具体算法和密钥来源未知，禁止推测
+ * - Sig::CalcSign —— ?CalcSign@Sig@KwLib@@YA_NPBDPAI1@Z 确认
+ *   [算法未确认] 输出两个 uint，具体算法未知
+ *
+ * 压缩包确认的字符串常量：
+ * - yeelion / yeelion-kuwo-tme / yeelion_history / yeelion_rand
+ * - KoOtOiTvINGwd (13字符，密钥候选)
+ * - _Y8g2E6n0E1i7L5t2IoOoNk (24字符，密钥候选)
+ *
+ * 压缩包中不存在的（禁止实现）：
+ * - RSA 公钥（压缩包无酷我自有公钥，已移除）
+ *
+ * @module crypto
+ * @see REVERSE_SPEC.md 第四章
+ */
+
 const CryptoJS = require('crypto-js');
-const forge = require('node-forge');
-const { randomString } = require('./util');
 
-const publicRsaKey = `-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDIAG7QOELSYoIJvTFJhMpe1s/gbjDJX51HBNnEl5HXqTW6lQ7LC8jr9fWZTwusknp+sVGzwd40MwP6U5yDE27M/X1+UR4tvOGOqp94TJtQ1EPnWGWXngpeIW5GxoQGao1rmYWAu6oi1z9XkChrsUdC6DJE5E221wf/4WLFxwAtRQIDAQAB
------END PUBLIC KEY-----`;
+// ============================================================
+// 压缩包确认的字符串常量（来源：strings 提取）
+// ============================================================
 
-const rsaKeyCache = new Map();
+/** Yeelion 签名/加密标识（来源：多个 DLL 确认） */
+const YEELION = 'yeelion';
+
+/** Yeelion TME 标识，与 .kwm 格式相关（来源：KwLib.dll） */
+const YEELION_KUWO_TME = 'yeelion-kuwo-tme';
+
+/** 历史记录加密标识（来源：KwMusicDLL.dll，与 _LoadHistory 相关） */
+const YEELION_HISTORY = 'yeelion_history';
+
+/** 随机数加密标识（来源：KwMusicDLL.dll，与搜索URL生成相关） */
+const YEELION_RAND = 'yeelion_rand';
+
+/** 密钥候选 1，13字符（来源：KwLib.dll/KwMV.dll/KwMusicDLL.dll/PlayerCore.dll/lidx.dll） */
+const KEY_CANDIDATE_1 = 'KoOtOiTvINGwd';
+
+/** 密钥候选 2，24字符（来源：KwLib.dll/KwMV.dll/KwMusicDLL.dll/PlayerCore.dll/lidx.dll） */
+const KEY_CANDIDATE_2 = '_Y8g2E6n0E1i7L5t2IoOoNk';
+
+// ============================================================
+// UTF-8 编解码辅助
+// ============================================================
 
 function encodeUtf8(str) {
   if (typeof TextEncoder !== 'undefined') {
     return new TextEncoder().encode(str);
   }
-  if (typeof Buffer !== 'undefined') {
-    return new Uint8Array(Buffer.from(str, 'utf8'));
-  }
-  const codePoints = [];
-  for (let i = 0; i < str.length; i++) {
-    let code = str.charCodeAt(i);
-    if (code >= 0xd800 && code <= 0xdbff && i + 1 < str.length) {
-      const next = str.charCodeAt(i + 1);
-      if (next >= 0xdc00 && next <= 0xdfff) {
-        code = ((code - 0xd800) << 10) + (next - 0xdc00) + 0x10000;
-        i++;
-      }
-    }
-    codePoints.push(code);
-  }
-  const bytes = [];
-  for (const code of codePoints) {
-    if (code <= 0x7f) {
-      bytes.push(code);
-    } else if (code <= 0x7ff) {
-      bytes.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
-    } else if (code <= 0xffff) {
-      bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
-    } else {
-      bytes.push(0xf0 | (code >> 18), 0x80 | ((code >> 12) & 0x3f), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
-    }
-  }
-  return new Uint8Array(bytes);
+  return new Uint8Array(Buffer.from(str, 'utf8'));
 }
 
 function decodeUtf8(uint8) {
   if (typeof TextDecoder !== 'undefined') {
     return new TextDecoder().decode(uint8);
   }
-  if (typeof Buffer !== 'undefined') {
-    return Buffer.from(uint8).toString('utf8');
-  }
-  let out = '';
-  let i = 0;
-  while (i < uint8.length) {
-    const byte1 = uint8[i++];
-    if (byte1 < 0x80) {
-      out += String.fromCharCode(byte1);
-      continue;
-    }
-    if (byte1 < 0xe0) {
-      const byte2 = uint8[i++] & 0x3f;
-      const codePoint = ((byte1 & 0x1f) << 6) | byte2;
-      out += String.fromCharCode(codePoint);
-      continue;
-    }
-    if (byte1 < 0xf0) {
-      const byte2 = uint8[i++] & 0x3f;
-      const byte3 = uint8[i++] & 0x3f;
-      const codePoint = ((byte1 & 0x0f) << 12) | (byte2 << 6) | byte3;
-      out += String.fromCharCode(codePoint);
-      continue;
-    }
-    const byte2 = uint8[i++] & 0x3f;
-    const byte3 = uint8[i++] & 0x3f;
-    const byte4 = uint8[i++] & 0x3f;
-    let codePoint = ((byte1 & 0x07) << 18) | (byte2 << 12) | (byte3 << 6) | byte4;
-    codePoint -= 0x10000;
-    out += String.fromCharCode((codePoint >> 10) + 0xd800, (codePoint & 0x3ff) + 0xdc00);
-  }
-  return out;
-}
-
-function normalizeBuffer(data) {
-  if (data instanceof Uint8Array) return data;
-  const str = typeof data === 'string' ? data : JSON.stringify(data);
-  return encodeUtf8(str);
+  return Buffer.from(uint8).toString('utf8');
 }
 
 function wordArrayFromBuffer(uint8) {
@@ -105,113 +86,150 @@ function wordArrayToBuffer(wordArray) {
   return uint8;
 }
 
-function getForgePublicKey(pem) {
-  if (!rsaKeyCache.has(pem)) {
-    rsaKeyCache.set(pem, forge.pki.publicKeyFromPem(pem));
-  }
-  return rsaKeyCache.get(pem);
-}
-
-function bufferToBinaryString(buffer) {
-  let out = '';
-  for (let i = 0; i < buffer.length; i++) out += String.fromCharCode(buffer[i]);
-  return out;
-}
+// ============================================================
+// MD5 哈希（对应压缩包 CMD5 类）
+// 来源：KwLib.dll ??0CMD5@@QAE@PBD@Z 等构造函数确认
+// ============================================================
 
 /**
- * MD5 加密
+ * MD5 哈希计算
+ *
+ * 对应压缩包 KwLib.dll 中的 CMD5 类：
+ * - ??0CMD5@@QAE@XZ (默认构造)
+ * - ??0CMD5@@QAE@PBD@Z (const char* 构造)
+ * - ??0CMD5@@QAE@PAK@Z (unsigned long* 构造)
+ *
+ * @param {string|Object} data - 待哈希的数据
+ * @returns {string} 32位十六进制 MD5 值
  */
 function cryptoMd5(data) {
   const buffer = typeof data === 'object' ? JSON.stringify(data) : data;
   return CryptoJS.MD5(buffer).toString(CryptoJS.enc.Hex);
 }
 
+// ============================================================
+// Base64 编解码（对应压缩包 Base64 类）
+// 来源：KwLib.dll ?Base64Encode@Base64@KwLib@@ / ?Base64Decode@Base64@KwLib@@
+// ============================================================
+
 /**
- * Sha1 加密
+ * Base64 编码
+ *
+ * 对应压缩包 KwLib.dll 中的 Base64::Base64Encode
+ * 压缩包日志确认："Encryption YL_Base64Encode in/out"（YL=Yeelion）
+ *
+ * @param {string|Uint8Array} data - 待编码数据
+ * @returns {string} Base64 字符串
  */
-function cryptoSha1(data) {
-  const buffer = typeof data === 'object' ? JSON.stringify(data) : data;
-  return CryptoJS.SHA1(buffer).toString(CryptoJS.enc.Hex);
+function base64Encode(data) {
+  if (data instanceof Uint8Array) {
+    return CryptoJS.enc.Base64.stringify(wordArrayFromBuffer(data));
+  }
+  return CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(data));
 }
 
 /**
- * AES 加密
+ * Base64 解码
+ *
+ * 对应压缩包 KwLib.dll 中的 Base64::Base64Decode
+ *
+ * @param {string} base64Str - Base64 字符串
+ * @returns {string} 解码后的字符串
  */
-function cryptoAesEncrypt(data, opt) {
-  if (typeof data === 'object') data = JSON.stringify(data);
-  const buffer = normalizeBuffer(data);
-  let key;
-  let iv;
-  let tempKey = '';
+function base64Decode(base64Str) {
+  const words = CryptoJS.enc.Base64.parse(base64Str);
+  return decodeUtf8(wordArrayToBuffer(words));
+}
 
-  if (opt?.key && opt?.iv) {
-    key = opt.key;
-    iv = opt.iv;
-  } else {
-    tempKey = opt?.key || randomString(16).toLowerCase();
-    key = cryptoMd5(tempKey).substring(0, 32);
-    iv = key.substring(key.length - 16);
-  }
+// ============================================================
+// Entrypt 加密/解密
+// 来源：KwLib.dll ?Encrypt@Entrypt@KwLib@@YAXPADHH@Z / ?Decrypt@Entrypt@KwLib@@YAXPADHH@Z
+// [算法未确认] 具体加密算法和密钥来源未知，禁止推测实现
+// ============================================================
 
-  const encrypted = CryptoJS.AES.encrypt(wordArrayFromBuffer(buffer), CryptoJS.enc.Utf8.parse(key), {
-    iv: CryptoJS.enc.Utf8.parse(iv),
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7,
-  });
-
-  const hex = CryptoJS.enc.Hex.stringify(encrypted.ciphertext);
-  if (opt?.key && opt?.iv) return hex;
-  return { str: hex, key: tempKey };
+/**
+ * [算法未确认] Entrypt 加密
+ *
+ * 压缩包函数签名：void Entrypt::Encrypt(char* data, int len, int mode)
+ *
+ * ⚠️ 警告：此函数的具体加密算法、密钥来源在压缩包中未逆向确认。
+ * 禁止用推测的 AES/DES 实现冒充。需要反汇编 KwLib.dll 确认后才能实现。
+ *
+ * @throws {Error} 调用时抛出错误，提示需要人工逆向确认
+ */
+function entryptEncrypt(data, len, mode) {
+  throw new Error(
+    '[算法未确认] Entrypt::Encrypt 的具体算法需要反汇编 KwLib.dll 确认。' +
+      '压缩包只确认了函数签名 void Encrypt(char*, int, int)，' +
+      '未确认密钥来源和加密类型。请参考 REVERSE_SPEC.md 第四章和第七章。'
+  );
 }
 
 /**
- * AES 解密
+ * [算法未确认] Entrypt 解密
+ *
+ * 压缩包函数签名：void Entrypt::Decrypt(char* data, int len, int mode)
+ *
+ * ⚠️ 警告：同 entryptEncrypt，算法未确认。
+ *
+ * @throws {Error} 调用时抛出错误，提示需要人工逆向确认
  */
-function cryptoAesDecrypt(data, key, iv) {
-  if (!iv) key = cryptoMd5(key).substring(0, 32);
-  iv = iv || key.substring(key.length - 16);
-  const cipherParams = CryptoJS.lib.CipherParams.create({ ciphertext: CryptoJS.enc.Hex.parse(data) });
-
-  const decrypted = CryptoJS.AES.decrypt(cipherParams, CryptoJS.enc.Utf8.parse(key), {
-    iv: CryptoJS.enc.Utf8.parse(iv),
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7,
-  });
-
-  const text = decodeUtf8(wordArrayToBuffer(decrypted));
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    return text;
-  }
+function entryptDecrypt(data, len, mode) {
+  throw new Error(
+    '[算法未确认] Entrypt::Decrypt 的具体算法需要反汇编 KwLib.dll 确认。' +
+      '压缩包只确认了函数签名 void Decrypt(char*, int, int)，' +
+      '未确认密钥来源和加密类型。请参考 REVERSE_SPEC.md 第四章和第七章。'
+  );
 }
 
+// ============================================================
+// Sig::CalcSign 签名计算
+// 来源：KwLib.dll ?CalcSign@Sig@KwLib@@YA_NPBDPAI1@Z
+// [算法未确认] 输出两个 uint，具体算法未知
+// ============================================================
+
 /**
- * RSA加密
+ * [算法未确认] CalcSign 签名计算
+ *
+ * 压缩包函数签名：bool Sig::CalcSign(const char* data, unsigned int* out1, unsigned int* out2)
+ *
+ * ⚠️ 警告：此函数的具体算法在压缩包中未逆向确认。
+ * 已知信息：
+ * - 输入：const char* data（字符串）
+ * - 输出：两个 unsigned int* out1, out2（两个无符号整数）
+ * - 用于 stype=geturl&sign=%s 等接口的 sign 参数
+ *
+ * 未知信息（禁止推测）：
+ * - 两个 uint 如何拼成 sign 字符串（hex？decimal？拼接顺序？）
+ * - 是否使用 yeelion 作为盐值
+ * - 内部是否调用 CMD5
+ *
+ * @throws {Error} 调用时抛出错误，提示需要人工逆向确认
  */
-function cryptoRSAEncrypt(data, publicKey) {
-  const buffer = normalizeBuffer(data);
-  const pem = publicKey || publicRsaKey;
-  const key = getForgePublicKey(pem);
-  const keyLength = Math.ceil(key.n.bitLength() / 8);
-
-  if (buffer.length > keyLength) throw new Error('Data length exceeds key size');
-  let padded = buffer;
-  if (buffer.length < keyLength) {
-    padded = new Uint8Array(keyLength);
-    padded.set(buffer);
-  }
-
-  const encrypted = key.encrypt(bufferToBinaryString(padded), 'RSAES-PKCS1-V1_5');
-  return forge.util.bytesToHex(encrypted);
+function calcSign(data) {
+  throw new Error(
+    '[算法未确认] Sig::CalcSign 的具体算法需要反汇编 KwLib.dll 确认。' +
+      '压缩包只确认了函数签名 bool CalcSign(const char*, unsigned int*, unsigned int*)，' +
+      '输出两个 uint 的拼接方式未知。请参考 REVERSE_SPEC.md 第四章和第七章。'
+  );
 }
 
 module.exports = {
-  cryptoAesDecrypt,
-  cryptoAesEncrypt,
+  // 压缩包确认的字符串常量
+  YEELION,
+  YEELION_KUWO_TME,
+  YEELION_HISTORY,
+  YEELION_RAND,
+  KEY_CANDIDATE_1,
+  KEY_CANDIDATE_2,
+
+  // 压缩包确认的加密函数（已实现）
   cryptoMd5,
-  cryptoRSAEncrypt,
-  cryptoSha1,
-  publicRsaKey,
-  wordArrayFromBuffer,
+  base64Encode,
+  base64Decode,
+
+  // 压缩包确认存在但算法未确认的函数（空壳，调用即抛错）
+  entryptEncrypt,
+  entryptDecrypt,
+  calcSign,
 };

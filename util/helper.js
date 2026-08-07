@@ -1,38 +1,47 @@
 /**
  * @fileoverview 酷我音乐 API 请求签名工具
  *
- * 来源：default.zip 中 KwLib.dll 的 Sig::CalcSign 函数分析。
+ * 严格遵守 REVERSE_SPEC.md 约束：
+ * - 签名函数 Sig::CalcSign 的算法 [未确认]
+ * - 禁止用 MD5(params+yeelion) 等推测实现冒充
  *
- * 酷我 PC 客户端 r.s 系列接口使用 MD5 签名，
- * sign 参数通过对请求参数排序拼接后 MD5 生成。
+ * 来源：default.zip 中 KwLib.dll 的 Sig::CalcSign 函数符号分析
+ * - ?CalcSign@Sig@KwLib@@YA_NPBDPAI1@Z
+ * - 函数签名：bool CalcSign(const char* data, unsigned int* out1, unsigned int* out2)
+ * - 输出两个 unsigned int，拼接方式未知
+ *
+ * @module helper
+ * @see REVERSE_SPEC.md 第四章第4.1节、第四章第4.4节
  */
 
-const { cryptoMd5 } = require('./crypto');
-
-// 签名盐值（来源压缩包 KwLib.dll Sig::CalcSign 关联分析）
-const SIGN_SALT = 'yeelion';
+const { calcSign, YEELION } = require('./crypto');
 
 /**
- * 生成 r.s 接口签名
+ * [算法未确认] 生成请求签名 sign
  *
- * 签名规则（来源压缩包 stype=geturl&sign=%s 等格式）：
- * 1. 参数按 key 排序
- * 2. 拼接为 key=value&key=value 格式
- * 3. 末尾追加盐值
- * 4. MD5 取十六进制
+ * ⚠️ 警告：Sig::CalcSign 的具体算法未逆向确认。
  *
- * @param {Object} params - 请求参数对象
- * @returns {string} 32位十六进制签名
+ * 已知信息（来源压缩包）：
+ * - 函数输出两个 unsigned int
+ * - 用于 stype=geturl&sign=%s 等接口
+ * - yeelion 字符串确认存在，但具体用途未知
+ *
+ * 未知信息（禁止推测）：
+ * - 两个 uint 如何拼成 sign 字符串
+ * - yeelion 是否作为盐值参与计算
+ *
+ * @param {Object|string} params - 请求参数
+ * @returns {string} 签名字符串
+ * @throws {Error} 算法未确认时抛出错误
  */
 const generateSign = (params) => {
-  const queryStr = Object.keys(params)
-    .sort()
-    .map((key) => `${key}=${params[key]}`)
-    .join('&');
-  return cryptoMd5(`${queryStr}${SIGN_SALT}`);
+  // 委托给 calcSign（空壳函数，调用即抛错）
+  // 当算法逆向确认后，在此实现具体逻辑
+  const data = typeof params === 'object' ? JSON.stringify(params) : params;
+  return calcSign(data);
 };
 
 module.exports = {
   generateSign,
-  SIGN_SALT,
+  YEELION,
 };
