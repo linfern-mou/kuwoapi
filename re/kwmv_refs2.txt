@@ -1,0 +1,819 @@
+== .rdata 中指针表引用 (4字节==VA) ==
+
+== .text 线性反汇编，操作数引用目标 VA ==
+找到 19 处指令引用：
+
+--- VA=0x000124FC: push 0x10053f40  -> 0x10053F40 (GET / HTTP/1.0) ---
+  上下文:
+    0001249C: add      eax, 0x14c48310
+    000124A1: cmp      dword ptr [esp + 0x24], 0x10
+    000124A6: jb       0x124b1
+    000124A8: push     dword ptr [esp + 0x10]
+    000124AC: call     edi
+    000124AE: add      esp, 4
+    000124B1: mov      byte ptr [esp + 0x194ac], 1
+    000124B9: cmp      dword ptr [esp + 0x3c], 0x10
+    000124BE: mov      dword ptr [esp + 0x24], 0xf
+    000124C6: mov      dword ptr [esp + 0x20], 0
+    000124CE: mov      byte ptr [esp + 0x10], 0
+    000124D3: jb       0x1271e
+    000124D9: push     dword ptr [esp + 0x28]
+    000124DD: call     edi
+    000124DF: add      esp, 4
+    000124E2: jmp      0x1271e
+    000124E7: call     esi
+    000124E9: cmp      dword ptr [esp + 0x58], 0x10
+    000124EE: mov      dword ptr [esp + 0x5c], eax
+    000124F2: lea      eax, [esp + 0x44]
+    000124F6: cmovae   eax, dword ptr [esp + 0x44]
+    000124FB: push     eax
+    000124FC: push     0x10053f40  ; -> GET / HTTP/1.0 <==
+    00012501: lea      eax, [esp + 0x2a8]
+    00012508: mov      dword ptr [esp + 0x74], 1
+    00012510: push     0x1ff
+    00012515: push     eax
+    00012516: mov      byte ptr [esp + 0x4af], 0
+    0001251E: call     dword ptr [0x10053318]
+    00012524: add      esp, 0x10
+    00012527: call     esi
+    00012529: lea      esi, [esp + 0x2a0]
+    00012530: mov      dword ptr [esp + 0x60], eax
+    00012534: lea      ecx, [esi + 1]
+    00012537: mov      al, byte ptr [esi]
+    00012539: inc      esi
+    0001253A: test     al, al
+    0001253C: jne      0x12537
+    0001253E: push     0
+    00012540: sub      esi, ecx
+    00012542: lea      eax, [esp + 0x2a4]
+    00012549: push     esi
+    0001254A: push     eax
+    0001254B: push     ebx
+    0001254C: call     dword ptr [0x1005342c]
+    00012552: cmp      eax, esi
+    00012554: je       0x125e5
+    0001255A: push     0x10053f1c
+    0001255F: lea      ecx, [esp + 0x2c]
+    00012563: call     0x23d0
+    00012568: mov      byte ptr [esp + 0x194ac], 6
+    00012570: lea      eax, [esp + 0x78]
+    00012574: cmp      dword ptr [esp + 0x8c], 0x10
+    0001257C: lea      ecx, [esp + 0x10]
+    00012580: cmovae   eax, dword ptr [esp + 0x78]
+    00012585: push     eax
+    00012586: call     0x23d0
+    0001258B: mov      byte ptr [esp + 0x194ac], 7
+    00012593: lea      eax, [esp + 0x44]
+    00012597: cmp      dword ptr [esp + 0x58], 0x10
+
+--- VA=0x00012E78: push 0x10053e8c  -> 0x10053E8C (HEAD %s HTTP/1.0) ---
+  上下文:
+    00012E18: add      byte ptr [eax], al
+    00012E1A: add      byte ptr [eax], dl
+    00012E1C: add      byte ptr [eax], al
+    00012E1E: mov      dword ptr [esp + 0x484], 0
+    00012E29: mov      dword ptr [esp + 0x488], 0
+    00012E34: mov      dword ptr [esp + 0x48c], 0
+    00012E3F: call     dword ptr [0x1005308c]
+    00012E45: cmp      dword ptr [esp + 0x40], 0x10
+    00012E4A: lea      ecx, [esp + 0x2c]
+    00012E4E: mov      dword ptr [esp + 0x490], eax
+    00012E55: lea      eax, [esp + 0xe0]
+    00012E5C: cmovae   ecx, dword ptr [esp + 0x2c]
+    00012E61: cmp      dword ptr [esp + 0x28], 0x10
+    00012E66: mov      dword ptr [esp + 0x494], eax
+    00012E6D: lea      eax, [esp + 0x14]
+    00012E71: cmovae   eax, dword ptr [esp + 0x14]
+    00012E76: push     ecx
+    00012E77: push     eax
+    00012E78: push     0x10053e8c  ; -> HEAD %s HTTP/1.0 <==
+    00012E7D: lea      eax, [esp + 0x26c]
+    00012E84: mov      dword ptr [esp + 0x46c], 0x100583b8
+    00012E8F: push     0x1ff
+    00012E94: push     eax
+    00012E95: mov      byte ptr [esp + 0x473], 0
+    00012E9D: call     dword ptr [0x10053318]
+    00012EA3: lea      ecx, [esp + 0x274]
+    00012EAA: add      esp, 0x14
+    00012EAD: lea      edx, [ecx + 1]
+    00012EB0: mov      al, byte ptr [ecx]
+    00012EB2: inc      ecx
+    00012EB3: test     al, al
+    00012EB5: jne      0x12eb0
+    00012EB7: sub      ecx, edx
+    00012EB9: lea      eax, [esp + 0x260]
+    00012EC0: push     ecx
+    00012EC1: push     eax
+    00012EC2: lea      ecx, [esp + 0xe8]
+    00012EC9: call     0x21ce0
+    00012ECE: lea      ecx, [esp + 0x460]
+    00012ED5: call     0x20390
+    00012EDA: lea      ebx, [ebx]
+    00012EE0: lea      ecx, [esp + 0x460]
+    00012EE7: call     0x20330
+    00012EEC: test     al, al
+    00012EEE: jne      0x12ee0
+    00012EF0: lea      ecx, [esp + 0xe0]
+    00012EF7: call     0x21a70
+    00012EFC: lea      ecx, [esp + 0xe0]
+    00012F03: call     0x22260
+    00012F08: cmp      dword ptr [esp + 0x28], 0x10
+    00012F0D: jb       0x12f18
+    00012F0F: push     dword ptr [esp + 0x14]
+    00012F13: call     esi
+    00012F15: add      esp, 4
+
+--- VA=0x00013C7C: push 0x10053a88  -> 0x10053A88 (GET /%s HTTP/1.1) ---
+  上下文:
+    00013C1C: adc      byte ptr [edx + 8], dh
+    00013C1F: push     dword ptr [ebp - 0x28]
+    00013C22: call     ebx
+    00013C24: add      esp, 4
+    00013C27: mov      byte ptr [ebp - 4], 3
+    00013C2B: cmp      dword ptr [ebp - 0x2c], 0x10
+    00013C2F: mov      dword ptr [ebp - 0x14], 0xf
+    00013C36: mov      dword ptr [ebp - 0x18], 0
+    00013C3D: mov      byte ptr [ebp - 0x28], 0
+    00013C41: jb       0x13c4b
+    00013C43: push     dword ptr [ebp - 0x40]
+    00013C46: call     ebx
+    00013C48: add      esp, 4
+    00013C4B: push     0x19000
+    00013C50: lea      eax, [ebp - 0x1b358]
+    00013C56: push     0
+    00013C58: push     eax
+    00013C59: call     0xdcb2
+    00013C5E: cmp      dword ptr [ebp - 0x5c], 0x10
+    00013C62: lea      ecx, [ebp - 0x70]
+    00013C65: lea      eax, [ebp - 0x88]
+    00013C6B: cmovae   ecx, dword ptr [ebp - 0x70]
+    00013C6F: cmp      dword ptr [ebp - 0x74], 0x10
+    00013C73: push     ecx
+    00013C74: cmovae   eax, dword ptr [ebp - 0x88]
+    00013C7B: push     eax
+    00013C7C: push     0x10053a88  ; -> GET /%s HTTP/1.1 <==
+    00013C81: lea      eax, [ebp - 0x1b358]
+    00013C87: push     0x18fff
+    00013C8C: push     eax
+    00013C8D: call     dword ptr [0x10053318]
+    00013C93: add      esp, 0x20
+    00013C96: mov      dword ptr [ebp - 0x2c], 0xf
+    00013C9D: lea      ecx, [ebp - 0x40]
+    00013CA0: mov      dword ptr [ebp - 0x30], 0
+    00013CA7: mov      byte ptr [ebp - 0x40], 0
+    00013CAB: push     9
+    00013CAD: push     0x10053778
+    00013CB2: call     0x4010
+    00013CB7: mov      byte ptr [ebp - 4], 6
+    00013CBB: xor      ecx, ecx
+    00013CBD: cmp      byte ptr [0x100535c0], cl
+    00013CC3: mov      eax, edi
+    00013CC5: mov      dword ptr [ebp - 0x14], 0xf
+    00013CCC: cmove    eax, ecx
+    00013CCF: mov      dword ptr [ebp - 0x18], 0
+    00013CD6: push     eax
+    00013CD7: push     0x100535c0
+    00013CDC: lea      ecx, [ebp - 0x28]
+    00013CDF: mov      byte ptr [ebp - 0x28], 0
+    00013CE3: call     0x4010
+    00013CE8: lea      eax, [ebp - 0x1b358]
+    00013CEE: mov      byte ptr [ebp - 4], 7
+    00013CF2: push     eax
+    00013CF3: push     0x10053b64
+    00013CF8: lea      eax, [ebp - 0x40]
+    00013CFB: push     eax
+    00013CFC: lea      eax, [ebp - 0x28]
+    00013CFF: push     0
+    00013D01: push     eax
+    00013D02: call     esi
+    00013D04: add      esp, 0x14
+    00013D07: cmp      dword ptr [ebp - 0x14], 0x10
+    00013D0B: jb       0x13d15
+    00013D0D: push     dword ptr [ebp - 0x28]
+    00013D10: call     ebx
+    00013D12: add      esp, 4
+    00013D15: mov      byte ptr [ebp - 4], 3
+
+--- VA=0x0002880A: push 0x1005cf28  -> 0x1005CF28 (POST / HTTP/1.1) ---
+  上下文:
+    000287AA: add      bh, al
+    000287AC: test     esp, esi
+
+--- VA=0x00028C20: push 0x1005cf28  -> 0x1005CF28 (POST / HTTP/1.1) ---
+  上下文:
+    00028BC0: add      byte ptr [eax], al
+    00028BC2: mov      dword ptr [ebp - 0xf4], 0x13
+    00028BCC: movzx    eax, word ptr [ecx + 8]
+    00028BD0: push     eax
+    00028BD1: movzx    eax, byte ptr [ecx + 4]
+    00028BD5: push     eax
+    00028BD6: movzx    eax, byte ptr [ecx + 5]
+    00028BDA: push     eax
+    00028BDB: movzx    eax, byte ptr [ecx + 6]
+    00028BDF: push     eax
+    00028BE0: movzx    eax, byte ptr [ecx + 7]
+    00028BE4: push     eax
+    00028BE5: lea      eax, [ebp - 0xe4]
+    00028BEB: push     0x100535d8
+    00028BF0: push     eax
+    00028BF1: call     dword ptr [0x10053354]
+    00028BF7: push     0x200
+    00028BFC: call     dword ptr [0x10053338]
+    00028C02: push     dword ptr [ebp - 0xf0]
+    00028C08: mov      esi, eax
+    00028C0A: lea      eax, [ebp - 0xe4]
+    00028C10: push     dword ptr [ebp - 0xec]
+    00028C16: mov      dword ptr [ebp - 0x18], esi
+    00028C19: push     dword ptr [ebp - 0xf4]
+    00028C1F: push     eax
+    00028C20: push     0x1005cf28  ; -> POST / HTTP/1.1 <==
+    00028C25: push     0x1ff
+    00028C2A: push     esi
+    00028C2B: call     dword ptr [0x10053318]
+    00028C31: mov      dword ptr [ebp - 4], 0
+    00028C38: add      esp, 0x48
+    00028C3B: mov      ecx, dword ptr [edi + 8]
+    00028C3E: push     eax
+    00028C3F: mov      edx, dword ptr [ecx]
+    00028C41: push     esi
+    00028C42: call     dword ptr [edx + 8]
+    00028C45: mov      ecx, dword ptr [edi + 8]
+    00028C48: lea      edx, [ebp - 0x2c]
+    00028C4B: push     dword ptr [ebp - 0xf4]
+    00028C51: push     edx
+    00028C52: mov      eax, dword ptr [ecx]
+    00028C54: call     dword ptr [eax + 8]
+    00028C57: mov      bl, 1
+    00028C59: mov      dword ptr [ebp - 4], 0xffffffff
+    00028C60: jmp      0x28c7c
+    00028C62: mov      eax, dword ptr [ebp - 0x30]
+    00028C65: mov      byte ptr [eax + 0x6d], 1
+    00028C69: mov      eax, 0x10028c6f
+    00028C6E: ret      
+    00028C6F: mov      bl, byte ptr [ebp - 0x11]
+    00028C72: mov      dword ptr [ebp - 4], 0xffffffff
+    00028C79: mov      esi, dword ptr [ebp - 0x18]
+    00028C7C: push     esi
+    00028C7D: call     dword ptr [0x100532f8]
+    00028C83: add      esp, 4
+    00028C86: mov      dword ptr [ebp - 0x4c], 0xf
+    00028C8D: lea      ecx, [ebp - 0x60]
+    00028C90: mov      dword ptr [ebp - 0x50], 0
+    00028C97: mov      byte ptr [ebp - 0x60], 0
+    00028C9B: push     0x15
+    00028C9D: push     0x1005a48c
+    00028CA2: call     0x4010
+    00028CA7: mov      dword ptr [ebp - 4], 2
+    00028CAE: xor      ecx, ecx
+    00028CB0: cmp      byte ptr [0x100535b4], cl
+    00028CB6: mov      eax, 9
+
+--- VA=0x0002AEBE: push 0x1005bd28  -> 0x1005BD28 (POST body fmt: <%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|...) ---
+  上下文:
+    0002AE5E: cmp      eax, 0x1006b540
+    0002AE63: adc      byte ptr [edi + 0xf], dl
+    0002AE66: mov      bh, 0x90
+    0002AE68: xchg     byte ptr [eax], al
+    0002AE6A: add      byte ptr [eax], al
+    0002AE6C: mov      ecx, dword ptr [eax + 0x7c]
+    0002AE6F: mov      eax, dword ptr [ebp - 0x40]
+    0002AE72: cmovae   ebx, dword ptr [0x1006b52c]
+    0002AE79: cmp      dword ptr [0x1006b528], 0x10
+    0002AE80: push     dword ptr [eax + 0x370]
+    0002AE86: cmovae   esi, dword ptr [0x1006b514]
+    0002AE8D: lea      eax, [ebp - 0x654]
+    0002AE93: push     edx
+    0002AE94: push     eax
+    0002AE95: lea      eax, [ebp - 0x230]
+    0002AE9B: push     eax
+    0002AE9C: push     ebx
+    0002AE9D: mov      ebx, dword ptr [ebp - 0x40]
+    0002AEA0: lea      eax, [ebp - 0x7a8]
+    0002AEA6: push     esi
+    0002AEA7: push     ecx
+    0002AEA8: push     dword ptr [ebx + 0x128]
+    0002AEAE: push     dword ptr [ebx + 0x124]
+    0002AEB4: push     0x1005bd20
+    0002AEB9: push     0x10054884
+    0002AEBE: push     0x1005bd28  ; -> POST body fmt: <%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|... <==
+    0002AEC3: push     0x103
+    0002AEC8: push     eax
+    0002AEC9: call     dword ptr [0x10053318]
+    0002AECF: add      esp, 0x40
+    0002AED2: mov      dword ptr [ebp - 0x124], 0xf
+    0002AEDC: lea      ecx, [ebp - 0x138]
+    0002AEE2: mov      dword ptr [ebp - 0x128], 0
+    0002AEEC: mov      byte ptr [ebp - 0x138], 0
+    0002AEF3: push     0xd
+    0002AEF5: push     0x10053f1c
+    0002AEFA: call     0x4010
+    0002AEFF: lea      ecx, [ebp - 0x7a8]
+    0002AF05: mov      byte ptr [ebp - 4], 2
+    0002AF09: mov      edi, dword ptr [0x10053174]
+    0002AF0F: lea      eax, [ebx + 0x2f8]
+    0002AF15: push     ecx
+    0002AF16: push     0x10053558
+    0002AF1B: lea      ecx, [ebp - 0x138]
+    0002AF21: push     ecx
+    0002AF22: push     0
+    0002AF24: push     eax
+    0002AF25: call     edi
+    0002AF27: mov      byte ptr [ebp - 4], 1
+    0002AF2B: add      esp, 0x14
+    0002AF2E: cmp      dword ptr [ebp - 0x124], 0x10
+    0002AF35: mov      esi, dword ptr [0x10053360]
+    0002AF3B: jb       0x2af48
+    0002AF3D: push     dword ptr [ebp - 0x138]
+    0002AF43: call     esi
+    0002AF45: add      esp, 4
+    0002AF48: cmp      byte ptr [ebp - 0x7a8], 0
+    0002AF4F: mov      dword ptr [ebp - 0x124], 0xf
+
+--- VA=0x0002BA53: push 0x1005be74  -> 0x1005BE74 (func:%s|kid:%u|sig1:%u|sig2:%u|res:%s) ---
+  上下文:
+
+--- VA=0x0002BD08: push 0x1005be74  -> 0x1005BE74 (func:%s|kid:%u|sig1:%u|sig2:%u|res:%s) ---
+  上下文:
+
+--- VA=0x0002CA2F: push 0x1005be74  -> 0x1005BE74 (func:%s|kid:%u|sig1:%u|sig2:%u|res:%s) ---
+  上下文:
+    0002C9CF: mov      edi, 0x858d1005
+    0002C9D4: sbb      al, 0xfa
+
+--- VA=0x0002CF02: push 0x1005be74  -> 0x1005BE74 (func:%s|kid:%u|sig1:%u|sig2:%u|res:%s) ---
+  上下文:
+    0002CEA2: dec      esp
+    0002CEA3: cld      
+
+--- VA=0x0002D55E: push 0x1005b7e0  -> 0x1005B7E0 (GET %s?%s HTTP/1.0 (copy1)) ---
+  上下文:
+    0002D4FE: je       0x2d4ff
+
+--- VA=0x0002D5AB: push 0x1005b8b0  -> 0x1005B8B0 (POST %s HTTP/1.1 (copy1)) ---
+  上下文:
+
+--- VA=0x0002D73B: push 0x1005b9c8  -> 0x1005B9C8 (GET %s?%s HTTP/1.0 (copy2)) ---
+  上下文:
+    0002D6DB: call     0x44cf0
+    0002D6E0: lea      eax, [ebp - 0x304]
+    0002D6E6: push     eax
+    0002D6E7: push     0x1005b9a8
+    0002D6EC: lea      eax, [ebp - 0x204]
+    0002D6F2: push     0xff
+    0002D6F7: push     eax
+    0002D6F8: call     esi
+    0002D6FA: add      esp, 0x14
+    0002D6FD: mov      byte ptr [ebp - 0x105], 0
+    0002D704: cmp      byte ptr [ebp - 0x17], 1
+    0002D708: jne      0x2d75d
+    0002D70A: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D711: lea      ecx, [ebp - 0xa4]
+    0002D717: lea      edx, [ebp - 0x204]
+    0002D71D: cmovae   ecx, dword ptr [ebp - 0xa4]
+    0002D724: lea      eax, [ebp - 0xbc]
+    0002D72A: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D731: push     edx
+    0002D732: cmovae   eax, dword ptr [ebp - 0xbc]
+    0002D739: push     ecx
+    0002D73A: push     eax
+    0002D73B: push     0x1005b9c8  ; -> GET %s?%s HTTP/1.0 (copy2) <==
+    0002D740: lea      eax, [ebp - 0x1b344]
+    0002D746: push     0x18fff
+    0002D74B: push     eax
+    0002D74C: call     esi
+    0002D74E: add      esp, 0x18
+    0002D751: mov      dword ptr [edi + 0x118], 3
+    0002D75B: jmp      0x2d7b4
+    0002D75D: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D764: lea      eax, [ebp - 0xa4]
+    0002D76A: lea      ecx, [ebp - 0xbc]
+    0002D770: cmovae   eax, dword ptr [ebp - 0xa4]
+    0002D777: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D77E: push     eax
+    0002D77F: cmovae   ecx, dword ptr [ebp - 0xbc]
+    0002D786: lea      eax, [ebp - 0x204]
+    0002D78C: push     eax
+    0002D78D: push     dword ptr [ebp - 0x94]
+    0002D793: lea      eax, [ebp - 0x1b344]
+    0002D799: push     ecx
+    0002D79A: push     0x1005ba98  ; -> POST %s HTTP/1.1 (copy2)
+    0002D79F: push     0x18fff
+    0002D7A4: push     eax
+    0002D7A5: call     esi
+    0002D7A7: add      esp, 0x1c
+    0002D7AA: mov      dword ptr [edi + 0x118], 4
+    0002D7B4: mov      esi, dword ptr [ebp - 0x48]
+    0002D7B7: push     0xd
+    0002D7B9: push     0x10053f1c
+    0002D7BE: lea      ecx, [ebp - 0x34]
+    0002D7C1: mov      dword ptr [ebp - 0x20], 0xf
+    0002D7C8: mov      dword ptr [ebp - 0x24], 0
+    0002D7CF: mov      byte ptr [ebp - 0x34], 0
+    0002D7D3: call     0x4010
+
+--- VA=0x0002D79A: push 0x1005ba98  -> 0x1005BA98 (POST %s HTTP/1.1 (copy2)) ---
+  上下文:
+    0002D73A: push     eax
+    0002D73B: push     0x1005b9c8  ; -> GET %s?%s HTTP/1.0 (copy2)
+    0002D740: lea      eax, [ebp - 0x1b344]
+    0002D746: push     0x18fff
+    0002D74B: push     eax
+    0002D74C: call     esi
+    0002D74E: add      esp, 0x18
+    0002D751: mov      dword ptr [edi + 0x118], 3
+    0002D75B: jmp      0x2d7b4
+    0002D75D: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D764: lea      eax, [ebp - 0xa4]
+    0002D76A: lea      ecx, [ebp - 0xbc]
+    0002D770: cmovae   eax, dword ptr [ebp - 0xa4]
+    0002D777: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D77E: push     eax
+    0002D77F: cmovae   ecx, dword ptr [ebp - 0xbc]
+    0002D786: lea      eax, [ebp - 0x204]
+    0002D78C: push     eax
+    0002D78D: push     dword ptr [ebp - 0x94]
+    0002D793: lea      eax, [ebp - 0x1b344]
+    0002D799: push     ecx
+    0002D79A: push     0x1005ba98  ; -> POST %s HTTP/1.1 (copy2) <==
+    0002D79F: push     0x18fff
+    0002D7A4: push     eax
+    0002D7A5: call     esi
+    0002D7A7: add      esp, 0x1c
+    0002D7AA: mov      dword ptr [edi + 0x118], 4
+    0002D7B4: mov      esi, dword ptr [ebp - 0x48]
+    0002D7B7: push     0xd
+    0002D7B9: push     0x10053f1c
+    0002D7BE: lea      ecx, [ebp - 0x34]
+    0002D7C1: mov      dword ptr [ebp - 0x20], 0xf
+    0002D7C8: mov      dword ptr [ebp - 0x24], 0
+    0002D7CF: mov      byte ptr [ebp - 0x34], 0
+    0002D7D3: call     0x4010
+    0002D7D8: lea      eax, [ebp - 0x1b344]
+    0002D7DE: mov      byte ptr [ebp - 4], 0x10
+    0002D7E2: push     eax
+    0002D7E3: push     0x1005bb84
+    0002D7E8: lea      eax, [ebp - 0x34]
+    0002D7EB: push     eax
+    0002D7EC: lea      eax, [ebp - 0x8c]
+    0002D7F2: push     0
+    0002D7F4: push     eax
+    0002D7F5: call     dword ptr [0x10053174]
+    0002D7FB: add      esp, 0x14
+    0002D7FE: mov      byte ptr [ebp - 4], 0xd
+    0002D802: cmp      dword ptr [ebp - 0x20], 0x10
+    0002D806: jb       0x2d814
+    0002D808: push     dword ptr [ebp - 0x34]
+    0002D80B: call     dword ptr [0x10053360]
+    0002D811: add      esp, 4
+    0002D814: lea      ecx, [ebp - 0x1b344]
+    0002D81A: lea      edx, [ecx + 1]
+    0002D81D: lea      ecx, [ecx]
+    0002D820: mov      al, byte ptr [ecx]
+    0002D822: inc      ecx
+    0002D823: test     al, al
+    0002D825: jne      0x2d820
+    0002D827: mov      eax, dword ptr [esi]
+    0002D829: sub      ecx, edx
+    0002D82B: push     ecx
+    0002D82C: lea      ecx, [ebp - 0x1b344]
+    0002D832: push     ecx
+    0002D833: mov      ecx, esi
+    0002D835: call     dword ptr [eax + 8]
+
+--- VA=0x0002EFF3: push 0x1005b338  -> 0x1005B338 (log: kid:%u|sip:%s|sig1:%u|sig2:%u|seares:%s|...|resserver:%s|ressucway:%d) ---
+  上下文:
+    0002EF93: push     dword ptr [esi + 0xfc]
+    0002EF99: movzx    eax, byte ptr [esi + 0x12c]
+    0002EFA0: push     dword ptr [esi + 0xf8]
+    0002EFA6: push     dword ptr [esi + 0x224]
+    0002EFAC: push     dword ptr [ecx + 0x88]
+    0002EFB2: push     eax
+    0002EFB3: push     dword ptr [ecx + 0x28]
+    0002EFB6: lea      eax, [ebp - 0xec]
+    0002EFBC: push     dword ptr [ebp - 0x28]
+    0002EFBF: push     dword ptr [ecx + 0x90]
+    0002EFC5: push     dword ptr [ecx + 0x94]
+    0002EFCB: push     dword ptr [esi + 0x74]
+    0002EFCE: push     dword ptr [esi + 0x70]
+    0002EFD1: push     dword ptr [esi + 0x24]
+    0002EFD4: push     dword ptr [esi + 0x20]
+    0002EFD7: push     dword ptr [esi + 0x64]
+    0002EFDA: push     dword ptr [esi + 8]
+    0002EFDD: push     dword ptr [esi + 0x5c]
+    0002EFE0: push     0x1005b330
+    0002EFE5: push     dword ptr [esi + 0x128]
+    0002EFEB: push     dword ptr [esi + 0x124]
+    0002EFF1: push     eax
+    0002EFF2: push     edx
+    0002EFF3: push     0x1005b338  ; -> log: kid:%u|sip:%s|sig1:%u|sig2:%u|seares:%s|...|resserver:%s|ressucway:%d <==
+    0002EFF8: lea      eax, [ebp - 0x4f0]
+    0002EFFE: push     0x1ff
+    0002F003: push     eax
+    0002F004: call     dword ptr [0x10053318]
+    0002F00A: mov      ebx, dword ptr [0x10053360]
+    0002F010: add      esp, 0x78
+    0002F013: cmp      dword ptr [ebp - 0x2c], 0x10
+    0002F017: jb       0x2f021
+    0002F019: push     dword ptr [ebp - 0x40]
+    0002F01C: call     ebx
+    0002F01E: add      esp, 4
+    0002F021: mov      dword ptr [ebp - 4], 0xffffffff
+    0002F028: cmp      dword ptr [ebp - 0x10], 0x10
+    0002F02C: mov      dword ptr [ebp - 0x2c], 0xf
+    0002F033: mov      dword ptr [ebp - 0x30], 0
+    0002F03A: mov      byte ptr [ebp - 0x40], 0
+    0002F03E: jb       0x2f048
+    0002F040: push     dword ptr [ebp - 0x24]
+    0002F043: call     ebx
+    0002F045: add      esp, 4
+    0002F048: cmp      byte ptr [ebp - 0x4f0], 0
+    0002F04F: mov      dword ptr [ebp - 0x2c], 0xf
+    0002F056: mov      dword ptr [ebp - 0x30], 0
+    0002F05D: mov      byte ptr [ebp - 0x40], 0
+    0002F061: jne      0x2f067
+    0002F063: xor      ecx, ecx
+    0002F065: jmp      0x2f079
+    0002F067: lea      ecx, [ebp - 0x4f0]
+    0002F06D: lea      edx, [ecx + 1]
+    0002F070: mov      al, byte ptr [ecx]
+    0002F072: inc      ecx
+    0002F073: test     al, al
+    0002F075: jne      0x2f070
+    0002F077: sub      ecx, edx
+    0002F079: push     ecx
+    0002F07A: lea      eax, [ebp - 0x4f0]
+    0002F080: push     eax
+    0002F081: lea      ecx, [ebp - 0x40]
+    0002F084: call     0x4010
+    0002F089: mov      dword ptr [ebp - 4], 1
+
+--- VA=0x00035A0E: push 0x1005ca98  -> 0x1005CA98 (GET %s HTTP/1.1) ---
+  上下文:
+    000359AE: adc      cl, ch
+    000359B0: jmp      0x359b2
+    000359B2: add      byte ptr [eax], al
+    000359B4: cmp      byte ptr [esi + 0x4e], 0
+    000359B8: je       0x359c7
+    000359BA: cmp      dword ptr [ecx + 0x20], 0x10
+    000359BE: lea      edi, [ecx + 0xc]
+    000359C1: jb       0x359e2
+    000359C3: mov      edi, dword ptr [edi]
+    000359C5: jmp      0x359e2
+    000359C7: lea      eax, [ebp - 0x50]
+    000359CA: push     eax
+    000359CB: call     0x8e40
+    000359D0: mov      byte ptr [ebp - 4], 4
+    000359D4: or       dword ptr [ebp - 0x34], 1
+    000359D8: cmp      dword ptr [eax + 0x14], 0x10
+    000359DC: jb       0x359e0
+    000359DE: mov      eax, dword ptr [eax]
+    000359E0: mov      edi, eax
+    000359E2: cmp      byte ptr [esi + 0x4e], 0
+    000359E6: je       0x359f0
+    000359E8: mov      eax, dword ptr [esi + 0x2c]
+    000359EB: add      eax, 0x24
+    000359EE: jmp      0x35a00
+    000359F0: mov      ecx, dword ptr [esi + 0x2c]
+    000359F3: lea      eax, [ebp - 0x30]
+    000359F6: push     eax
+    000359F7: call     0x8f30
+    000359FC: or       dword ptr [ebp - 0x34], 2
+    00035A00: cmp      dword ptr [eax + 0x14], 0x10
+    00035A04: jb       0x35a08
+    00035A06: mov      eax, dword ptr [eax]
+    00035A08: push     dword ptr [ebp - 0x38]
+    00035A0B: push     ebx
+    00035A0C: push     edi
+    00035A0D: push     eax
+    00035A0E: push     0x1005ca98  ; -> GET %s HTTP/1.1 <==
+    00035A13: lea      eax, [ebp - 0x640]
+    00035A19: push     0x1ff
+    00035A1E: push     eax
+    00035A1F: call     dword ptr [0x10053318]
+    00035A25: mov      eax, dword ptr [ebp - 0x34]
+    00035A28: add      esp, 0x1c
+    00035A2B: mov      edi, dword ptr [0x10053360]
+    00035A31: test     al, 2
+    00035A33: je       0x35a5e
+    00035A35: and      eax, 0xfffffffd
+    00035A38: cmp      dword ptr [ebp - 0x1c], 0x10
+    00035A3C: mov      dword ptr [ebp - 0x34], eax
+    00035A3F: jb       0x35a4c
+    00035A41: push     dword ptr [ebp - 0x30]
+    00035A44: call     edi
+    00035A46: mov      eax, dword ptr [ebp - 0x34]
+    00035A49: add      esp, 4
+    00035A4C: mov      dword ptr [ebp - 0x1c], 0xf
+    00035A53: mov      dword ptr [ebp - 0x20], 0
+    00035A5A: mov      byte ptr [ebp - 0x30], 0
+    00035A5E: mov      dword ptr [ebp - 4], 1
+    00035A65: test     al, 1
+    00035A67: je       0x35a7d
+    00035A69: and      eax, 0xfffffffe
+    00035A6C: cmp      dword ptr [ebp - 0x3c], 0x10
+    00035A70: mov      dword ptr [ebp - 0x34], eax
+    00035A73: jb       0x35a7d
+    00035A75: push     dword ptr [ebp - 0x50]
+    00035A78: call     edi
+    00035A7A: add      esp, 4
+    00035A7D: lea      edx, [ebp - 0x640]
+    00035A83: lea      ecx, [edx + 1]
+    00035A86: mov      al, byte ptr [edx]
+    00035A88: inc      edx
+    00035A89: test     al, al
+    00035A8B: jne      0x35a86
+    00035A8D: sub      edx, ecx
+    00035A8F: mov      ecx, dword ptr [esi + 8]
+    00035A92: push     edx
+    00035A93: lea      edx, [ebp - 0x640]
+    00035A99: push     edx
+    00035A9A: mov      eax, dword ptr [ecx]
+    00035A9C: call     dword ptr [eax + 8]
+    00035A9F: cmp      byte ptr [esi + 0x4e], 0
+    00035AA3: jne      0x35ab5
+    00035AA5: cmp      byte ptr [esi + 0x4f], 0
+    00035AA9: jne      0x35abb
+    00035AAB: mov      eax, dword ptr [esi + 0x18]
+
+--- VA=0x000369D8: push 0x1005c820  -> 0x1005C820 (GET %s HTTP/1.1) ---
+  上下文:
+
+--- VA=0x000375C1: push 0x1005c678  -> 0x1005C678 (GET %s HTTP/1.1 (peer?)) ---
+  上下文:
+    00037561: add      byte ptr [eax], dl
+    00037563: add      byte ptr [eax], al
+    00037565: mov      dword ptr [ebp - 0x24f8], 0
+    0003756F: mov      dword ptr [ebp - 0x24f4], 0
+    00037579: mov      dword ptr [ebp - 0x24f0], 0
+    00037583: call     dword ptr [0x1005308c]
+    00037589: cmp      dword ptr [ebp - 0x3c], 0x10
+    0003758D: mov      dword ptr [ebp - 0x24ec], eax
+    00037593: lea      eax, [ebp - 0x50]
+    00037596: mov      dword ptr [ebp - 0x251c], 0x100583b8
+    000375A0: mov      dword ptr [ebp - 0x24e8], edi
+    000375A6: mov      byte ptr [ebp - 0x2dd], 0
+    000375AD: push     dword ptr [ebp + 8]
+    000375B0: cmovae   eax, dword ptr [ebp - 0x50]
+    000375B4: push     dword ptr [ebp - 0x20]
+    000375B7: push     eax
+    000375B8: push     dword ptr [ebp - 0x1c]
+    000375BB: lea      eax, [ebp - 0x4dc]
+    000375C1: push     0x1005c678  ; -> GET %s HTTP/1.1 (peer?) <==
+    000375C6: push     0x1ff
+    000375CB: push     eax
+    000375CC: call     dword ptr [0x10053318]
+    000375D2: lea      ecx, [ebp - 0x4dc]
+    000375D8: add      esp, 0x1c
+    000375DB: lea      edx, [ecx + 1]
+    000375DE: mov      edi, edi
+    000375E0: mov      al, byte ptr [ecx]
+    000375E2: inc      ecx
+    000375E3: test     al, al
+    000375E5: jne      0x375e0
+    000375E7: mov      eax, dword ptr [edi]
+    000375E9: sub      ecx, edx
+    000375EB: push     ecx
+    000375EC: lea      ecx, [ebp - 0x4dc]
+    000375F2: push     ecx
+    000375F3: mov      ecx, edi
+    000375F5: call     dword ptr [eax + 8]
+    000375F8: lea      ecx, [ebp - 0x251c]
+    000375FE: call     0x20390
+    00037603: mov      ebx, eax
+    00037605: cmp      ebx, 0xc8
+    0003760B: je       0x37660
+    0003760D: cmp      ebx, 0xce
+    00037613: je       0x37660
+    00037615: push     0x7f
+    00037617: lea      eax, [ebp - 0x150]
+    0003761D: push     0x1005c4c0
+    00037622: push     eax
+    00037623: call     dword ptr [0x10053304]
+    00037629: add      esp, 0xc
+    0003762C: mov      byte ptr [ebp - 0xd1], 0
+    00037633: lea      eax, [ebp - 0x2dc]
+    00037639: mov      dword ptr [ebp - 0xd0], ebx
+    0003763F: mov      ecx, 0x21
+    00037644: lea      esi, [ebp - 0x150]
+    0003764A: lea      edi, [ebp - 0x2dc]
+    00037650: push     0x10060a40
+    00037655: rep movsd dword ptr es:[edi], dword ptr [esi]
+    00037657: push     eax
+    00037658: call     0x4d9d6
+    0003765D: lea      ecx, [ecx]
+
+--- VA=0x00038A7D: push 0x1005cf28  -> 0x1005CF28 (POST / HTTP/1.1) ---
+  上下文:
+    00038A1D: pop      ebp
+    00038A1E: ret      0x10
+    00038A21: int3     
+    00038A22: int3     
+    00038A23: int3     
+    00038A24: int3     
+    00038A25: int3     
+    00038A26: int3     
+    00038A27: int3     
+    00038A28: int3     
+    00038A29: int3     
+    00038A2A: int3     
+    00038A2B: int3     
+    00038A2C: int3     
+    00038A2D: int3     
+    00038A2E: int3     
+    00038A2F: int3     
+    00038A30: push     4
+    00038A32: push     0x1005cfe0
+    00038A37: push     ecx
+    00038A38: call     dword ptr [0x100532dc]
+    00038A3E: add      esp, 0xc
+    00038A41: neg      eax
+    00038A43: sbb      eax, eax
+    00038A45: inc      eax
+    00038A46: ret      
+    00038A47: int3     
+    00038A48: int3     
+    00038A49: int3     
+    00038A4A: int3     
+    00038A4B: int3     
+    00038A4C: int3     
+    00038A4D: int3     
+    00038A4E: int3     
+    00038A4F: int3     
+    00038A50: push     dword ptr [ecx + 8]
+    00038A53: push     dword ptr [ecx + 0xc]
+    00038A56: push     dword ptr [ecx + 4]
+    00038A59: push     0x1005cf80
+    00038A5E: push     0x1ff
+    00038A63: push     edx
+    00038A64: call     dword ptr [0x10053318]
+    00038A6A: add      esp, 0x18
+    00038A6D: ret      
+    00038A6E: int3     
+    00038A6F: int3     
+    00038A70: push     dword ptr [ecx + 8]
+    00038A73: lea      eax, [ecx + 0x14]
+    00038A76: push     dword ptr [ecx + 0xc]
+    00038A79: push     dword ptr [ecx + 4]
+    00038A7C: push     eax
+    00038A7D: push     0x1005cf28  ; -> POST / HTTP/1.1 <==
+    00038A82: push     0x1ff
+    00038A87: push     edx
+    00038A88: call     dword ptr [0x10053318]
+    00038A8E: add      esp, 0x1c
+    00038A91: ret      
+    00038A92: int3     
+    00038A93: int3     
+    00038A94: int3     
+    00038A95: int3     
+    00038A96: int3     
+    00038A97: int3     
+    00038A98: int3     
+    00038A99: int3     
+    00038A9A: int3     
+    00038A9B: int3     
+    00038A9C: int3     
+    00038A9D: int3     
+    00038A9E: int3     
+    00038A9F: int3     
+    00038AA0: push     ebp
+    00038AA1: mov      ebp, esp
+    00038AA3: mov      eax, 0x2910
+    00038AA8: call     0x4dac0
+    00038AAD: push     ebx
+    00038AAE: lea      eax, [ebp - 0x2910]
+    00038AB4: mov      dword ptr [ebp - 4], edx
+    00038AB7: push     esi
+    00038AB8: dec      eax
+    00038AB9: mov      ebx, ecx
+    00038ABB: push     edi
+    00038ABC: mov      dword ptr [ebp - 8], eax
+    00038ABF: nop      
+    00038AC0: mov      edi, dword ptr [ebp - 8]
+    00038AC3: xor      esi, esi
+    00038AC5: mov      edx, dword ptr [ebx]
+    00038AC7: lea      eax, [edi + 1]
+    00038ACA: push     1
+    00038ACC: add      eax, esi
+    00038ACE: mov      ecx, ebx
+    00038AD0: push     eax
+    00038AD1: call     dword ptr [edx + 4]
+    00038AD4: inc      esi
+    00038AD5: cmp      byte ptr [edi + esi], 0xa
+    00038AD9: je       0x38ae3
+    00038ADB: cmp      esi, 0x2800
+    00038AE1: jb       0x38ac5
+    00038AE3: mov      edi, dword ptr [0x100532dc]
+    00038AE9: cmp      esi, 0x2800
+    00038AEF: jae      0x38bf2
+    00038AF5: push     0xf
+    00038AF7: lea      eax, [ebp - 0x2910]
+    00038AFD: mov      byte ptr [ebp + esi - 0x2910], 0
+    00038B05: push     0x10053700
+    00038B0A: push     eax
+    00038B0B: call     edi
+    00038B0D: add      esp, 0xc
+    00038B10: test     eax, eax
+    00038B12: jne      0x38b3a
+    00038B14: mov      eax, dword ptr [ebp - 4]
+    00038B17: add      eax, 4
+    00038B1A: push     eax

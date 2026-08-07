@@ -1,0 +1,331 @@
+== KwMV.dll ==
+ImageBase=0x10000000  SizeOfImage=0x00073000
+  sec .text    VA=0x00001000 VSize=0x000512DF Raw=0x00000400 RawSz=0x00051400
+  sec .rdata   VA=0x00053000 VSize=0x000155D6 Raw=0x00051800 RawSz=0x00015600
+  sec .data    VA=0x00069000 VSize=0x00002908 Raw=0x00066E00 RawSz=0x00000A00
+  sec .rsrc    VA=0x0006C000 VSize=0x00000730 Raw=0x00067800 RawSz=0x00000800
+  sec .reloc   VA=0x0006D000 VSize=0x000050D4 Raw=0x00068000 RawSz=0x00005200
+
+== 关键字符串 (RVA + VA + 内容) ==
+  RVA=0x00053684 VA=0x10053684  'Peer'
+  RVA=0x00053778 VA=0x10053778  'P2PClient'
+  RVA=0x000537B0 VA=0x100537B0  'P2Pserver'
+  RVA=0x000537EC VA=0x100537EC  'Starting P2P Server'
+  RVA=0x00053818 VA=0x10053818  'SearchServer'
+  RVA=0x00053844 VA=0x10053844  'CP2PClient'
+  RVA=0x00053A88 VA=0x10053A88  'GET /%s HTTP/1.1'
+  RVA=0x00053A9A VA=0x10053A9A  'Host: %s'
+  RVA=0x00053D20 VA=0x10053D20  'KwP2PDLL'
+  RVA=0x00053D60 VA=0x10053D60  'p2p.log'
+  RVA=0x00053DE0 VA=0x10053DE0  'P2P_KWMV_MSG'
+  RVA=0x00053E8C VA=0x10053E8C  'HEAD %s HTTP/1.0'
+  RVA=0x00053E9E VA=0x10053E9E  'Host: %s'
+  RVA=0x00053F40 VA=0x10053F40  'GET / HTTP/1.0'
+  RVA=0x00053F50 VA=0x10053F50  'Host: %s'
+  RVA=0x000540F0 VA=0x100540F0  '|uid:%u|sip:%s|server:%s|conn:%d|conntm:%d|readtm:%d|datalen:%d|band:%d|error:%d|'
+  RVA=0x000546E0 VA=0x100546E0  'P2PClient::loadsettings switch to mcache directory'
+  RVA=0x000547A8 VA=0x100547A8  'CP2PInterface'
+  RVA=0x000547DC VA=0x100547DC  'ResSeaPort'
+  RVA=0x000547E8 VA=0x100547E8  'ResSeaSvr'
+  RVA=0x00054824 VA=0x10054824  '%s|%u|%u'
+  RVA=0x00054928 VA=0x10054928  '|uid:%u|hip:%s|sip:%s|file_count:%u|keep_per:%.0f|cur_per:%.0f|max_size:%u|cur_size:%.0f|'
+  RVA=0x00054A08 VA=0x10054A08  'p2pclientStart'
+  RVA=0x00058560 VA=0x10058560  'PassiveConn, Peer ID:%u'
+  RVA=0x00058578 VA=0x10058578  'PassiveConn, Peer ID:%u Succ'
+  RVA=0x00058598 VA=0x10058598  'PassiveConn, Peer ID:%u Fail'
+  RVA=0x000585B8 VA=0x100585B8  'Nat Punch, Peer IP:%s'
+  RVA=0x00058848 VA=0x10058848  'Connect peer failed'
+  RVA=0x00059458 VA=0x10059458  'POST %s HTTP/1.1'
+  RVA=0x00059508 VA=0x10059508  'HTTP/1.1 200 OK'
+  RVA=0x000599C4 VA=0x100599C4  'Remote peer close socket'
+  RVA=0x00059B84 VA=0x10059B84  '2012KwP2PDLL'
+  RVA=0x00059DD9 VA=0x10059DD9  '<Tracker>deliver.kuwo.cn</Tracker>'
+  RVA=0x00059EA3 VA=0x10059EA3  '<ResUpSvr>deliver.kuwo.cn</ResUpSvr>'
+  RVA=0x00059EE2 VA=0x10059EE2  '<ResSeaSvr>deliver.kuwo.cn</ResSeaSvr>'
+  RVA=0x00059F09 VA=0x10059F09  '<ResSeaPort>80</ResSeaPort>'
+  RVA=0x0005A1F0 VA=0x1005A1F0  'sessiontm=%d, udppeer=%d, tcppeer=%d, udpconn=%d, tcpconn=%d, udpeff=%d, tcpeff=%d'
+  RVA=0x0005A2D0 VA=0x1005A2D0  'total peer effectiveness is bad, %f'
+  RVA=0x0005A2F4 VA=0x1005A2F4  'set next task use tcp peer'
+  RVA=0x0005A310 VA=0x1005A310  'set p2p network env bad flag'
+  RVA=0x0005A330 VA=0x1005A330  'set p2p network env good flag'
+  RVA=0x0005A44C VA=0x1005A44C  'PeerConnectTimeOut'
+  RVA=0x0005A48C VA=0x1005A48C  'CDownloadPeerTransfer'
+  RVA=0x0005A4AC VA=0x1005A4AC  ' Peer ID(%u), '
+  RVA=0x0005A4C4 VA=0x1005A4C4  'DownloadPeerTransfer'
+  RVA=0x0005A4E4 VA=0x1005A4E4  ' Peer ID(%u), '
+  RVA=0x0005A504 VA=0x1005A504  ' Peer ID(%u), '
+  RVA=0x0005A528 VA=0x1005A528  ' Peer ID(%u), '
+  RVA=0x0005A54E VA=0x1005A54E  ' Peer ID(%u), '
+  RVA=0x0005A56E VA=0x1005A56E  'Bitmap Peer ID(%u), '
+  RVA=0x0005A59A VA=0x1005A59A  ' Peer ID(%u), '
+  RVA=0x0005A5D0 VA=0x1005A5D0  ' Peer ID(%u), '
+  RVA=0x0005A60C VA=0x1005A60C  'CDownloadPeerTransfer::__RequestProc'
+  RVA=0x0005A63A VA=0x1005A63A  'Peer(%u)'
+  RVA=0x0005A656 VA=0x1005A656  'Peer(%u)'
+  RVA=0x0005A67B VA=0x1005A67B  'Peer(%u)'
+  RVA=0x0005A740 VA=0x1005A740  'PeerTransfer Stopped for limit.'
+  RVA=0x0005A7B8 VA=0x1005A7B8  'P2PRequest:%8x %2d\tPos:'
+  RVA=0x0005A8C4 VA=0x1005A8C4  'PreClose In Peer ID(%u)'
+  RVA=0x0005A8F0 VA=0x1005A8F0  'Kill In Peer ID(%u)'
+  RVA=0x0005A968 VA=0x1005A968  '|PeerInfo:'
+  RVA=0x0005A9E4 VA=0x1005A9E4  'P2PDownTask'
+  RVA=0x0005ADAA VA=0x1005ADAA  ', Peer'
+  RVA=0x0005ADD2 VA=0x1005ADD2  ', Peer'
+  RVA=0x0005AEC0 VA=0x1005AEC0  'P2P '
+  RVA=0x0005AECE VA=0x1005AECE  'Peer(%u)'
+  RVA=0x0005B030 VA=0x1005B030  'kid:%u|sip:%s|sig1:%u|sig2:%u|total:%u|local:%u|rcvpack:%u|rcvduppack:%u|peerpack:%u|serpack:%u|seatm:%u|down5tm:%u|sessiontm:%d|downres:%s|fileerr:%d|avedis:%f|maxdis:%u|fpackerr:%d|errpacks:%u|numser:%u|numserconn:%u|ptn:%u|filetype:%u|freason:%u|usedp:%u|discardp:%u|maxlivep:%u|chkempty:%u|nconn:%u|nopack:%u|tooslow:%u|neterr:%u|complete:%u|except:%u|conn:%u|slow:%u|taskt:%u|stopstatus:%u|searcherr:%u|down5:%u|towarned:%u|useurl:%d|httpmode:%d|mode:%d|nat:%d|snet:%d|peer:%d,%d,%d,%d,%d|con:%d,%d,%d,%d,%d|cok:%d,%d,%d,%d,%d|down:%d,%d,%d,%d,%d'
+  RVA=0x0005B270 VA=0x1005B270  'LogPeerInfo_V1'
+  RVA=0x0005B280 VA=0x1005B280  'P2PLOG'
+  RVA=0x0005B2E8 VA=0x1005B2E8  'kid:%u|sig1:%u|sig2:%u|t_session:%d|%s:%s|searcherr:%u|ptn:%u|mode:%d'
+  RVA=0x0005B338 VA=0x1005B338  'kid:%u|sip:%s|sig1:%u|sig2:%u|seares:%s|seatm:%u|peernum:%u|usedp:%u|nconn:%u|tooslow:%u|servtm:%u|servpeer:%u|peerpack:%u|serpack:%u|sestm:%d|total:%u|filetype:%u|down5:%u|mode:%u|stopstatus:%u|searcherr:%u|towarned:%u|useurl:%d|httpmode:%d|resserver:%s|ressuccsvr:%s|ressucway:%d|'
+  RVA=0x0005B454 VA=0x1005B454  'P2P_DOWN_FILE'
+  RVA=0x0005B518 VA=0x1005B518  '|kid:%u|sip:%s|sig1:%u|sig2:%u|filetype:%u|mode:%u|stopstatus:%u|searcherr:%u|tmwarned:%u|'
+  RVA=0x0005B648 VA=0x1005B648  '%u, Peer'
+  RVA=0x0005B66C VA=0x1005B66C  'Peer'
+  RVA=0x0005B688 VA=0x1005B688  'Peer'
+  RVA=0x0005B6B2 VA=0x1005B6B2  'Peer'
+  RVA=0x0005B6DA VA=0x1005B6DA  'Peer'
+  RVA=0x0005B7E0 VA=0x1005B7E0  'GET %s?%s HTTP/1.0'
+  RVA=0x0005B7F4 VA=0x1005B7F4  'Host: deliver.kuwo.cn'
+  RVA=0x0005B8B0 VA=0x1005B8B0  'POST %s HTTP/1.1'
+  RVA=0x0005B8C2 VA=0x1005B8C2  'Host: deliver.kuwo.cn'
+  RVA=0x0005B9C8 VA=0x1005B9C8  'GET %s?%s HTTP/1.0'
+  RVA=0x0005B9DC VA=0x1005B9DC  'Host: deliver.kuwo.cn'
+  RVA=0x0005BA98 VA=0x1005BA98  'POST %s HTTP/1.1'
+  RVA=0x0005BAAA VA=0x1005BAAA  'Host: deliver.kuwo.cn'
+  RVA=0x0005BD28 VA=0x1005BD28  '<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|<uip:%s>|<new>|<nat:%u>|<flags:%u><speer>|<ipdeny:no>%s|<loginid:%s>'
+  RVA=0x0005BE74 VA=0x1005BE74  'func:%s|kid:%u|sig1:%u|sig2:%u|res:%s'
+  RVA=0x0005BF62 VA=0x1005BF62  'Peer'
+  RVA=0x0005BF7C VA=0x1005BF7C  'Peer'
+  RVA=0x0005BF98 VA=0x1005BF98  'Peer'
+  RVA=0x0005BFB4 VA=0x1005BFB4  'Peer'
+  RVA=0x0005BFD0 VA=0x1005BFD0  'Peer'
+  RVA=0x0005C0C2 VA=0x1005C0C2  'peer'
+  RVA=0x0005C0D7 VA=0x1005C0D7  'peer'
+  RVA=0x0005C382 VA=0x1005C382  'peer'
+  RVA=0x0005C678 VA=0x1005C678  'GET %s HTTP/1.1'
+  RVA=0x0005C689 VA=0x1005C689  'Host: %s'
+  RVA=0x0005C820 VA=0x1005C820  'GET %s HTTP/1.1'
+  RVA=0x0005C831 VA=0x1005C831  'Host: %s'
+  RVA=0x0005CA98 VA=0x1005CA98  'GET %s HTTP/1.1'
+  RVA=0x0005CAA9 VA=0x1005CAA9  'Host: %s'
+  RVA=0x0005CF04 VA=0x1005CF04  'Host: %s'
+  RVA=0x0005CF10 VA=0x1005CF10  'HTTP/1.1'
+  RVA=0x0005CF1C VA=0x1005CF1C  'HTTP/1.1 %d'
+  RVA=0x0005CF28 VA=0x1005CF28  'POST / HTTP/1.1'
+  RVA=0x0005CF39 VA=0x1005CF39  'Host: %s'
+  RVA=0x0005CF80 VA=0x1005CF80  'HTTP/1.1 200 OK'
+  RVA=0x0005D2FC VA=0x1005D2FC  'P2PMD5'
+  RVA=0x0005D446 VA=0x1005D446  ':%u, Peer:%u'
+  RVA=0x0005D584 VA=0x1005D584  'peer or unkown'
+  RVA=0x0005D870 VA=0x1005D870  'Open, cid:%s, path:%s, mapfilepath:%s, mode:%s'
+  RVA=0x0005DE74 VA=0x1005DE74  'Reset:%d|kid:%u|hip:%s|sip:%s|natt:%d'
+  RVA=0x0005DEB0 VA=0x1005DEB0  'kid:%u|hip:%s|sip:%s|natt:%d|starttm:%d|endtm:%d|packnum:%d|fexist:%d|sig1:%u|sig2:%u|index:%u|ip:%s|close:%s'
+  RVA=0x0005E1BC VA=0x1005E1BC  'The Version Between Peers Is Not Compatible'
+  RVA=0x00066429 VA=0x10066429  'StartP2P'
+  RVA=0x00066432 VA=0x10066432  'StartP2P_V1'
+  RVA=0x0006643E VA=0x1006643E  'StopP2P'
+  RVA=0x00068476 VA=0x10068476  '?LogP2PLWActMsg@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0PBD@Z'
+  RVA=0x00069570 VA=0x10069570  '.?AVCDownloadPeerTransfer@@'
+
+== .text 中引用这些字符串 VA 的指令 ==
+扫描 .text (size=0x512DF) 寻找 push/mov 立即数引用...
+找到 167 处原始 4 字节匹配，反汇编确认...
+确认引用 163 处：
+
+--- 引用 VA=0x000091A8  -> 字符串 VA=0x1005A968 ('|PeerInfo:') ---
+    000091A7: push 0x1005a968
+    上下文:
+      00009168: add      al, 0x10
+      0000916A: mov      eax, dword ptr fs:[0]
+      00009170: push     eax
+      00009171: mov      dword ptr fs:[0], esp
+      00009178: sub      esp, 0x50
+      0000917B: push     ebx
+      0000917C: push     esi
+      0000917D: push     edi
+      0000917E: mov      edi, ecx
+      00009180: lea      ecx, [ebp - 0x10]
+      00009183: push     edi
+      00009184: call     dword ptr [0x1005314c]
+      0000918A: mov      dword ptr [ebp - 4], 0
+      00009191: mov      eax, dword ptr [edi + 4]
+      00009194: cmp      eax, dword ptr [edi + 8]
+      00009197: jne      0x91a5
+      00009199: mov      eax, dword ptr [edi + 0x10]
+      0000919C: cmp      eax, dword ptr [edi + 0x14]
+      0000919F: je       0x92f6
+      000091A5: push     0xa
+      000091A7: push     0x1005a968  ; -> '|PeerInfo:' <==
+      000091AC: lea      ecx, [ebp - 0x40]
+      000091AF: mov      dword ptr [ebp - 0x2c], 0xf
+      000091B6: mov      dword ptr [ebp - 0x30], 0
+      000091BD: mov      byte ptr [ebp - 0x40], 0
+      000091C1: call     0x4010
+      000091C6: mov      byte ptr [ebp - 4], 1
+      000091CA: mov      esi, dword ptr [edi + 4]
+      000091CD: mov      ebx, dword ptr [0x10053360]
+      000091D3: cmp      esi, dword ptr [edi + 8]
+      000091D6: je       0x9232
+      000091D8: cmp      dword ptr [esi + 0x18], 0x10
+      000091DC: jb       0x91e3
+      000091DE: mov      eax, dword ptr [esi + 4]
+      000091E1: jmp      0x91e6
+      000091E3: lea      eax, [esi + 4]
+      000091E6: push     dword ptr [esi + 0x24]
+      000091E9: push     dword ptr [esi + 0x20]
+      000091EC: push     dword ptr [esi + 0x1c]
+      000091EF: push     eax
+      000091F0: push     dword ptr [esi]
+      000091F2: lea      eax, [ebp - 0x58]
+      000091F5: push     0x1005a974
+      000091FA: push     eax
+      000091FB: call     dword ptr [0x10053130]
+      00009201: add      esp, 0x1c
+      00009204: push     -1
+      00009206: push     0
+      00009208: lea      eax, [ebp - 0x58]
+      0000920B: mov      byte ptr [ebp - 4], 2
+      0000920F: push     eax
+      00009210: lea      ecx, [ebp - 0x40]
+      00009213: call     0x35f0
+      00009218: mov      byte ptr [ebp - 4], 1
+      0000921C: cmp      dword ptr [ebp - 0x44], 0x10
+
+--- 引用 VA=0x0000C5B2  -> 字符串 VA=0x1005DEB0 ('kid:%u|hip:%s|sip:%s|natt:%d|starttm:%d|endtm:%d|packnum:%d|fexist:%d|sig1:%u|sig2:%u|index:%u|ip:%s|close:%s') ---
+    0000C5B1: push 0x1005deb0
+    上下文:
+      0000C572: push     dword ptr [ebp - 0x1c]
+      0000C575: mov      esi, dword ptr [eax + 0x7c]
+      0000C578: mov      eax, dword ptr [edi + 0x2c]
+      0000C57B: push     dword ptr [ebp - 0x28]
+      0000C57E: push     dword ptr [eax + 0x60]
+      0000C581: push     dword ptr [eax + 0x5c]
+      0000C584: push     dword ptr [eax + 0x58]
+      0000C587: push     dword ptr [eax + 0x50]
+      0000C58A: call     dword ptr [0x1005308c]
+      0000C590: push     eax
+      0000C591: mov      eax, dword ptr [edi + 0x2c]
+      0000C594: push     dword ptr [eax + 0x54]
+      0000C597: mov      eax, dword ptr [0x10069c2c]
+      0000C59C: movzx    eax, word ptr [eax + 0x86]
+      0000C5A3: push     eax
+      0000C5A4: push     dword ptr [ebp - 0x20]
+      0000C5A7: lea      eax, [ebp - 0x208]
+      0000C5AD: push     dword ptr [ebp - 0x14]
+      0000C5B0: push     esi
+      0000C5B1: push     0x1005deb0  ; -> 'kid:%u|hip:%s|sip:%s|natt:%d|starttm:%d|endtm:%d|packnum:%d|fexist:%d|sig1:%u|sig2:%u|index:%u|ip:%s|close:%s' <==
+      0000C5B6: push     0x103
+      0000C5BB: push     eax
+      0000C5BC: call     dword ptr [0x10053318]
+      0000C5C2: mov      esi, dword ptr [0x10053360]
+      0000C5C8: add      esp, 0x40
+      0000C5CB: cmp      dword ptr [ebp - 0x44], 0x10
+      0000C5CF: jb       0xc5d9
+      0000C5D1: push     dword ptr [ebp - 0x58]
+      0000C5D4: call     esi
+      0000C5D6: add      esp, 4
+      0000C5D9: cmp      dword ptr [ebp - 0xa4], 0x10
+      0000C5E0: mov      dword ptr [ebp - 0x44], 0xf
+      0000C5E7: mov      dword ptr [ebp - 0x48], 0
+      0000C5EE: mov      byte ptr [ebp - 0x58], 0
+      0000C5F2: jb       0xc5ff
+      0000C5F4: push     dword ptr [ebp - 0xb8]
+      0000C5FA: call     esi
+      0000C5FC: add      esp, 4
+      0000C5FF: cmp      dword ptr [ebp - 0x8c], 0x10
+      0000C606: mov      dword ptr [ebp - 0xa4], 0xf
+      0000C610: mov      dword ptr [ebp - 0xa8], 0
+      0000C61A: mov      byte ptr [ebp - 0xb8], 0
+      0000C621: jb       0xc62e
+      0000C623: push     dword ptr [ebp - 0xa0]
+
+--- 引用 VA=0x0000E134  -> 字符串 VA=0x10053778 ('P2PClient') ---
+    0000E133: push 0x10053778
+    上下文:
+      0000E0F4: add      bh, bh
+      0000E0F6: xor      eax, 0x10069c0c
+      0000E0FB: push     0
+      0000E0FD: push     0
+      0000E0FF: push     0
+      0000E101: push     0x80000000
+      0000E106: push     0
+      0000E108: push     0x80000000
+      0000E10D: push     0xcf0000
+      0000E112: push     0x10053740
+      0000E117: push     0x10053740
+      0000E11C: push     0
+      0000E11E: call     dword ptr [0x100533a0]
+      0000E124: mov      dword ptr [0x10069c14], eax
+      0000E129: test     eax, eax
+      0000E12B: jne      0xe21b
+      0000E131: push     9
+      0000E133: push     0x10053778  ; -> 'P2PClient' <==
+      0000E138: lea      ecx, [esp + 0x88]
+      0000E13F: mov      dword ptr [esp + 0x9c], 0xf
+      0000E14A: mov      dword ptr [esp + 0x98], eax
+      0000E151: mov      byte ptr [esp + 0x88], al
+      0000E158: call     0x4010
+      0000E15D: mov      dword ptr [esp + 0x67c], 1
+      0000E168: xor      ecx, ecx
+      0000E16A: cmp      byte ptr [0x100535c0], cl
+      0000E170: mov      eax, 9
+      0000E175: mov      dword ptr [esp + 0x4c], 0xf
+      0000E17D: cmove    eax, ecx
+      0000E180: mov      dword ptr [esp + 0x48], 0
+      0000E188: push     eax
+      0000E189: push     0x100535c0
+      0000E18E: lea      ecx, [esp + 0x40]
+      0000E192: mov      byte ptr [esp + 0x40], 0
+      0000E197: call     0x4010
+      0000E19C: push     0x10054848
+      0000E1A1: lea      eax, [esp + 0x84]
+
+--- 引用 VA=0x0000E718  -> 字符串 VA=0x10053778 ('P2PClient') ---
+    0000E717: push 0x10053778
+    上下文:
+      0000E6D8: dec      eax
+      0000E6D9: add      eax, 0x3e90e810
+
+--- 引用 VA=0x0000EA31  -> 字符串 VA=0x10054928 ('|uid:%u|hip:%s|sip:%s|file_count:%u|keep_per:%.0f|cur_per:%.0f|max_size:%u|cur_size:%.0f|') ---
+    0000EA30: push 0x10054928
+    上下文:
+      0000E9F1: adc      al, 0x24
+      0000E9F3: fild     dword ptr [esp + 0x18]
+      0000E9F7: push     eax
+      0000E9F8: test     eax, eax
+      0000E9FA: jns      0xea02
+      0000E9FC: fadd     qword ptr [0x1005e9b8]
+      0000EA02: fdivp    st(1)
+      0000EA04: lea      eax, [esp + 0x24c]
+      0000EA0B: sub      esp, 0x10
+      0000EA0E: fld      qword ptr [0x1005e998]
+      0000EA14: fmul     st(1), st(0)
+      0000EA16: fxch     st(1)
+      0000EA18: fstp     qword ptr [esp + 8]
+      0000EA1C: fmul     qword ptr [esp + 0xdc]
+      0000EA23: fstp     qword ptr [esp]
+      0000EA26: push     dword ptr [esp + 0xd8]
+      0000EA2D: push     esi
+      0000EA2E: push     edx
+      0000EA2F: push     ecx
+      0000EA30: push     0x10054928  ; -> '|uid:%u|hip:%s|sip:%s|file_count:%u|keep_per:%.0f|cur_per:%.0f|max_size:%u|cur_size:%.0f|' <==
+      0000EA35: push     0x3ff
+      0000EA3A: push     eax
+      0000EA3B: call     dword ptr [0x10053318]
+      0000EA41: add      esp, 0x38
+      0000EA44: cmp      dword ptr [esp + 0x64], 0x10
+      0000EA49: jb       0xea54
+      0000EA4B: push     dword ptr [esp + 0x50]
+      0000EA4F: call     edi
+      0000EA51: add      esp, 4
+      0000EA54: mov      byte ptr [esp + 0x67c], 4
+      0000EA5C: cmp      dword ptr [esp + 0x34], 0x10
+      0000EA61: mov      dword ptr [esp + 0x64], 0xf
+      0000EA69: mov      dword ptr [esp + 0x60], 0
+      0000EA71: mov      byte ptr [esp + 0x50], 0
+      0000EA76: jb       0xea81
+      0000EA78: push     dword ptr [esp + 0x20]
+      0000EA7C: call     edi
+      0000EA7E: add      esp, 4
+      0000EA81: lea      eax, [esp +

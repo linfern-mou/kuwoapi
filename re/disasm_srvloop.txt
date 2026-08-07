@@ -1,0 +1,125 @@
+== 服务器条目解析循环 (0x0002C030 ~ 0x0002C260) ==
+  0002C030: mov      byte ptr [ebp - 4], 0x1a
+  0002C034: lea      ecx, [ebp - 0x2a8]
+  0002C03A: push     0xd
+  0002C03C: push     0x10053f1c  ; 'CDownloadTask'
+  0002C041: mov      dword ptr [ebp - 0x294], 0xf
+  0002C04B: mov      dword ptr [ebp - 0x298], 0
+  0002C055: mov      byte ptr [ebp - 0x2a8], 0
+  0002C05C: call     0x4010
+  0002C061: mov      byte ptr [ebp - 4], 0x1b
+  0002C065: lea      eax, [ebp - 0x198]
+  0002C06B: cmp      dword ptr [ebp - 0x184], 0x10
+  0002C072: lea      ecx, [ebx + 0x2f8]
+  0002C078: cmovae   eax, dword ptr [ebp - 0x198]
+  0002C07F: push     eax
+  0002C080: push     0x1005bf1c  ; 'url=%s'
+  0002C085: lea      eax, [ebp - 0x2a8]
+  0002C08B: push     eax
+  0002C08C: push     0
+  0002C08E: push     ecx
+  0002C08F: call     dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+  0002C095: add      esp, 0x14
+  0002C098: cmp      dword ptr [ebp - 0x294], 0x10
+  0002C09F: jb       0x2c0ac
+  0002C0A1: push     dword ptr [ebp - 0x2a8]
+  0002C0A7: call     esi
+  0002C0A9: add      esp, 4
+  0002C0AC: mov      dword ptr [ebp - 0x1e4], 0xf
+  0002C0B6: mov      dword ptr [ebp - 0x1e8], 0
+  0002C0C0: mov      byte ptr [ebp - 0x1f8], 0
+  0002C0C7: mov      dword ptr [ebp - 0x1fc], 0xf
+  0002C0D1: mov      dword ptr [ebp - 0x200], 0
+  0002C0DB: mov      byte ptr [ebp - 0x210], 0
+  0002C0E2: lea      eax, [ebp - 0x210]
+  0002C0E8: mov      byte ptr [ebp - 4], 0x1d
+  0002C0EC: push     eax
+  0002C0ED: lea      edx, [ebp - 0x1f8]
+  0002C0F3: lea      ecx, [ebp - 0x198]
+  0002C0F9: call     0x42e90
+  0002C0FE: add      esp, 4
+  0002C101: lea      eax, [edi + 0xb0]
+  0002C107: mov      dword ptr [ebp - 0xb4], eax
+  0002C10D: push     eax
+  0002C10E: call     dword ptr [0x100530d0]  ; KERNEL32.dll!EnterCriticalSection
+  0002C114: lea      ecx, [edi + 0x80]
+  0002C11A: mov      byte ptr [ebp - 4], 0x1e
+  0002C11E: lea      eax, [ebp - 0x1f8]
+  0002C124: cmp      ecx, eax
+  0002C126: je       0x2c132
+  0002C128: push     -1
+  0002C12A: push     0
+  0002C12C: push     eax
+  0002C12D: call     0x3850
+  0002C132: lea      ecx, [ebp - 0xb4]
+  0002C138: mov      byte ptr [ebp - 4], 0x1d
+  0002C13C: call     0x5660
+  0002C141: lea      eax, [ebp - 0x210]
+  0002C147: mov      ecx, edi
+  0002C149: push     eax
+  0002C14A: call     0x8fb0
+  0002C14F: lea      eax, [ebp - 0x1f8]
+  0002C155: push     eax
+  0002C156: lea      ecx, [edi + 0xc]
+  0002C159: call     0x2510
+  0002C15E: lea      eax, [ebp - 0x210]
+  0002C164: push     eax
+  0002C165: lea      ecx, [edi + 0x24]
+  0002C168: call     0x2510
+  0002C16D: lea      eax, [ebp - 0x66c]
+  0002C173: mov      ecx, edi
+  0002C175: push     eax
+  0002C176: call     0x8e40
+  0002C17B: mov      ecx, eax
+  0002C17D: call     0x25d0
+  0002C182: lea      ecx, [ebp - 0x66c]
+  0002C188: mov      bl, al
+  0002C18A: call     0x24e0
+  0002C18F: test     bl, bl
+  0002C191: je       0x2c493
+  0002C197: test     edi, edi
+  0002C199: je       0x2c1a3
+  0002C19B: push     ecx
+  0002C19C: mov      ecx, edi
+  0002C19E: call     0x93a0
+  0002C1A3: lea      ecx, [ebp - 0x210]
+  0002C1A9: call     0x24e0
+  0002C1AE: lea      ecx, [ebp - 0x1f8]
+  0002C1B4: call     0x24e0
+  0002C1B9: lea      ecx, [ebp - 0x198]
+  0002C1BF: call     0x24e0
+  0002C1C4: mov      ebx, dword ptr [ebp - 0x40]
+  0002C1C7: lea      eax, [ebx + 0x248]
+  0002C1CD: push     eax
+  0002C1CE: lea      ecx, [ebp - 0x2c]
+  0002C1D1: call     0x5640
+  0002C1D6: lea      ecx, [ebx + 0x290]
+  0002C1DC: mov      byte ptr [ebp - 4], 0x22
+  0002C1E0: call     0x95a0
+  0002C1E5: test     eax, eax
+  0002C1E7: jne      0x2c296
+  0002C1ED: push     0x1005bf40  ; 'URLERROR'
+  0002C1F2: lea      ecx, [ebp - 0x554]
+  0002C1F8: call     0x23d0
+  0002C1FD: push     0x10054558  ; 'P2P'
+  0002C202: lea      ecx, [ebp - 0x3fc]
+  0002C208: mov      byte ptr [ebp - 4], 0x23
+  0002C20C: call     0x23d0
+  0002C211: push     0x100548cc  ; 'kwservice'
+  0002C216: lea      ecx, [ebp - 0x524]
+  0002C21C: mov      byte ptr [ebp - 4], 0x24
+  0002C220: call     0x23d0
+  0002C225: mov      byte ptr [ebp - 4], 0x25
+  0002C229: lea      eax, [ebp - 0x684]
+  0002C22F: push     dword ptr [ebx + 0x128]
+  0002C235: push     dword ptr [ebx + 0x124]
+  0002C23B: push     0x1005bf38  ; '%u.%u'
+  0002C240: push     eax
+  0002C241: call     dword ptr [0x10053130]  ; KwLib.dll!?Format@StringUtility@KwLib@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBDZZ
+  0002C247: push     eax
+  0002C248: lea      eax, [ebp - 0x554]
+  0002C24E: mov      byte ptr [ebp - 4], 0x26
+  0002C252: push     eax
+  0002C253: lea      eax, [ebp - 0x3fc]
+  0002C259: push     eax
+  0002C25A: lea      eax, [ebp - 0x524]

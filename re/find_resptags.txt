@@ -1,0 +1,1362 @@
+  <URL>          VA=0x1005BEF8
+  <CHECKSUM>     VA=0x1005C128
+  <FILE_LEN>     VA=0x1005C100
+  <USR_ID>       VA=0x1005BF4C
+  <DENY_IP>      VA=0x1005BE58
+  <RES_DEL>      VA=0x1005BEC8
+  <SNETOPT>      VA=0x1005C008
+  <RES>          NOT FOUND
+  <IP>           NOT FOUND
+  <PORT>         NOT FOUND
+  <SVR>          NOT FOUND
+
+== 引用这些标签的指令 ==
+
+--- VA=0x0002BA02: push 0x1005be58  -> '<DENY_IP>' ---
+
+--- VA=0x0002BCBA: push 0x1005bec8  -> '<RES_DEL>' ---
+
+--- VA=0x0002BEDF: push 0x1005bef8  -> '<URL>' ---
+
+--- VA=0x0002C2A4: push 0x1005bf4c  -> '<USR_ID>' ---
+
+--- VA=0x0002CAB5: push 0x1005c008  -> '<SNETOPT>' ---
+
+--- VA=0x0002CC86: push 0x1005c100  -> '<FILE_LEN>' ---
+
+--- VA=0x0002CD23: push 0x1005c128  -> '<CHECKSUM>' ---
+
+== <URL> 引用所在函数的完整上下文 ==
+  函数入口 VA=0x0002ABF0, 反汇编到 0x0002BFDF
+  0002ABF0: push     ebp
+  0002ABF1: mov      ebp, esp
+  0002ABF3: push     -1
+  0002ABF5: push     0x100508f3  ; '¸<;\x06\x10éßÐÿÿ\x8d\x8dDÿÿÿéØ\x1bûÿ\x8dM\x94éÐ\x1bûÿ\x8d\x8d\x18ÿÿÿéÅ\x1bûÿ\x8d\x8d'
+  0002ABFA: mov      eax, dword ptr fs:[0]
+  0002AC00: push     eax
+  0002AC01: mov      dword ptr fs:[0], esp
+  0002AC08: push     ecx
+  0002AC09: mov      eax, 0x32c84
+  0002AC0E: call     0x4dac0
+  0002AC13: push     ebx
+  0002AC14: push     esi
+  0002AC15: push     edi
+  0002AC16: mov      ebx, ecx
+  0002AC18: mov      dword ptr [ebp - 0x10], esp
+  0002AC1B: mov      dword ptr [ebp - 0x40], ebx
+  0002AC1E: xor      eax, eax
+  0002AC20: cmp      byte ptr [eax + ebx + 0x124], 0
+  0002AC28: jne      0x2ac43
+  0002AC2A: inc      eax
+  0002AC2B: cmp      eax, 8
+  0002AC2E: jl       0x2ac20
+  0002AC30: xor      al, al
+  0002AC32: mov      ecx, dword ptr [ebp - 0xc]
+  0002AC35: mov      dword ptr fs:[0], ecx
+  0002AC3C: pop      edi
+  0002AC3D: pop      esi
+  0002AC3E: pop      ebx
+  0002AC3F: mov      esp, ebp
+  0002AC41: pop      ebp
+  0002AC42: ret      
+  0002AC43: call     dword ptr [0x1005308c]  ; KERNEL32.dll!GetTickCount
+  0002AC49: mov      dword ptr [ebp - 0x78], eax
+  0002AC4C: xor      eax, eax
+  0002AC4E: mov      dword ptr [ebp - 0x230], eax
+  0002AC54: mov      dword ptr [ebp - 0x22c], eax
+  0002AC5A: mov      dword ptr [ebp - 0x228], eax
+  0002AC60: mov      dword ptr [ebp - 0x224], eax
+  0002AC66: mov      dword ptr [ebp - 0x220], eax
+  0002AC6C: mov      dword ptr [ebp - 0x21c], eax
+  0002AC72: mov      dword ptr [ebp - 0x218], eax
+  0002AC78: mov      dword ptr [ebp - 0x214], eax
+  0002AC7E: call     0x39ac0
+  0002AC83: mov      edi, dword ptr [0x10053354]  ; MSVCR120.dll!sprintf
+  0002AC89: mov      edx, eax
+  0002AC8B: test     edx, edx
+  0002AC8D: je       0x2acbd
+  0002AC8F: movzx    ecx, dl
+  0002AC92: push     ecx
+  0002AC93: mov      ecx, edx
+  0002AC95: shr      eax, 0x10
+  0002AC98: shr      ecx, 8
+  0002AC9B: and      eax, 0xff
+  0002ACA0: and      ecx, 0xff
+  0002ACA6: shr      edx, 0x18
+  0002ACA9: push     ecx
+  0002ACAA: push     eax
+  0002ACAB: push     edx
+  0002ACAC: lea      eax, [ebp - 0x230]
+  0002ACB2: push     0x100535cc  ; '%d.%d.%d.%d'
+  0002ACB7: push     eax
+  0002ACB8: call     edi
+  0002ACBA: add      esp, 0x18
+  0002ACBD: mov      esi, dword ptr [0x10069c2c]
+  0002ACC3: lea      ecx, [ebp - 0x10e]
+  0002ACC9: mov      byte ptr [ebp - 0x6a5], 0
+  0002ACD0: mov      eax, dword ptr [esi + 0x80]
+  0002ACD6: mov      dword ptr [ebp - 0x10e], eax
+  0002ACDC: mov      ax, word ptr [esi + 0x84]
+  0002ACE3: mov      word ptr [ebp - 0x10a], ax
+  0002ACEA: call     0x8cb0
+  0002ACEF: test     al, al
+  0002ACF1: je       0x2ad02
+  0002ACF3: mov      ecx, dword ptr [esi + 0x80]
+  0002ACF9: mov      ax, word ptr [esi + 0x84]
+  0002AD00: jmp      0x2ad0f
+  0002AD02: mov      ecx, dword ptr [esi + 0xc2]
+  0002AD08: mov      ax, word ptr [esi + 0xc6]
+  0002AD0F: mov      word ptr [ebp - 0x1c], ax
+  0002AD13: movzx    eax, cl
+  0002AD16: push     eax
+  0002AD17: mov      eax, ecx
+  0002AD19: mov      dword ptr [ebp - 0x20], ecx
+  0002AD1C: shr      eax, 8
+  0002AD1F: and      eax, 0xff
+  0002AD24: push     eax
+  0002AD25: mov      eax, ecx
+  0002AD27: shr      ecx, 0x18
+  0002AD2A: shr      eax, 0x10
+  0002AD2D: and      eax, 0xff
+  0002AD32: push     eax
+  0002AD33: push     ecx
+  0002AD34: lea      eax, [ebp - 0x654]
+  0002AD3A: push     0x100535cc  ; '%d.%d.%d.%d'
+  0002AD3F: push     eax
+  0002AD40: call     edi
+  0002AD42: mov      eax, dword ptr [0x10069be4]
+  0002AD47: add      esp, 0x18
+  0002AD4A: mov      eax, dword ptr [eax + 0x34]
+  0002AD4D: mov      dword ptr [ebx + 0x370], eax
+  0002AD53: cmp      dword ptr [0x1006b608], 0
+  0002AD5A: je       0x2ad67
+  0002AD5C: or       eax, 0x20000
+  0002AD61: mov      dword ptr [ebx + 0x370], eax
+  0002AD67: mov      eax, dword ptr [ebx + 0x224]
+  0002AD6D: test     eax, eax
+  0002AD6F: jne      0x2ad7d
+  0002AD71: or       dword ptr [ebx + 0x370], 0x40000
+  0002AD7B: jmp      0x2ad8c
+  0002AD7D: cmp      eax, 3
+  0002AD80: jne      0x2ad8c
+  0002AD82: or       dword ptr [ebx + 0x370], 0x100000
+  0002AD8C: mov      esi, dword ptr [0x10053180]  ; KwModConfig.dll!AfxGetConfigManager
+  0002AD92: mov      byte ptr [ebp - 0x2d], 0
+  0002AD96: call     esi
+  0002AD98: lea      ecx, [ebp - 0x2d]
+  0002AD9B: push     ecx
+  0002AD9C: push     0x1005bcec  ; 'Enable'
+  0002ADA1: mov      edx, dword ptr [eax]
+  0002ADA3: mov      ecx, eax
+  0002ADA5: push     0x1005bcf4  ; 'CdnSpeedPolicy'
+  0002ADAA: call     dword ptr [edx + 0x70]
+  0002ADAD: mov      dword ptr [ebp - 0xe8], 0xf
+  0002ADB7: mov      dword ptr [ebp - 0xec], 0
+  0002ADC1: mov      byte ptr [ebp - 0xfc], 0
+  0002ADC8: mov      dword ptr [ebp - 4], 0
+  0002ADCF: cmp      byte ptr [ebp - 0x2d], 0
+  0002ADD3: je       0x2ade7
+  0002ADD5: push     9
+  0002ADD7: push     0x1005bd04  ; '|<cdnreq>'
+  0002ADDC: lea      ecx, [ebp - 0xfc]
+  0002ADE2: call     0x4010
+  0002ADE7: mov      dword ptr [ebp - 0x9c], 0xf
+  0002ADF1: mov      dword ptr [ebp - 0xa0], 0
+  0002ADFB: mov      byte ptr [ebp - 0xb0], 0
+  0002AE02: mov      byte ptr [ebp - 4], 1
+  0002AE06: call     esi
+  0002AE08: lea      ecx, [ebp - 0xb0]
+  0002AE0E: push     ecx
+  0002AE0F: push     0x1005bd10  ; 'NetID'
+  0002AE14: mov      edx, dword ptr [eax]
+  0002AE16: mov      ecx, eax
+  0002AE18: push     0x1005bd18  ; 'Setting'
+  0002AE1D: call     dword ptr [edx + 0x10]
+  0002AE20: cmp      dword ptr [ebp - 0x9c], 0x10
+  0002AE27: lea      eax, [ebp - 0xb0]
+  0002AE2D: lea      edi, [ebp - 0xfc]
+  0002AE33: mov      ebx, 0x1006b52c
+  0002AE38: cmovae   eax, dword ptr [ebp - 0xb0]
+  0002AE3F: mov      esi, 0x1006b514
+  0002AE44: cmp      dword ptr [ebp - 0xe8], 0x10
+  0002AE4B: mov      dword ptr [ebp - 0x28], eax
+  0002AE4E: push     dword ptr [ebp - 0x28]
+  0002AE51: mov      eax, dword ptr [0x10069c2c]
+  0002AE56: cmovae   edi, dword ptr [ebp - 0xfc]
+  0002AE5D: cmp      dword ptr [0x1006b540], 0x10
+  0002AE64: push     edi
+  0002AE65: movzx    edx, word ptr [eax + 0x86]
+  0002AE6C: mov      ecx, dword ptr [eax + 0x7c]
+  0002AE6F: mov      eax, dword ptr [ebp - 0x40]
+  0002AE72: cmovae   ebx, dword ptr [0x1006b52c]
+  0002AE79: cmp      dword ptr [0x1006b528], 0x10
+  0002AE80: push     dword ptr [eax + 0x370]
+  0002AE86: cmovae   esi, dword ptr [0x1006b514]
+  0002AE8D: lea      eax, [ebp - 0x654]
+  0002AE93: push     edx
+  0002AE94: push     eax
+  0002AE95: lea      eax, [ebp - 0x230]
+  0002AE9B: push     eax
+  0002AE9C: push     ebx
+  0002AE9D: mov      ebx, dword ptr [ebp - 0x40]
+  0002AEA0: lea      eax, [ebp - 0x7a8]
+  0002AEA6: push     esi
+  0002AEA7: push     ecx
+  0002AEA8: push     dword ptr [ebx + 0x128]
+  0002AEAE: push     dword ptr [ebx + 0x124]
+  0002AEB4: push     0x1005bd20  ; 'U_QRY'
+  0002AEB9: push     0x10054884  ; '001'
+  0002AEBE: push     0x1005bd28
+  0002AEC3: push     0x103
+  0002AEC8: push     eax
+  0002AEC9: call     dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+  0002AECF: add      esp, 0x40
+  0002AED2: mov      dword ptr [ebp - 0x124], 0xf
+  0002AEDC: lea      ecx, [ebp - 0x138]
+  0002AEE2: mov      dword ptr [ebp - 0x128], 0
+  0002AEEC: mov      byte ptr [ebp - 0x138], 0
+  0002AEF3: push     0xd
+  0002AEF5: push     0x10053f1c  ; 'CDownloadTask'
+  0002AEFA: call     0x4010
+  0002AEFF: lea      ecx, [ebp - 0x7a8]
+  0002AF05: mov      byte ptr [ebp - 4], 2
+  0002AF09: mov      edi, dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+  0002AF0F: lea      eax, [ebx + 0x2f8]
+  0002AF15: push     ecx
+  0002AF16: push     0x10053558  ; '%s'
+  0002AF1B: lea      ecx, [ebp - 0x138]
+  0002AF21: push     ecx
+  0002AF22: push     0
+  0002AF24: push     eax
+  0002AF25: call     edi
+  0002AF27: mov      byte ptr [ebp - 4], 1
+  0002AF2B: add      esp, 0x14
+  0002AF2E: cmp      dword ptr [ebp - 0x124], 0x10
+  0002AF35: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+  0002AF3B: jb       0x2af48
+  0002AF3D: push     dword ptr [ebp - 0x138]
+  0002AF43: call     esi
+  0002AF45: add      esp, 4
+  0002AF48: cmp      byte ptr [ebp - 0x7a8], 0
+  0002AF4F: mov      dword ptr [ebp - 0x124], 0xf
+  0002AF59: mov      dword ptr [ebp - 0x128], 0
+  0002AF63: mov      byte ptr [ebp - 0x138], 0
+  0002AF6A: mov      dword ptr [ebp - 0xb8], 0xf
+  0002AF74: mov      dword ptr [ebp - 0xbc], 0
+  0002AF7E: mov      byte ptr [ebp - 0xcc], 0
+  0002AF85: jne      0x2af8b
+  0002AF87: xor      ecx, ecx
+  0002AF89: jmp      0x2af9d
+  0002AF8B: lea      ecx, [ebp - 0x7a8]
+  0002AF91: lea      edx, [ecx + 1]
+  0002AF94: mov      al, byte ptr [ecx]
+  0002AF96: inc      ecx
+  0002AF97: test     al, al
+  0002AF99: jne      0x2af94
+  0002AF9B: sub      ecx, edx
+  0002AF9D: push     ecx
+  0002AF9E: lea      eax, [ebp - 0x7a8]
+  0002AFA4: push     eax
+  0002AFA5: lea      ecx, [ebp - 0xcc]
+  0002AFAB: call     0x4010
+  0002AFB0: mov      byte ptr [ebp - 4], 3
+  0002AFB4: lea      ecx, [ebp - 0xe4]
+  0002AFBA: push     0x15
+  0002AFBC: push     0x1005b764  ; '/yl_res_manage.search'
+  0002AFC1: mov      dword ptr [ebp - 0xd0], 0xf
+  0002AFCB: mov      dword ptr [ebp - 0xd4], 0
+  0002AFD5: mov      byte ptr [ebp - 0xe4], 0
+  0002AFDC: call     0x4010
+  0002AFE1: mov      byte ptr [ebp - 4], 4
+  0002AFE5: cmp      dword ptr [0x1006b544], 0
+  0002AFEC: jne      0x2b072
+  0002AFF2: sub      esp, 0x18
+  0002AFF5: mov      ecx, esp
+  0002AFF7: push     0x100547dc  ; 'ResSeaPort'
+  0002AFFC: call     0x23d0
+  0002B001: call     0x25420
+  0002B006: push     eax
+  0002B007: sub      esp, 0x18
+  0002B00A: mov      ecx, esp
+  0002B00C: push     0x100547e8  ; 'ResSeaSvr'
+  0002B011: call     0x23d0
+  0002B016: mov      ecx, dword ptr [0x10069c30]
+  0002B01C: lea      eax, [ebp - 0x308]
+  0002B022: push     eax
+  0002B023: call     0x25330
+  0002B028: mov      byte ptr [ebp - 4], 5
+  0002B02C: cmp      dword ptr [eax + 0x14], 0x10
+  0002B030: jb       0x2b034
+  0002B032: mov      eax, dword ptr [eax]
+  0002B034: push     eax
+  0002B035: mov      ecx, 0x1006b544
+  0002B03A: call     0x45480
+  0002B03F: mov      byte ptr [ebp - 4], 4
+  0002B043: cmp      dword ptr [ebp - 0x2f4], 0x10
+  0002B04A: jb       0x2b057
+  0002B04C: push     dword ptr [ebp - 0x308]
+  0002B052: call     esi
+  0002B054: add      esp, 4
+  0002B057: mov      dword ptr [ebp - 0x2f4], 0xf
+  0002B061: mov      dword ptr [ebp - 0x2f8], 0
+  0002B06B: mov      byte ptr [ebp - 0x308], 0
+  0002B072: push     0xd
+  0002B074: push     0x10053f1c  ; 'CDownloadTask'
+  0002B079: lea      ecx, [ebp - 0x1e0]
+  0002B07F: mov      dword ptr [ebp - 0x1cc], 0xf
+  0002B089: mov      dword ptr [ebp - 0x1d0], 0
+  0002B093: mov      byte ptr [ebp - 0x1e0], 0
+  0002B09A: call     0x4010
+  0002B09F: push     0x1005bd98  ; '¿ªÊ¼ËÑË÷ºòÑ¡×ÊÔ´......'
+  0002B0A4: lea      eax, [ebp - 0x1e0]
+  0002B0AA: mov      byte ptr [ebp - 4], 6
+  0002B0AE: push     eax
+  0002B0AF: lea      eax, [ebx + 0x2f8]
+  0002B0B5: push     0
+  0002B0B7: push     eax
+  0002B0B8: call     edi
+  0002B0BA: add      esp, 0x10
+  0002B0BD: mov      byte ptr [ebp - 4], 4
+  0002B0C1: cmp      dword ptr [ebp - 0x1cc], 0x10
+  0002B0C8: jb       0x2b0d5
+  0002B0CA: push     dword ptr [ebp - 0x1e0]
+  0002B0D0: call     esi
+  0002B0D2: add      esp, 4
+  0002B0D5: mov      ecx, dword ptr [0x10069c2c]
+  0002B0DB: mov      dword ptr [ebp - 0x1cc], 0xf
+  0002B0E5: mov      dword ptr [ebp - 0x1d0], 0
+  0002B0EF: mov      byte ptr [ebp - 0x1e0], 0
+  0002B0F6: mov      eax, dword ptr [ecx + 0x80]
+  0002B0FC: mov      dword ptr [ebp - 0x114], eax
+  0002B102: mov      ax, word ptr [ecx + 0x84]
+  0002B109: lea      ecx, [ebp - 0x114]
+  0002B10F: mov      word ptr [ebp - 0x110], ax
+  0002B116: call     0x8d10
+  0002B11B: test     al, al
+  0002B11D: je       0x2b130
+  0002B11F: push     dword ptr [ebx + 0x128]
+  0002B125: push     dword ptr [ebx + 0x124]
+  0002B12B: call     0x2a410
+  0002B130: lea      eax, [ebp - 0xc90]
+  0002B136: push     eax
+  0002B137: call     0x2a5f0
+  0002B13C: mov      byte ptr [ebp - 0x61], al
+  0002B13F: mov      dword ptr [ebp - 0x3c], 0
+  0002B146: mov      dword ptr [ebp - 0x38], 0
+  0002B14D: mov      dword ptr [ebp - 0x34], 0
+  0002B154: push     0x1006b544
+  0002B159: lea      ecx, [ebp - 0x3c]
+  0002B15C: mov      byte ptr [ebp - 4], 7
+  0002B160: call     0x28f0
+  0002B165: lea      eax, [ebp - 0x74]
+  0002B168: mov      ecx, 0x1006b4e0
+  0002B16D: push     eax
+  0002B16E: call     0x15470
+  0002B173: mov      byte ptr [ebp - 4], 8
+  0002B177: mov      eax, dword ptr [ebp - 0x74]
+  0002B17A: mov      ecx, eax
+  0002B17C: mov      edx, dword ptr [ebp - 0x70]
+  0002B17F: mov      byte ptr [ebp - 0x95], 0
+  0002B186: cmp      eax, edx
+  0002B188: je       0x2b1d4
+  0002B18A: mov      ax, word ptr [0x1006b548]
+  0002B190: mov      ebx, dword ptr [0x1006b544]
+  0002B196: cmp      ebx, dword ptr [ecx]
+  0002B198: mov      ebx, dword ptr [ebp - 0x40]
+  0002B19B: jne      0x2b1a3
+  0002B19D: cmp      ax, word ptr [ecx + 4]
+  0002B1A1: je       0x2b1ac
+  0002B1A3: add      ecx, 6
+  0002B1A6: cmp      ecx, edx
+  0002B1A8: jne      0x2b190
+  0002B1AA: jmp      0x2b1d4
+  0002B1AC: cmp      ecx, edx
+  0002B1AE: je       0x2b1d4
+  0002B1B0: add      ecx, 6
+  0002B1B3: cmp      ecx, edx
+  0002B1B5: je       0x2b1ce
+  0002B1B7: mov      eax, dword ptr [ecx]
+  0002B1B9: mov      dword ptr [ecx - 6], eax
+  0002B1BC: mov      ax, word ptr [ecx + 4]
+  0002B1C0: mov      word ptr [ecx - 2], ax
+  0002B1C4: add      ecx, 6
+  0002B1C7: cmp      ecx, edx
+  0002B1C9: jne      0x2b1b7
+  0002B1CB: mov      edx, dword ptr [ebp - 0x70]
+  0002B1CE: sub      edx, 6
+  0002B1D1: mov      dword ptr [ebp - 0x70], edx
+  0002B1D4: push     dword ptr [ebp - 0x1e]
+  0002B1D7: lea      ecx, [ebp - 0x3c]
+  0002B1DA: push     edx
+  0002B1DB: push     dword ptr [ebp - 0x74]
+  0002B1DE: push     dword ptr [ebp - 0x38]
+  0002B1E1: call     0x9ec0
+  0002B1E6: cmp      dword ptr [0x1006b56d], 0
+  0002B1ED: je       0x2b1fc
+  0002B1EF: push     0x1006b56d
+  0002B1F4: lea      ecx, [ebp - 0x3c]
+  0002B1F7: call     0x28f0
+  0002B1FC: mov      byte ptr [ebp - 0x11], 0
+  0002B200: mov      dword ptr [ebp - 0x7c], 0
+  0002B207: call     dword ptr [0x1005308c]  ; KERNEL32.dll!GetTickCount
+  0002B20D: mov      ecx, dword ptr [ebp - 0x38]
+  0002B210: sub      ecx, dword ptr [ebp - 0x3c]
+  0002B213: mov      dword ptr [ebp - 0x48], eax
+  0002B216: mov      eax, 0x2aaaaaab
+  0002B21B: imul     ecx
+  0002B21D: mov      dword ptr [ebp - 0x24], 0
+  0002B224: mov      ecx, edx
+  0002B226: shr      ecx, 0x1f
+  0002B229: add      ecx, edx
+  0002B22B: je       0x2b516
+  0002B231: mov      dword ptr [ebp - 0x18], 0
+  0002B238: jmp      0x2b240
+  0002B23A: lea      ebx, [ebx]
+  0002B240: cmp      byte ptr [ebp - 0x11], 0
+  0002B244: jne      0x2b543
+  0002B24A: push     0x124
+  0002B24F: call     dword ptr [0x1005335c]  ; MSVCR120.dll!??2@YAPAXI@Z
+  0002B255: mov      esi, eax
+  0002B257: add      esp, 4
+  0002B25A: mov      dword ptr [ebp - 0x44], esi
+  0002B25D: test     esi, esi
+  0002B25F: je       0x2b289
+  0002B261: xor      eax, eax
+  0002B263: mov      dword ptr [esi + 4], 0
+  0002B26A: mov      word ptr [esi + 8], ax
+  0002B26E: mov      dword ptr [esi + 0x1c], eax
+  0002B271: mov      dword ptr [esi + 0x20], 0xf
+  0002B278: mov      byte ptr [esi + 0xc], al
+  0002B27B: lea      eax, [esi + 0x24]
+  0002B27E: push     eax
+  0002B27F: call     dword ptr [0x10053090]  ; KERNEL32.dll!InitializeCriticalSection
+  0002B285: mov      edx, esi
+  0002B287: jmp      0x2b28e
+  0002B289: xor      edx, edx
+  0002B28B: mov      dword ptr [ebp - 0x44], edx
+  0002B28E: mov      al, byte ptr [ebp - 0x61]
+  0002B291: lea      edi, [edx + 0x4c]
+  0002B294: mov      dword ptr [edx + 0x3c], 0
+  0002B29B: lea      esi, [ebp - 0xc90]
+  0002B2A1: mov      dword ptr [edx + 0x40], 0
+  0002B2A8: mov      ecx, 0x31
+  0002B2AD: mov      byte ptr [edx + 0x48], al
+  0002B2B0: rep movsd dword ptr es:[edi], dword ptr [esi]
+  0002B2B2: mov      ecx, dword ptr [ebp - 0x18]
+  0002B2B5: add      ecx, dword ptr [ebp - 0x3c]
+  0002B2B8: mov      dword ptr [ebp - 0x7c], edx
+  0002B2BB: mov      eax, dword ptr [ecx]
+  0002B2BD: mov      dword ptr [edx + 4], eax
+  0002B2C0: mov      ax, word ptr [ecx + 4]
+  0002B2C4: lea      ecx, [edx + 0xc]
+  0002B2C7: mov      word ptr [edx + 8], ax
+  0002B2CB: lea      eax, [ebp - 0xcc]
+  0002B2D1: cmp      ecx, eax
+  0002B2D3: je       0x2b2e2
+  0002B2D5: push     -1
+  0002B2D7: push     0
+  0002B2D9: push     eax
+  0002B2DA: call     0x3850
+  0002B2DF: mov      edx, dword ptr [ebp - 0x44]
+  0002B2E2: mov      dword ptr [edx], 0x1388
+  0002B2E8: lea      eax, [ebx + 0x3e4]
+  0002B2EE: mov      dword ptr [edx + 0x44], eax
+  0002B2F1: mov      dword ptr [edx + 0x114], 0
+  0002B2FB: mov      dword ptr [edx + 0x118], 0
+  0002B305: mov      eax, dword ptr [ebx + 0x124]
+  0002B30B: mov      dword ptr [edx + 0x11c], eax
+  0002B311: mov      eax, dword ptr [ebx + 0x128]
+  0002B317: push     0x14
+  0002B319: mov      dword ptr [edx + 0x120], eax
+  0002B31F: call     dword ptr [0x1005335c]  ; MSVCR120.dll!??2@YAPAXI@Z
+  0002B325: add      esp, 4
+  0002B328: test     eax, eax
+  0002B32A: je       0x2b343
+  0002B32C: mov      dword ptr [eax + 8], 0xffffffff
+  0002B333: mov      dword ptr [eax + 0xc], 0
+  0002B33A: mov      dword ptr [eax + 0x10], 3
+  0002B341: jmp      0x2b345
+  0002B343: xor      eax, eax
+  0002B345: mov      esi, dword ptr [ebp - 0x44]
+  0002B348: lea      edi, [ebx + 0x3e8]
+  0002B34E: mov      dword ptr [esi + 0x110], eax
+  0002B354: lea      eax, [ebp - 0x7c]
+  0002B357: mov      ecx, dword ptr [edi + 4]
+  0002B35A: cmp      eax, ecx
+  0002B35C: jae      0x2b38e
+  0002B35E: mov      edx, dword ptr [edi]
+  0002B360: cmp      edx, eax
+  0002B362: ja       0x2b38e
+  0002B364: sub      eax, edx
+  0002B366: sar      eax, 2
+  0002B369: mov      dword ptr [ebp - 0x28], eax
+  0002B36C: cmp      ecx, dword ptr [edi + 8]
+  0002B36F: jne      0x2b379
+  0002B371: push     ecx
+  0002B372: mov      ecx, edi
+  0002B374: call     0x98e0
+  0002B379: mov      ecx, dword ptr [ebp - 0x28]
+  0002B37C: mov      eax, dword ptr [edi]
+  0002B37E: lea      eax, [eax + ecx*4]
+  0002B381: mov      ecx, dword ptr [edi + 4]
+  0002B384: test     ecx, ecx
+  0002B386: je       0x2b3a4
+  0002B388: mov      eax, dword ptr [eax]
+  0002B38A: mov      dword ptr [ecx], eax
+  0002B38C: jmp      0x2b3a4
+  0002B38E: cmp      ecx, dword ptr [edi + 8]
+  0002B391: jne      0x2b39b
+  0002B393: push     ecx
+  0002B394: mov      ecx, edi
+  0002B396: call     0x98e0
+  0002B39B: mov      eax, dword ptr [edi + 4]
+  0002B39E: test     eax, eax
+  0002B3A0: je       0x2b3a4
+  0002B3A2: mov      dword ptr [eax], esi
+  0002B3A4: add      dword ptr [edi + 4], 4
+  0002B3A8: mov      edi, dword ptr [esi + 0x110]
+  0002B3AE: cmp      dword ptr [edi + 0x10], 3
+  0002B3B2: jne      0x2b3e3
+  0002B3B4: lea      eax, [edi + 8]
+  0002B3B7: mov      dword ptr [edi + 0x10], 0
+  0002B3BE: push     eax
+  0002B3BF: push     0
+  0002B3C1: push     esi
+  0002B3C2: push     0x1002d1d0  ; 'U\x8bìjÿh÷\t\x05\x10d¡'
+  0002B3C7: push     0
+  0002B3C9: push     0
+  0002B3CB: call     dword ptr [0x10053308]  ; MSVCR120.dll!_beginthreadex
+  0002B3D1: add      esp, 0x18
+  0002B3D4: mov      dword ptr [edi + 0xc], eax
+  0002B3D7: cmp      eax, -1
+  0002B3DA: jne      0x2b3e3
+  0002B3DC: mov      dword ptr [edi + 0x10], 3
+  0002B3E3: push     0xfa0
+  0002B3E8: push     dword ptr [ebx + 0x3e4]
+  0002B3EE: call     dword ptr [0x10053084]  ; KERNEL32.dll!WaitForSingleObject
+  0002B3F4: cmp      eax, 0x102
+  0002B3F9: je       0x2b4dd
+  0002B3FF: push     0xd
+  0002B401: push     0x10053f1c  ; 'CDownloadTask'
+  0002B406: lea      ecx, [ebp - 0x180]
+  0002B40C: mov      dword ptr [ebp - 0x16c], 0xf
+  0002B416: mov      dword ptr [ebp - 0x170], 0
+  0002B420: mov      byte ptr [ebp - 0x180], 0
+  0002B427: call     0x4010
+  0002B42C: mov      byte ptr [ebp - 4], 9
+  0002B430: lea      eax, [ebp - 0x320]
+  0002B436: mov      ecx, dword ptr [ebp - 0x18]
+  0002B439: add      ecx, dword ptr [ebp - 0x3c]
+  0002B43C: push     eax
+  0002B43D: call     0x15f0
+  0002B442: mov      byte ptr [ebp - 4], 0xa
+  0002B446: cmp      dword ptr [eax + 0x14], 0x10
+  0002B44A: jb       0x2b44e
+  0002B44C: mov      eax, dword ptr [eax]
+  0002B44E: mov      edi, dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+  0002B454: push     eax
+  0002B455: push     0x1005bdb0  ; 'search succeed on server %s'
+  0002B45A: lea      eax, [ebp - 0x180]
+  0002B460: push     eax
+  0002B461: lea      eax, [ebx + 0x2f8]
+  0002B467: push     0
+  0002B469: push     eax
+  0002B46A: call     edi
+  0002B46C: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+  0002B472: add      esp, 0x14
+  0002B475: cmp      dword ptr [ebp - 0x30c], 0x10
+  0002B47C: jb       0x2b489
+  0002B47E: push     dword ptr [ebp - 0x320]
+  0002B484: call     esi
+  0002B486: add      esp, 4
+  0002B489: mov      byte ptr [ebp - 4], 8
+  0002B48D: cmp      dword ptr [ebp - 0x16c], 0x10
+  0002B494: mov      dword ptr [ebp - 0x30c], 0xf
+  0002B49E: mov      dword ptr [ebp - 0x310], 0
+  0002B4A8: mov      byte ptr [ebp - 0x320], 0
+  0002B4AF: jb       0x2b4bc
+  0002B4B1: push     dword ptr [ebp - 0x180]
+  0002B4B7: call     esi
+  0002B4B9: add      esp, 4
+  0002B4BC: mov      dword ptr [ebp - 0x16c], 0xf
+  0002B4C6: mov      dword ptr [ebp - 0x170], 0
+  0002B4D0: mov      byte ptr [ebp - 0x180], 0
+  0002B4D7: mov      byte ptr [ebp - 0x11], 1
+  0002B4DB: jmp      0x2b4e3
+  0002B4DD: mov      edi, dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+  0002B4E3: mov      ecx, dword ptr [ebp - 0x38]
+  0002B4E6: mov      eax, 0x2aaaaaab
+  0002B4EB: sub      ecx, dword ptr [ebp - 0x3c]
+  0002B4EE: mov      esi, dword ptr [ebp - 0x24]
+  0002B4F1: add      dword ptr [ebp - 0x18], 6
+  0002B4F5: inc      esi
+  0002B4F6: imul     ecx
+  0002B4F8: mov      dword ptr [ebp - 0x24], esi
+  0002B4FB: mov      eax, edx
+  0002B4FD: shr      eax, 0x1f
+  0002B500: add      eax, edx
+  0002B502: cmp      esi, eax
+  0002B504: jb       0x2b240
+  0002B50A: cmp      byte ptr [ebp - 0x11], 0
+  0002B50E: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+  0002B514: jne      0x2b549
+  0002B516: call     dword ptr [0x1005308c]  ; KERNEL32.dll!GetTickCount
+  0002B51C: cmp      dword ptr [ebx + 0x224], 0
+  0002B523: mov      dword ptr [0x10069c48], eax
+  0002B528: jne      0x2b530
+  0002B52A: mov      eax, dword ptr [ebx + 0x220]
+  0002B530: push     0x7530
+  0002B535: push     dword ptr [ebx + 0x3e4]
+  0002B53B: call     dword ptr [0x10053084]  ; KERNEL32.dll!WaitForSingleObject
+  0002B541: jmp      0x2b549
+  0002B543: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+  0002B549: mov      dword ptr [ebp - 0x4c], 0xf
+  0002B550: mov      dword ptr [ebp - 0x50], 0
+  0002B557: mov      byte ptr [ebp - 0x60], 0
+  0002B55B: xor      eax, eax
+  0002B55D: mov      byte ptr [ebp - 4], 0xb
+  0002B561: mov      dword ptr [ebp - 0x44], eax
+  0002B564: xor      dl, dl
+  0002B566: mov      eax, dword ptr [ebx + 0x3ec]
+  0002B56C: xor      ecx, ecx
+  0002B56E: sub      eax, dword ptr [ebx + 0x3e8]
+  0002B574: sar      eax, 2
+  0002B577: mov      byte ptr [ebp - 0x11], dl
+  0002B57A: mov      dword ptr [ebp - 0x24], ecx
+  0002B57D: test     eax, eax
+  0002B57F: je       0x2b7a1
+  0002B585: jmp      0x2b593
+  0002B587: jmp      0x2b590
+  0002B589: lea      esp, [esp]
+  0002B590: mov      dl, byte ptr [ebp - 0x11]
+  0002B593: test     dl, dl
+  0002B595: jne      0x2b83a
+  0002B59B: mov      eax, dword ptr [ebx + 0x3e8]
+  0002B5A1: mov      esi, dword ptr [eax + ecx*4]
+  0002B5A4: mov      dword ptr [ebp - 0x7c], esi
+  0002B5A7: lea      eax, [esi + 0x24]
+  0002B5AA: push     eax
+  0002B5AB: mov      dword ptr [ebp - 0x68], eax
+  0002B5AE: call     dword ptr [0x100530d0]  ; KERNEL32.dll!EnterCriticalSection
+  0002B5B4: mov      eax, dword ptr [esi + 0x40]
+  0002B5B7: test     eax, eax
+  0002B5B9: je       0x2b76a
+  0002B5BF: cmp      eax, 0x19000
+  0002B5C4: mov      ecx, 0x18fff
+  0002B5C9: cmovge   eax, ecx
+  0002B5CC: push     eax
+  0002B5CD: push     dword ptr [esi + 0x3c]
+  0002B5D0: mov      dword ptr [ebp - 0x44], eax
+  0002B5D3: lea      eax, [ebp - 0x19c90]
+  0002B5D9: push     eax
+  0002B5DA: call     0x4dbb2
+  0002B5DF: mov      eax, dword ptr [ebp - 0x44]
+  0002B5E2: add      esp, 0xc
+  0002B5E5: mov      byte ptr [ebp + eax - 0x19c90], 0
+  0002B5ED: cmp      byte ptr [ebp - 0x19c90], 0
+  0002B5F4: jne      0x2b5fa
+  0002B5F6: xor      ecx, ecx
+  0002B5F8: jmp      0x2b60c
+  0002B5FA: lea      ecx, [ebp - 0x19c90]
+  0002B600: lea      edx, [ecx + 1]
+  0002B603: mov      al, byte ptr [ecx]
+  0002B605: inc      ecx
+  0002B606: test     al, al
+  0002B608: jne      0x2b603
+  0002B60A: sub      ecx, edx
+  0002B60C: push     ecx
+  0002B60D: lea      eax, [ebp - 0x19c90]
+  0002B613: push     eax
+  0002B614: lea      ecx, [ebp - 0x60]
+  0002B617: call     0x4010
+  0002B61C: mov      eax, dword ptr [0x1006b544]
+  0002B621: mov      dword ptr [ebx + 0x3f4], eax
+  0002B627: movzx    eax, word ptr [0x1006b548]
+  0002B62E: mov      word ptr [ebx + 0x3f8], ax
+  0002B635: mov      eax, dword ptr [esi + 4]
+  0002B638: mov      dword ptr [ebx + 0x3fa], eax
+  0002B63E: movzx    eax, word ptr [esi + 8]
+  0002B642: mov      word ptr [ebx + 0x3fe], ax
+  0002B649: mov      eax, dword ptr [esi + 0x118]
+  0002B64F: mov      dword ptr [ebx + 0x400], eax
+  0002B655: mov      eax, dword ptr [esi + 4]
+  0002B658: mov      dword ptr [0x1006b544], eax
+  0002B65D: movzx    eax, word ptr [esi + 8]
+  0002B661: mov      byte ptr [ebp - 0x11], 1
+  0002B665: mov      word ptr [0x1006b548], ax
+  0002B66B: call     dword ptr [0x1005308c]  ; KERNEL32.dll!GetTickCount
+  0002B671: mov      ecx, eax
+  0002B673: mov      eax, 0x10624dd3
+  0002B678: sub      ecx, dword ptr [ebp - 0x48]
+  0002B67B: mul      ecx
+  0002B67D: mov      eax, edx
+  0002B67F: shr      eax, 6
+  0002B682: mov      dword ptr [ebp - 0x48], eax
+  0002B685: cmp      eax, 6
+  0002B688: jb       0x2b695
+  0002B68A: call     dword ptr [0x1005308c]  ; KERNEL32.dll!GetTickCount
+  0002B690: mov      dword ptr [0x10069c48], eax
+  0002B695: push     0xd
+  0002B697: push     0x10053f1c  ; 'CDownloadTask'
+  0002B69C: lea      ecx, [ebp - 0x1c8]
+  0002B6A2: mov      dword ptr [ebp - 0x1b4], 0xf
+  0002B6AC: mov      dword ptr [ebp - 0x1b8], 0
+  0002B6B6: mov      byte ptr [ebp - 0x1c8], 0
+  0002B6BD: call     0x4010
+  0002B6C2: lea      eax, [ebp - 0x338]
+  0002B6C8: mov      byte ptr [ebp - 4], 0xc
+  0002B6CC: push     eax
+  0002B6CD: lea      ecx, [esi + 4]
+  0002B6D0: call     0x1540
+  0002B6D5: mov      byte ptr [ebp - 4], 0xd
+  0002B6D9: cmp      dword ptr [eax + 0x14], 0x10
+  0002B6DD: jb       0x2b6e1
+  0002B6DF: mov      eax, dword ptr [eax]
+  0002B6E1: push     dword ptr [ebx + 0x400]
+  0002B6E7: push     eax
+  0002B6E8: push     0x1005bdcc  ; '´Ó·þÎñÆ÷ %s ¼ìË÷µ½½á¹û, Ä£Ê½Îª%d'
+  0002B6ED: lea      eax, [ebp - 0x1c8]
+  0002B6F3: push     eax
+  0002B6F4: lea      eax, [ebx + 0x2f8]
+  0002B6FA: push     0
+  0002B6FC: push     eax
+  0002B6FD: call     edi
+  0002B6FF: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+  0002B705: add      esp, 0x18
+  0002B708: cmp      dword ptr [ebp - 0x324], 0x10
+  0002B70F: jb       0x2b71c
+  0002B711: push     dword ptr [ebp - 0x338]
+  0002B717: call     esi
+  0002B719: add      esp, 4
+  0002B71C: mov      byte ptr [ebp - 4], 0xb
+  0002B720: cmp      dword ptr [ebp - 0x1b4], 0x10
+  0002B727: mov      dword ptr [ebp - 0x324], 0xf
+  0002B731: mov      dword ptr [ebp - 0x328], 0
+  0002B73B: mov      byte ptr [ebp - 0x338], 0
+  0002B742: jb       0x2b74f
+  0002B744: push     dword ptr [ebp - 0x1c8]
+  0002B74A: call     esi
+  0002B74C: add      esp, 4
+  0002B74F: mov      dword ptr [ebp - 0x1b4], 0xf
+  0002B759: mov      dword ptr [ebp - 0x1b8], 0
+  0002B763: mov      byte ptr [ebp - 0x1c8], 0
+  0002B76A: push     dword ptr [ebp - 0x68]
+  0002B76D: call     dword ptr [0x100530c8]  ; KERNEL32.dll!LeaveCriticalSection
+  0002B773: mov      eax, dword ptr [ebx + 0x3ec]
+  0002B779: mov      ecx, dword ptr [ebp - 0x24]
+  0002B77C: sub      eax, dword ptr [ebx + 0x3e8]
+  0002B782: inc      ecx
+  0002B783: sar      eax, 2
+  0002B786: mov      dword ptr [ebp - 0x24], ecx
+  0002B789: cmp      ecx, eax
+  0002B78B: jb       0x2b590
+  0002B791: cmp      byte ptr [ebp - 0x11], 0
+  0002B795: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+  0002B79B: jne      0x2b840
+  0002B7A1: cmp      byte ptr [0x1006b56c], 0
+  0002B7A8: jne      0x2b83a
+  0002B7AE: mov      ecx, 0x1006b4e0
+  0002B7B3: call     0x154a0
+  0002B7B8: push     0xd
+  0002B7BA: push     0x10053f1c  ; 'CDownloadTask'
+  0002B7BF: test     al, al
+  0002B7C1: je       0x2b98b
+  0002B7C7: lea      ecx, [ebp - 0x290]
+  0002B7CD: mov      dword ptr [ebp - 0x27c], 0xf
+  0002B7D7: mov      dword ptr [ebp - 0x280], 0
+  0002B7E1: mov      byte ptr [ebp - 0x290], 0
+  0002B7E8: call     0x4010
+  0002B7ED: push     0x1005bdf0  ; '·þÎñÆ÷Á¬½ÓÊ§°Ü£¬µ«ÊÇPING²Ù×÷³É¹¦£¬ÅÐ¶ÏÓÐ¿ÉÄÜ´æÔÚ·À»ðÇ½'
+  0002B7F2: lea      eax, [ebp - 0x290]
+  0002B7F8: mov      byte ptr [ebp - 4], 0xe
+  0002B7FC: push     eax
+  0002B7FD: lea      eax, [ebx + 0x2f8]
+  0002B803: push     0
+  0002B805: push     eax
+  0002B806: call     edi
+  0002B808: add      esp, 0x10
+  0002B80B: mov      byte ptr [ebp - 4], 0xb
+  0002B80F: cmp      dword ptr [ebp - 0x27c], 0x10
+  0002B816: jb       0x2b823
+  0002B818: push     dword ptr [ebp - 0x290]
+  0002B81E: call     esi
+  0002B820: add      esp, 4
+  0002B823: lea      eax, [ebp - 0x18]
+  0002B826: mov      dword ptr [ebp - 0x18], 3
+  0002B82D: push     eax
+  0002B82E: call     0x13260
+  0002B833: mov      byte ptr [0x1006b56c], 1
+  0002B83A: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+  0002B840: cmp      dword ptr [ebp - 0x50], 0
+  0002B844: jne      0x2b9f6
+  0002B84A: cmp      dword ptr [ebx + 0x1c], 0
+  0002B84E: je       0x2b857
+  0002B850: mov      dword ptr [ebx + 0x1c], 0xb
+  0002B857: cmp      dword ptr [ebp - 0x4c], 0x10
+  0002B85B: mov      dword ptr [ebx + 0xfc], 1
+  0002B865: jb       0x2b86f
+  0002B867: push     dword ptr [ebp - 0x60]
+  0002B86A: call     esi
+  0002B86C: add      esp, 4
+  0002B86F: mov      eax, dword ptr [ebp - 0x74]
+  0002B872: mov      dword ptr [ebp - 0x4c], 0xf
+  0002B879: mov      dword ptr [ebp - 0x50], 0
+  0002B880: mov      byte ptr [ebp - 0x60], 0
+  0002B884: test     eax, eax
+  0002B886: je       0x2b8a3
+  0002B888: push     eax
+  0002B889: call     esi
+  0002B88B: add      esp, 4
+  0002B88E: mov      dword ptr [ebp - 0x74], 0
+  0002B895: mov      dword ptr [ebp - 0x70], 0
+  0002B89C: mov      dword ptr [ebp - 0x6c], 0
+  0002B8A3: mov      byte ptr [ebp - 4], 4
+  0002B8A7: cmp      dword ptr [ebp - 0x3c], 0
+  0002B8AB: je       0x2b8d3
+  0002B8AD: lea      ecx, [ebp - 0x3c]
+  0002B8B0: call     dword ptr [0x100531a8]  ; MSVCP120.dll!?_Orphan_all@_Container_base0@std@@QAEXXZ
+  0002B8B6: push     dword ptr [ebp - 0x3c]
+  0002B8B9: call     esi
+  0002B8BB: add      esp, 4
+  0002B8BE: mov      dword ptr [ebp - 0x3c], 0
+  0002B8C5: mov      dword ptr [ebp - 0x38], 0
+  0002B8CC: mov      dword ptr [ebp - 0x34], 0
+  0002B8D3: cmp      dword ptr [ebp - 0xd0], 0x10
+  0002B8DA: jb       0x2b8e7
+  0002B8DC: push     dword ptr [ebp - 0xe4]
+  0002B8E2: call     esi
+  0002B8E4: add      esp, 4
+  0002B8E7: cmp      dword ptr [ebp - 0xb8], 0x10
+  0002B8EE: mov      dword ptr [ebp - 0xd0], 0xf
+  0002B8F8: mov      dword ptr [ebp - 0xd4], 0
+  0002B902: mov      byte ptr [ebp - 0xe4], 0
+  0002B909: jb       0x2b916
+  0002B90B: push     dword ptr [ebp - 0xcc]
+  0002B911: call     esi
+  0002B913: add      esp, 4
+  0002B916: cmp      dword ptr [ebp - 0x9c], 0x10
+  0002B91D: mov      byte ptr [ebp - 0xcc], 0
+  0002B924: mov      dword ptr [ebp - 0xbc], 0
+  0002B92E: mov      dword ptr [ebp - 0xb8], 0xf
+  0002B938: jb       0x2b945
+  0002B93A: push     dword ptr [ebp - 0xb0]
+  0002B940: call     esi
+  0002B942: add      esp, 4
+  0002B945: cmp      dword ptr [ebp - 0xe8], 0x10
+  0002B94C: mov      dword ptr [ebp - 0x9c], 0xf
+  0002B956: mov      dword ptr [ebp - 0xa0], 0
+  0002B960: mov      byte ptr [ebp - 0xb0], 0
+  0002B967: jb       0x2d1b0
+  0002B96D: push     dword ptr [ebp - 0xfc]
+  0002B973: call     esi
+  0002B975: add      esp, 4
+  0002B978: mov      al, 1
+  0002B97A: mov      ecx, dword ptr [ebp - 0xc]
+  0002B97D: mov      dword ptr fs:[0], ecx
+  0002B984: pop      edi
+  0002B985: pop      esi
+  0002B986: pop      ebx
+  0002B987: mov      esp, ebp
+  0002B989: pop      ebp
+  0002B98A: ret      
+  0002B98B: lea      ecx, [ebp - 0x2f0]
+  0002B991: mov      dword ptr [ebp - 0x2dc], 0xf
+  0002B99B: mov      dword ptr [ebp - 0x2e0], 0
+  0002B9A5: mov      byte ptr [ebp - 0x2f0], 0
+  0002B9AC: call     0x4010
+  0002B9B1: push     0x1005be28  ; '·þÎñÆ÷Á¬½ÓÊ§°Ü£¬PING²Ù×÷Ê§°Ü£¬ÅÐ¶ÏÍøÂçÁ¬½ÓÒì³£'
+  0002B9B6: lea      eax, [ebp - 0x2f0]
+  0002B9BC: mov      byte ptr [ebp - 4], 0xf
+  0002B9C0: push     eax
+  0002B9C1: lea      eax, [ebx + 0x2f8]
+  0002B9C7: push     0
+  0002B9C9: push     eax
+  0002B9CA: call     edi
+  0002B9CC: mov      byte ptr [ebp - 4], 0xb
+  0002B9D0: add      esp, 0x10
+  0002B9D3: cmp      dword ptr [ebp - 0x2dc], 0x10
+  0002B9DA: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+  0002B9E0: jb       0x2b840
+  0002B9E6: push     dword ptr [ebp - 0x2f0]
+  0002B9EC: call     esi
+  0002B9EE: add      esp, 4
+  0002B9F1: jmp      0x2b840
+  0002B9F6: call     dword ptr [0x1005308c]  ; KERNEL32.dll!GetTickCount
+  0002B9FC: sub      eax, dword ptr [ebp - 0x78]
+  0002B9FF: push     9
+  0002BA01: push     ecx
+  0002BA02: push     0x1005be58  ; '<DENY_IP>'
+  0002BA07: lea      ecx, [ebp - 0x60]
+  0002BA0A: mov      dword ptr [ebx + 0x5c], eax
+  0002BA0D: call     0x9800
+  0002BA12: cmp      eax, -1
+  0002BA15: je       0x2bcb7
+  0002BA1B: cmp      dword ptr [ebx + 0x1c], 0
+  0002BA1F: je       0x2ba28
+  0002BA21: mov      dword ptr [ebx + 0x1c], 0xf
+  0002BA28: mov      eax, dword ptr [0x10069c2c]
+  0002BA2D: push     0x1005be64  ; 'DENY_IP'
+  0002BA32: push     dword ptr [ebx + 0x128]
+  0002BA38: mov      byte ptr [ebp - 0x7ad], 0
+  0002BA3F: push     dword ptr [ebx + 0x124]
+  0002BA45: push     dword ptr [eax + 0x7c]
+  0002BA48: lea      eax, [ebp - 0x8b0]
+  0002BA4E: push     0x1005be6c  ; 'SEARCH'
+  0002BA53: push     0x1005be74  ; 'func:%s|kid:%u|sig1:%u|sig2:%u|res:%s'
+  0002BA58: push     0x103
+  0002BA5D: push     eax
+  0002BA5E: call     dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+  0002BA64: add      esp, 0x20
+  0002BA67: mov      dword ptr [ebp - 0x2ac], 0xf
+  0002BA71: cmp      byte ptr [ebp - 0x8b0], 0
+  0002BA78: mov      dword ptr [ebp - 0x2b0], 0
+  0002BA82: mov      byte ptr [ebp - 0x2c0], 0
+  0002BA89: jne      0x2ba8f
+  0002BA8B: xor      ecx, ecx
+  0002BA8D: jmp      0x2baa1
+  0002BA8F: lea      ecx, [ebp - 0x8b0]
+  0002BA95: lea      edx, [ecx + 1]
+  0002BA98: mov      al, byte ptr [ecx]
+  0002BA9A: inc      ecx
+  0002BA9B: test     al, al
+  0002BA9D: jne      0x2ba98
+  0002BA9F: sub      ecx, edx
+  0002BAA1: push     ecx
+  0002BAA2: lea      eax, [ebp - 0x8b0]
+  0002BAA8: push     eax
+  0002BAA9: lea      ecx, [ebp - 0x2c0]
+  0002BAAF: call     0x4010
+  0002BAB4: mov      byte ptr [ebp - 4], 0x10
+  0002BAB8: lea      ecx, [ebp - 0x1b0]
+  0002BABE: push     6
+  0002BAC0: push     0x1005be9c  ; 'SEARES'
+  0002BAC5: mov      dword ptr [ebp - 0x19c], 0xf
+  0002BACF: mov      dword ptr [ebp - 0x1a0], 0
+  0002BAD9: mov      byte ptr [ebp - 0x1b0], 0
+  0002BAE0: call     0x4010
+  0002BAE5: push     0
+  0002BAE7: push     0
+  0002BAE9: lea      eax, [ebp - 0x2c0]
+  0002BAEF: mov      byte ptr [ebp - 4], 0x11
+  0002BAF3: push     eax
+  0002BAF4: lea      eax, [ebp - 0x1b0]
+  0002BAFA: push     eax
+  0002BAFB: call     dword ptr [0x10053170]  ; KwLog.dll!?LogUserActMsg@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0PBD_N@Z
+  0002BB01: add      esp, 0x10
+  0002BB04: cmp      dword ptr [ebp - 0x19c], 0x10
+  0002BB0B: jb       0x2bb18
+  0002BB0D: push     dword ptr [ebp - 0x1b0]
+  0002BB13: call     esi
+  0002BB15: add      esp, 4
+  0002BB18: mov      byte ptr [ebp - 4], 0xb
+  0002BB1C: cmp      dword ptr [ebp - 0x2ac], 0x10
+  0002BB23: mov      dword ptr [ebp - 0x19c], 0xf
+  0002BB2D: mov      dword ptr [ebp - 0x1a0], 0
+  0002BB37: mov      byte ptr [ebp - 0x1b0], 0
+  0002BB3E: jb       0x2bb4b
+  0002BB40: push     dword ptr [ebp - 0x2c0]
+  0002BB46: call     esi
+  0002BB48: add      esp, 4
+  0002BB4B: push     0xd
+  0002BB4D: push     0x10053f1c  ; 'CDownloadTask'
+  0002BB52: lea      ecx, [ebp - 0x2d8]
+  0002BB58: mov      dword ptr [ebx + 0xfc], 7
+  0002BB62: mov      dword ptr [ebp - 0x2c4], 0xf
+  0002BB6C: mov      dword ptr [ebp - 0x2c8], 0
+  0002BB76: mov      byte ptr [ebp - 0x2d8], 0
+  0002BB7D: call     0x4010
+  0002BB82: push     0x1005bea4  ; 'µØÖ·ÊÜÏÞ'
+  0002BB87: lea      eax, [ebp - 0x2d8]
+  0002BB8D: mov      byte ptr [ebp - 4], 0x12
+  0002BB91: push     eax
+  0002BB92: lea      eax, [ebx + 0x2f8]
+  0002BB98: push     0
+  0002BB9A: push     eax
+  0002BB9B: call     edi
+  0002BB9D: add      esp, 0x10
+  0002BBA0: mov      byte ptr [ebp - 4], 0xb
+  0002BBA4: cmp      dword ptr [ebp - 0x2c4], 0x10
+  0002BBAB: jb       0x2bbb8
+  0002BBAD: push     dword ptr [ebp - 0x2d8]
+  0002BBB3: call     esi
+  0002BBB5: add      esp, 4
+  0002BBB8: push     0xa
+  0002BBBA: push     0x1005beb0  ; 'foreign IP'
+  0002BBBF: lea      ecx, [ebp - 0x248]
+  0002BBC5: mov      dword ptr [ebp - 0x234], 0xf
+  0002BBCF: mov      dword ptr [ebp - 0x238], 0
+  0002BBD9: mov      byte ptr [ebp - 0x248], 0
+  0002BBE0: call     0x4010
+  0002BBE5: mov      byte ptr [ebp - 4], 0x13
+  0002BBE9: lea      ecx, [ebp - 0x150]
+  0002BBEF: push     8
+  0002BBF1: push     0x1005bebc  ; 'PLAYFAIL'
+  0002BBF6: mov      dword ptr [ebp - 0x13c], 0xf
+  0002BC00: mov      dword ptr [ebp - 0x140], 0
+  0002BC0A: mov      byte ptr [ebp - 0x150], 0
+  0002BC11: call     0x4010
+  0002BC16: push     0
+  0002BC18: push     0
+  0002BC1A: lea      eax, [ebp - 0x248]
+  0002BC20: mov      byte ptr [ebp - 4], 0x14
+  0002BC24: push     eax
+  0002BC25: lea      eax, [ebp - 0x150]
+  0002BC2B: push     eax
+  0002BC2C: call     dword ptr [0x10053170]  ; KwLog.dll!?LogUserActMsg@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0PBD_N@Z
+  0002BC32: add      esp, 0x10
+  0002BC35: cmp      dword ptr [ebp - 0x13c], 0x10
+  0002BC3C: jb       0x2bc49
+  0002BC3E: push     dword ptr [ebp - 0x150]
+  0002BC44: call     esi
+  0002BC46: add      esp, 4
+  0002BC49: cmp      dword ptr [ebp - 0x234], 0x10
+  0002BC50: mov      dword ptr [ebp - 0x13c], 0xf
+  0002BC5A: mov      dword ptr [ebp - 0x140], 0
+  0002BC64: mov      byte ptr [ebp - 0x150], 0
+  0002BC6B: jb       0x2bc78
+  0002BC6D: push     dword ptr [ebp - 0x248]
+  0002BC73: call     esi
+  0002BC75: add      esp, 4
+  0002BC78: cmp      dword ptr [ebp - 0x4c], 0x10
+  0002BC7C: jb       0x2bc86
+  0002BC7E: push     dword ptr [ebp - 0x60]
+  0002BC81: call     esi
+  0002BC83: add      esp, 4
+  0002BC86: mov      byte ptr [ebp - 4], 7
+  0002BC8A: cmp      dword ptr [ebp - 0x74], 0
+  0002BC8E: mov      dword ptr [ebp - 0x4c], 0xf
+  0002BC95: mov      dword ptr [ebp - 0x50], 0
+  0002BC9C: mov      byte ptr [ebp - 0x60], 0
+  0002BCA0: je       0x2b8a3
+  0002BCA6: lea      ecx, [ebp - 0x74]
+  0002BCA9: call     dword ptr [0x100531a8]  ; MSVCP120.dll!?_Orphan_all@_Container_base0@std@@QAEXXZ
+  0002BCAF: push     dword ptr [ebp - 0x74]
+  0002BCB2: jmp      0x2b889
+  0002BCB7: push     9
+  0002BCB9: push     ecx
+  0002BCBA: push     0x1005bec8  ; '<RES_DEL>'
+  0002BCBF: lea      ecx, [ebp - 0x60]
+  0002BCC2: call     0x9800
+  0002BCC7: cmp      eax, -1
+  0002BCCA: je       0x2be70
+  0002BCD0: cmp      dword ptr [ebx + 0x1c], 0
+  0002BCD4: je       0x2bcdd
+  0002BCD6: mov      dword ptr [ebx + 0x1c], 0xd
+  0002BCDD: mov      eax, dword ptr [0x10069c2c]
+  0002BCE2: push     0x1005bed4  ; 'NoRes'
+  0002BCE7: push     dword ptr [ebx + 0x128]
+  0002BCED: mov      byte ptr [ebp - 0x8b5], 0
+  0002BCF4: push     dword ptr [ebx + 0x124]
+  0002BCFA: push     dword ptr [eax + 0x7c]
+  0002BCFD: lea      eax, [ebp - 0x9b8]
+  0002BD03: push     0x1005be6c  ; 'SEARCH'
+  0002BD08: push     0x1005be74  ; 'func:%s|kid:%u|sig1:%u|sig2:%u|res:%s'
+  0002BD0D: push     0x103
+  0002BD12: push     eax
+  0002BD13: call     dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+  0002BD19: add      esp, 0x20
+  0002BD1C: mov      dword ptr [ebp - 0x24c], 0xf
+  0002BD26: cmp      byte ptr [ebp - 0x9b8], 0
+  0002BD2D: mov      dword ptr [ebp - 0x250], 0
+  0002BD37: mov      byte ptr [ebp - 0x260], 0
+  0002BD3E: jne      0x2bd44
+  0002BD40: xor      ecx, ecx
+  0002BD42: jmp      0x2bd59
+  0002BD44: lea      ecx, [ebp - 0x9b8]
+  0002BD4A: lea      edx, [ecx + 1]
+  0002BD4D: lea      ecx, [ecx]
+  0002BD50: mov      al, byte ptr [ecx]
+  0002BD52: inc      ecx
+  0002BD53: test     al, al
+  0002BD55: jne      0x2bd50
+  0002BD57: sub      ecx, edx
+  0002BD59: push     ecx
+  0002BD5A: lea      eax, [ebp - 0x9b8]
+  0002BD60: push     eax
+  0002BD61: lea      ecx, [ebp - 0x260]
+  0002BD67: call     0x4010
+  0002BD6C: mov      byte ptr [ebp - 4], 0x15
+  0002BD70: lea      ecx, [ebp - 0x168]
+  0002BD76: push     6
+  0002BD78: push     0x1005be9c  ; 'SEARES'
+  0002BD7D: mov      dword ptr [ebp - 0x154], 0xf
+  0002BD87: mov      dword ptr [ebp - 0x158], 0
+  0002BD91: mov      byte ptr [ebp - 0x168], 0
+  0002BD98: call     0x4010
+  0002BD9D: push     0
+  0002BD9F: push     0
+  0002BDA1: lea      eax, [ebp - 0x260]
+  0002BDA7: mov      byte ptr [ebp - 4], 0x16
+  0002BDAB: push     eax
+  0002BDAC: lea      eax, [ebp - 0x168]
+  0002BDB2: push     eax
+  0002BDB3: call     dword ptr [0x10053170]  ; KwLog.dll!?LogUserActMsg@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0PBD_N@Z
+  0002BDB9: add      esp, 0x10
+  0002BDBC: cmp      dword ptr [ebp - 0x154], 0x10
+  0002BDC3: jb       0x2bdd0
+  0002BDC5: push     dword ptr [ebp - 0x168]
+  0002BDCB: call     esi
+  0002BDCD: add      esp, 4
+  0002BDD0: mov      byte ptr [ebp - 4], 0xb
+  0002BDD4: cmp      dword ptr [ebp - 0x24c], 0x10
+  0002BDDB: mov      dword ptr [ebp - 0x154], 0xf
+  0002BDE5: mov      dword ptr [ebp - 0x158], 0
+  0002BDEF: mov      byte ptr [ebp - 0x168], 0
+  0002BDF6: jb       0x2be03
+  0002BDF8: push     dword ptr [ebp - 0x260]
+  0002BDFE: call     esi
+  0002BE00: add      esp, 4
+  0002BE03: push     0xd
+  0002BE05: push     0x10053f1c  ; 'CDownloadTask'
+  0002BE0A: lea      ecx, [ebp - 0x278]
+  0002BE10: mov      dword ptr [ebx + 0xfc], 6
+  0002BE1A: mov      dword ptr [ebp - 0x264], 0xf
+  0002BE24: mov      dword ptr [ebp - 0x268], 0
+  0002BE2E: mov      byte ptr [ebp - 0x278], 0
+  0002BE35: call     0x4010
+  0002BE3A: push     0x1005bedc  ; '×ÊÔ´ÒÑ¾\xadÉ¾³ý'
+  0002BE3F: lea      eax, [ebp - 0x278]
+  0002BE45: mov      byte ptr [ebp - 4], 0x17
+  0002BE49: push     eax
+  0002BE4A: lea      eax, [ebx + 0x2f8]
+  0002BE50: push     0
+  0002BE52: push     eax
+  0002BE53: call     edi
+  0002BE55: add      esp, 0x10
+  0002BE58: cmp      dword ptr [ebp - 0x264], 0x10
+  0002BE5F: jb       0x2bc78
+  0002BE65: push     dword ptr [ebp - 0x278]
+  0002BE6B: jmp      0x2bc73
+  0002BE70: push     8
+  0002BE72: push     0
+  0002BE74: push     0x1005beec  ; 'FILE_LEN'
+  0002BE79: lea      ecx, [ebp - 0x60]
+  0002BE7C: mov      dword ptr [ebp - 0x68], 0
+  0002BE83: call     0x3a10
+  0002BE88: cmp      eax, -1
+  0002BE8B: je       0x2bedb
+  0002BE8D: push     1
+  0002BE8F: inc      eax
+  0002BE90: lea      ecx, [ebp - 0x60]
+  0002BE93: push     eax
+  0002BE94: push     0x1005b02c  ; '<'
+  0002BE99: call     0x3a10
+  0002BE9E: mov      edi, eax
+  0002BEA0: cmp      edi, -1
+  0002BEA3: je       0x2bedb
+  0002BEA5: push     1
+  0002BEA7: push     edi
+  0002BEA8: push     0x100594f8  ; '>'
+  0002BEAD: lea      ecx, [ebp - 0x60]
+  0002BEB0: call     0x3a10
+  0002BEB5: cmp      eax, -1
+  0002BEB8: je       0x2bedb
+  0002BEBA: sub      esp, 0x18
+  0002BEBD: sub      eax, edi
+  0002BEBF: mov      ecx, esp
+  0002BEC1: dec      eax
+  0002BEC2: push     eax
+  0002BEC3: lea      eax, [edi + 1]
+  0002BEC6: push     eax
+  0002BEC7: push     ecx
+  0002BEC8: lea      ecx, [ebp - 0x60]
+  0002BECB: call     0x6120
+  0002BED0: call     0x43330
+  0002BED5: add      esp, 0x18
+  0002BED8: mov      dword ptr [ebp - 0x68], eax
+  0002BEDB: push     5
+  0002BEDD: push     0
+  0002BEDF: push     0x1005bef8  ; '<URL>' <==
+  0002BEE4: lea      ecx, [ebp - 0x60]
+  0002BEE7: mov      dword ptr [ebp - 0x48], 5
+  0002BEEE: call     0x3a10
+  0002BEF3: cmp      eax, -1
+  0002BEF6: je       0x2c1c7
+  0002BEFC: push     1
+  0002BEFE: add      eax, 5
+  0002BF01: lea      ecx, [ebp - 0x60]
+  0002BF04: push     eax
+  0002BF05: push     0x1005b02c  ; '<'
+  0002BF0A: call     0x3a10
+  0002BF0F: mov      dword ptr [ebp - 0x78], eax
+  0002BF12: cmp      eax, -1
+  0002BF15: je       0x2c1c7
+  0002BF1B: push     1
+  0002BF1D: push     eax
+  0002BF1E: push     0x100594f8  ; '>'
+  0002BF23: lea      ecx, [ebp - 0x60]
+  0002BF26: call     0x3a10
+  0002BF2B: mov      edi, eax
+  0002BF2D: mov      dword ptr [ebp - 0x18], 0
+  0002BF34: cmp      edi, -1
+  0002BF37: je       0x2bf5d
+  0002BF39: mov      eax, dword ptr [ebp - 0x78]
+  0002BF3C: sub      esp, 0x18
+  0002BF3F: mov      edx, edi
+  0002BF41: mov      ecx, esp
+  0002BF43: sub      edx, eax
+  0002BF45: inc      eax
+  0002BF46: dec      edx
+  0002BF47: push     edx
+  0002BF48: push     eax
+  0002BF49: push     ecx
+  0002BF4A: lea      ecx, [ebp - 0x60]
+  0002BF4D: call     0x6120
+  0002BF52: call     0x43330
+  0002BF57: add      esp, 0x18
+  0002BF5A: mov      dword ptr [ebp - 0x18], eax
+  0002BF5D: push     0x10053f1c  ; 'CDownloadTask'
+  0002BF62: lea      ecx, [ebp - 0x36c]
+  0002BF68: call     0x23d0
+  0002BF6D: mov      byte ptr [ebp - 4], 0x18
+  0002BF71: lea      eax, [ebp - 0x36c]
+  0002BF77: push     dword ptr [ebp - 0x18]
+  0002BF7A: push     0x1005bf00  ; 'ËÑË÷µ½%d¸ö·þÎñÆ÷×ÊÔ´......'
+  0002BF7F: push     eax
+  0002BF80: lea      eax, [ebx + 0x2f8]
+  0002BF86: push     0
+  0002BF88: push     eax
+  0002BF89: call     dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+  0002BF8F: add      esp, 0x14
+  0002BF92: cmp      dword ptr [ebp - 0x358], 0x10
+  0002BF99: jb       0x2bfa6
+  0002BF9B: push     dword ptr [ebp - 0x36c]
+  0002BFA1: call     esi
+  0002BFA3: add      esp, 4
+  0002BFA6: mov      eax, dword ptr [ebp - 0x18]
+  0002BFA9: lea      esp, [esp]
+  0002BFB0: test     eax, eax
+  0002BFB2: je       0x2c1c7
+  0002BFB8: push     1
+  0002BFBA: push     edi
+  0002BFBB: push     0x1005b02c  ; '<'
+  0002BFC0: lea      ecx, [ebp - 0x60]
+  0002BFC3: mov      byte ptr [ebp - 4], 0x19
+  0002BFC7: call     0x3a10
+  0002BFCC: mov      dword ptr [ebp - 0x78], eax
+  0002BFCF: cmp      eax, -1
+  0002BFD2: je       0x2c1c7
+  0002BFD8: push     1
+  0002BFDA: push     eax
+  0002BFDB: push     0x100594f8  ; '>'
+  0002BFE0: lea      ecx, [ebp - 0x60]
+  0002BFE3: call     0x3a10
+  0002BFE8: mov      dword ptr [ebp - 0x24], eax
+  0002BFEB: cmp      eax, -1
+  0002BFEE: je       0x2c1c7
+  0002BFF4: push     0xc8
+  0002BFF9: call     dword ptr [0x1005335c]  ; MSVCR120.dll!??2@YAPAXI@Z
+  0002BFFF: add      esp, 4
+  0002C002: test     eax, eax
+  0002C004: je       0x2c011
+  0002C006: mov      ecx, eax
+  0002C008: call     0x8d80
+  0002C00D: mov      edi, eax
+  0002C00F: jmp      0x2c013
+  0002C011: xor      edi, edi
+  0002C013: mov      ecx, dword ptr [ebp - 0x78]
+  0002C016: mov      eax, dword ptr [ebp - 0x24]
+  0002C019: sub      eax, ecx
+  0002C01B: dec      eax
+  0002C01C: push     eax
+  0002C01D: lea      eax, [ecx + 1]
+  0002C020: push     eax
+  0002C021: lea      eax, [ebp - 0x198]
+  0002C027: push     eax
+  0002C028: lea      ecx, [ebp - 0x60]
+  0002C02B: call     0x6120
+  0002C030: mov      byte ptr [ebp - 4], 0x1a
+  0002C034: lea      ecx, [ebp - 0x2a8]
+  0002C03A: push     0xd
+  0002C03C: push     0x10053f1c  ; 'CDownloadTask'
+  0002C041: mov      dword ptr [ebp - 0x294], 0xf
+  0002C04B: mov      dword ptr [ebp - 0x298], 0
+  0002C055: mov      byte ptr [ebp - 0x2a8], 0
+  0002C05C: call     0x4010
+  0002C061: mov      byte ptr [ebp - 4], 0x1b
+  0002C065: lea      eax, [ebp - 0x198]
+  0002C06B: cmp      dword ptr [ebp - 0x184], 0x10
+  0002C072: lea      ecx, [ebx + 0x2f8]
+  0002C078: cmovae   eax, dword ptr [ebp - 0x198]
+  0002C07F: push     eax
+  0002C080: push     0x1005bf1c  ; 'url=%s'
+  0002C085: lea      eax, [ebp - 0x2a8]
+  0002C08B: push     eax
+  0002C08C: push     0
+  0002C08E: push     ecx
+  0002C08F: call     dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+  0002C095: add      esp, 0x14
+  0002C098: cmp      dword ptr [ebp - 0x294], 0x10
+  0002C09F: jb       0x2c0ac
+  0002C0A1: push     dword ptr [ebp - 0x2a8]
+  0002C0A7: call     esi
+  0002C0A9: add      esp, 4
+  0002C0AC: mov      dword ptr [ebp - 0x1e4], 0xf
+  0002C0B6: mov      dword ptr [ebp - 0x1e8], 0
+  0002C0C0: mov      byte ptr [ebp - 0x1f8], 0
+  0002C0C7: mov      dword ptr [ebp - 0x1fc], 0xf
+  0002C0D1: mov      dword ptr [ebp - 0x200], 0
+  0002C0DB: mov      byte ptr [ebp - 0x210], 0
+  0002C0E2: lea      eax, [ebp - 0x210]
+  0002C0E8: mov      byte ptr [ebp - 4], 0x1d
+  0002C0EC: push     eax
+  0002C0ED: lea      edx, [ebp - 0x1f8]
+  0002C0F3: lea      ecx, [ebp - 0x198]
+  0002C0F9: call     0x42e90
+  0002C0FE: add      esp, 4
+  0002C101: lea      eax, [edi + 0xb0]
+  0002C107: mov      dword ptr [ebp - 0xb4], eax
+  0002C10D: push     eax
+  0002C10E: call     dword ptr [0x100530d0]  ; KERNEL32.dll!EnterCriticalSection
+  0002C114: lea      ecx, [edi + 0x80]
+  0002C11A: mov      byte ptr [ebp - 4], 0x1e
+  0002C11E: lea      eax, [ebp - 0x1f8]
+  0002C124: cmp      ecx, eax
+  0002C126: je       0x2c132
+  0002C128: push     -1
+  0002C12A: push     0
+  0002C12C: push     eax
+  0002C12D: call     0x3850
+  0002C132: lea      ecx, [ebp - 0xb4]
+  0002C138: mov      byte ptr [ebp - 4], 0x1d
+  0002C13C: call     0x5660
+  0002C141: lea      eax, [ebp - 0x210]
+  0002C147: mov      ecx, edi
+  0002C149: push     eax
+  0002C14A: call     0x8fb0
+  0002C14F: lea      eax, [ebp - 0x1f8]
+  0002C155: push     eax
+  0002C156: lea      ecx, [edi + 0xc]
+  0002C159: call     0x2510
+  0002C15E: lea      eax, [ebp - 0x210]
+  0002C164: push     eax
+  0002C165: lea      ecx, [edi + 0x24]
+  0002C168: call     0x2510
+  0002C16D: lea      eax, [ebp - 0x66c]
+  0002C173: mov      ecx, edi
+  0002C175: push     eax
+  0002C176: call     0x8e40
+  0002C17B: mov      ecx, eax
+  0002C17D: call     0x25d0
+  0002C182: lea      ecx, [ebp - 0x66c]
+  0002C188: mov      bl, al
+  0002C18A: call     0x24e0
+  0002C18F: test     bl, bl
+  0002C191: je       0x2c493
+  0002C197: test     edi, edi
+  0002C199: je       0x2c1a3
+  0002C19B: push     ecx
+  0002C19C: mov      ecx, edi
+  0002C19E: call     0x93a0
+  0002C1A3: lea      ecx, [ebp - 0x210]
+  0002C1A9: call     0x24e0
+  0002C1AE: lea      ecx, [ebp - 0x1f8]
+  0002C1B4: call     0x24e0
+  0002C1B9: lea      ecx, [ebp - 0x198]
+  0002C1BF: call     0x24e0
+  0002C1C4: mov      ebx, dword ptr [ebp - 0x40]
+  0002C1C7: lea      eax, [ebx + 0x248]
+  0002C1CD: push     eax
+  0002C1CE: lea      ecx, [ebp - 0x2c]
+  0002C1D1: call     0x5640
+  0002C1D6: lea      ecx, [ebx + 0x290]

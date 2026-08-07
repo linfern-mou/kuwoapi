@@ -1,0 +1,440 @@
+== 导入表 (关键) ==
+  IAT 0x10053318 -> ('MSVCR120.dll', '_snprintf')
+  IAT 0x10053360 -> ('MSVCR120.dll', '??3@YAXPAX@Z')
+  IAT 0x10053174 -> ('KwLog.dll', '?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ')
+  IAT 0x10053130 -> ('KwLib.dll', '?Format@StringUtility@KwLib@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBDZZ')
+  IAT 0x1005314C -> ('KwLib.dll', '??0CAutoCrititalSection@Thread@KwLib@@QAE@PBVCBaseCrititalSection@12@@Z')
+  IAT 0x1005342C -> ('WS2_32.dll', 'send')
+  IAT 0x10053558 -> (not found, searching nearby)
+
+== 关心字符串内容 ==
+  0x1005BD28: '<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|<uip:%s>|<new>|<nat:%u>|<flags:%u><speer>|<ipdeny:no>%s|<loginid:%s>\r\n'
+  0x1005BD20: 'U_QRY'
+  0x10054884: '001'
+  0x10053558: '%s'
+  0x10053F1C: 'CDownloadTask'
+  0x1005B9A8: 'Proxy-Authorization: Basic %s\r\n'
+  0x1005B7E0: 'GET %s?%s HTTP/1.0\r\nHost: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nConnection: Close\r\n\r\n'
+  0x1005B8B0: 'POST %s HTTP/1.1\r\nHost: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nContent-Length: %d\r\nConnection: Keep-Alive\r\n\r\n%s'
+  0x1005B9C8: 'GET %s?%s HTTP/1.0\r\nHost: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nConnection: Close\r\n%s\r\n'
+  0x1005BA98: 'POST %s HTTP/1.1\r\nHost: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nContent-Length: %d\r\nConnection: Keep-Alive\r\n%s\r\n%s'
+  0x1005B7F4: 'Host: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nConnection: Close\r\n\r\n'
+  0x1005B8C2: 'Host: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nContent-Length: %d\r\nConnection: Keep-Alive\r\n\r\n%s'
+  0x1005BE74: 'func:%s|kid:%u|sig1:%u|sig2:%u|res:%s'
+  0x1005B338: 'kid:%u|sip:%s|sig1:%u|sig2:%u|seares:%s|seatm:%u|peernum:%u|usedp:%u|nconn:%u|tooslow:%u|servtm:%u|servpeer:%u|peerpack:%u|serpack:%u|sestm:%d|total:%u|filetype:%u|down5:%u|mode:%u|stopstatus:%u|searcherr:%u|towarned:%u|useurl:%d|httpmode:%d|resserver:%s|ressuccsvr:%s|ressucway:%d|'
+
+== 区域1: POST body 构造 (0x0002AD00 ~ 0x0002AF80, mark=0x0002AEBE) ==
+  -- 反汇编 0x0002AD00 ~ 0x0002AF80 --
+    0002AD00: jmp      0x2ad0f
+    0002AD02: mov      ecx, dword ptr [esi + 0xc2]
+    0002AD08: mov      ax, word ptr [esi + 0xc6]
+    0002AD0F: mov      word ptr [ebp - 0x1c], ax
+    0002AD13: movzx    eax, cl
+    0002AD16: push     eax
+    0002AD17: mov      eax, ecx
+    0002AD19: mov      dword ptr [ebp - 0x20], ecx
+    0002AD1C: shr      eax, 8
+    0002AD1F: and      eax, 0xff
+    0002AD24: push     eax
+    0002AD25: mov      eax, ecx
+    0002AD27: shr      ecx, 0x18
+    0002AD2A: shr      eax, 0x10
+    0002AD2D: and      eax, 0xff
+    0002AD32: push     eax
+    0002AD33: push     ecx
+    0002AD34: lea      eax, [ebp - 0x654]
+    0002AD3A: push     0x100535cc  ; '%d.%d.%d.%d'
+    0002AD3F: push     eax
+    0002AD40: call     edi
+    0002AD42: mov      eax, dword ptr [0x10069be4]
+    0002AD47: add      esp, 0x18
+    0002AD4A: mov      eax, dword ptr [eax + 0x34]
+    0002AD4D: mov      dword ptr [ebx + 0x370], eax
+    0002AD53: cmp      dword ptr [0x1006b608], 0
+    0002AD5A: je       0x2ad67
+    0002AD5C: or       eax, 0x20000
+    0002AD61: mov      dword ptr [ebx + 0x370], eax
+    0002AD67: mov      eax, dword ptr [ebx + 0x224]
+    0002AD6D: test     eax, eax
+    0002AD6F: jne      0x2ad7d
+    0002AD71: or       dword ptr [ebx + 0x370], 0x40000
+    0002AD7B: jmp      0x2ad8c
+    0002AD7D: cmp      eax, 3
+    0002AD80: jne      0x2ad8c
+    0002AD82: or       dword ptr [ebx + 0x370], 0x100000
+    0002AD8C: mov      esi, dword ptr [0x10053180]  ; KwModConfig.dll!AfxGetConfigManager
+    0002AD92: mov      byte ptr [ebp - 0x2d], 0
+    0002AD96: call     esi
+    0002AD98: lea      ecx, [ebp - 0x2d]
+    0002AD9B: push     ecx
+    0002AD9C: push     0x1005bcec  ; 'Enable'
+    0002ADA1: mov      edx, dword ptr [eax]
+    0002ADA3: mov      ecx, eax
+    0002ADA5: push     0x1005bcf4  ; 'CdnSpeedPolicy'
+    0002ADAA: call     dword ptr [edx + 0x70]
+    0002ADAD: mov      dword ptr [ebp - 0xe8], 0xf
+    0002ADB7: mov      dword ptr [ebp - 0xec], 0
+    0002ADC1: mov      byte ptr [ebp - 0xfc], 0
+    0002ADC8: mov      dword ptr [ebp - 4], 0
+    0002ADCF: cmp      byte ptr [ebp - 0x2d], 0
+    0002ADD3: je       0x2ade7
+    0002ADD5: push     9
+    0002ADD7: push     0x1005bd04  ; '|<cdnreq>'
+    0002ADDC: lea      ecx, [ebp - 0xfc]
+    0002ADE2: call     0x4010
+    0002ADE7: mov      dword ptr [ebp - 0x9c], 0xf
+    0002ADF1: mov      dword ptr [ebp - 0xa0], 0
+    0002ADFB: mov      byte ptr [ebp - 0xb0], 0
+    0002AE02: mov      byte ptr [ebp - 4], 1
+    0002AE06: call     esi
+    0002AE08: lea      ecx, [ebp - 0xb0]
+    0002AE0E: push     ecx
+    0002AE0F: push     0x1005bd10  ; 'NetID'
+    0002AE14: mov      edx, dword ptr [eax]
+    0002AE16: mov      ecx, eax
+    0002AE18: push     0x1005bd18  ; 'Setting'
+    0002AE1D: call     dword ptr [edx + 0x10]
+    0002AE20: cmp      dword ptr [ebp - 0x9c], 0x10
+    0002AE27: lea      eax, [ebp - 0xb0]
+    0002AE2D: lea      edi, [ebp - 0xfc]
+    0002AE33: mov      ebx, 0x1006b52c
+    0002AE38: cmovae   eax, dword ptr [ebp - 0xb0]
+    0002AE3F: mov      esi, 0x1006b514
+    0002AE44: cmp      dword ptr [ebp - 0xe8], 0x10
+    0002AE4B: mov      dword ptr [ebp - 0x28], eax
+    0002AE4E: push     dword ptr [ebp - 0x28]
+    0002AE51: mov      eax, dword ptr [0x10069c2c]
+    0002AE56: cmovae   edi, dword ptr [ebp - 0xfc]
+    0002AE5D: cmp      dword ptr [0x1006b540], 0x10
+    0002AE64: push     edi
+    0002AE65: movzx    edx, word ptr [eax + 0x86]
+    0002AE6C: mov      ecx, dword ptr [eax + 0x7c]
+    0002AE6F: mov      eax, dword ptr [ebp - 0x40]
+    0002AE72: cmovae   ebx, dword ptr [0x1006b52c]
+    0002AE79: cmp      dword ptr [0x1006b528], 0x10
+    0002AE80: push     dword ptr [eax + 0x370]
+    0002AE86: cmovae   esi, dword ptr [0x1006b514]
+    0002AE8D: lea      eax, [ebp - 0x654]
+    0002AE93: push     edx
+    0002AE94: push     eax
+    0002AE95: lea      eax, [ebp - 0x230]
+    0002AE9B: push     eax
+    0002AE9C: push     ebx
+    0002AE9D: mov      ebx, dword ptr [ebp - 0x40]
+    0002AEA0: lea      eax, [ebp - 0x7a8]
+    0002AEA6: push     esi
+    0002AEA7: push     ecx
+    0002AEA8: push     dword ptr [ebx + 0x128]
+    0002AEAE: push     dword ptr [ebx + 0x124]
+    0002AEB4: push     0x1005bd20  ; 'U_QRY'
+    0002AEB9: push     0x10054884  ; '001'
+    0002AEBE: push     0x1005bd28  ; '<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|<uip:%s>|<new>|<nat:%u>|<flags:%u><speer>|<ipdeny:no>%s|<loginid:%s>\r\n' <==
+    0002AEC3: push     0x103
+    0002AEC8: push     eax
+    0002AEC9: call     dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002AECF: add      esp, 0x40
+    0002AED2: mov      dword ptr [ebp - 0x124], 0xf
+    0002AEDC: lea      ecx, [ebp - 0x138]
+    0002AEE2: mov      dword ptr [ebp - 0x128], 0
+    0002AEEC: mov      byte ptr [ebp - 0x138], 0
+    0002AEF3: push     0xd
+    0002AEF5: push     0x10053f1c  ; 'CDownloadTask'
+    0002AEFA: call     0x4010
+    0002AEFF: lea      ecx, [ebp - 0x7a8]
+    0002AF05: mov      byte ptr [ebp - 4], 2
+    0002AF09: mov      edi, dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+    0002AF0F: lea      eax, [ebx + 0x2f8]
+    0002AF15: push     ecx
+    0002AF16: push     0x10053558  ; '%s'
+    0002AF1B: lea      ecx, [ebp - 0x138]
+    0002AF21: push     ecx
+    0002AF22: push     0
+    0002AF24: push     eax
+    0002AF25: call     edi
+    0002AF27: mov      byte ptr [ebp - 4], 1
+    0002AF2B: add      esp, 0x14
+    0002AF2E: cmp      dword ptr [ebp - 0x124], 0x10
+    0002AF35: mov      esi, dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+    0002AF3B: jb       0x2af48
+    0002AF3D: push     dword ptr [ebp - 0x138]
+    0002AF43: call     esi
+    0002AF45: add      esp, 4
+    0002AF48: cmp      byte ptr [ebp - 0x7a8], 0
+    0002AF4F: mov      dword ptr [ebp - 0x124], 0xf
+    0002AF59: mov      dword ptr [ebp - 0x128], 0
+    0002AF63: mov      byte ptr [ebp - 0x138], 0
+    0002AF6A: mov      dword ptr [ebp - 0xb8], 0xf
+    0002AF74: mov      dword ptr [ebp - 0xbc], 0
+
+== 区域2: GET %s?%s HTTP/1.0 引用 (0x0002D480 ~ 0x0002D680, mark=0x0002D55E) ==
+  -- 反汇编 0x0002D480 ~ 0x0002D680 --
+    0002D480: call     dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+    0002D486: add      esp, 0x10
+    0002D489: mov      byte ptr [ebp - 4], 0xd
+    0002D48D: cmp      dword ptr [ebp - 0x20], 0x10
+    0002D491: jb       0x2d49f
+    0002D493: push     dword ptr [ebp - 0x34]
+    0002D496: call     dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+    0002D49C: add      esp, 4
+    0002D49F: mov      eax, dword ptr [esi]
+    0002D4A1: mov      ecx, esi
+    0002D4A3: call     dword ptr [eax + 0x1c]
+    0002D4A6: mov      edx, dword ptr [esi]
+    0002D4A8: lea      eax, [edi + 4]
+    0002D4AB: push     eax
+    0002D4AC: mov      ecx, esi
+    0002D4AE: call     dword ptr [edx + 0x3c]
+    0002D4B1: mov      eax, dword ptr [esi]
+    0002D4B3: mov      ecx, esi
+    0002D4B5: push     dword ptr [edi]
+    0002D4B7: call     dword ptr [eax + 0x20]
+    0002D4BA: mov      eax, dword ptr [esi]
+    0002D4BC: mov      ecx, esi
+    0002D4BE: push     dword ptr [edi]
+    0002D4C0: call     dword ptr [eax + 0x24]
+    0002D4C3: mov      eax, dword ptr [esi]
+    0002D4C5: mov      ecx, esi
+    0002D4C7: call     dword ptr [eax + 0x44]
+    0002D4CA: push     0xd
+    0002D4CC: push     0x10053f1c  ; 'CDownloadTask'
+    0002D4D1: lea      ecx, [ebp - 0x34]
+    0002D4D4: mov      byte ptr [ebp - 0x35], 1
+    0002D4D8: mov      dword ptr [ebp - 0x20], 0xf
+    0002D4DF: mov      dword ptr [ebp - 0x24], 0
+    0002D4E6: mov      byte ptr [ebp - 0x34], 0
+    0002D4EA: call     0x4010
+    0002D4EF: push     0x1005b7c8
+    0002D4F4: lea      eax, [ebp - 0x34]
+    0002D4F7: mov      byte ptr [ebp - 4], 0xf
+    0002D4FB: push     eax
+    0002D4FC: lea      eax, [ebp - 0x8c]
+    0002D502: push     0
+    0002D504: push     eax
+    0002D505: call     dword ptr [0x10053174]  ; KwLog.dll!?YL_Log@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H0PBDZZ
+    0002D50B: add      esp, 0x10
+    0002D50E: mov      byte ptr [ebp - 4], 0xd
+    0002D512: cmp      dword ptr [ebp - 0x20], 0x10
+    0002D516: jb       0x2d524
+    0002D518: push     dword ptr [ebp - 0x34]
+    0002D51B: call     dword ptr [0x10053360]  ; MSVCR120.dll!??3@YAXPAX@Z
+    0002D521: add      esp, 4
+    0002D524: cmp      byte ptr [edi + 0x48], 0
+    0002D528: jne      0x2d5d4
+    0002D52E: cmp      byte ptr [ebp - 0x17], 1
+    0002D532: lea      ecx, [ebp - 0xa4]
+    0002D538: lea      eax, [ebp - 0xbc]
+    0002D53E: jne      0x2d587
+    0002D540: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D547: cmovae   ecx, dword ptr [ebp - 0xa4]
+    0002D54E: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D555: push     ecx
+    0002D556: cmovae   eax, dword ptr [ebp - 0xbc]
+    0002D55D: push     eax
+    0002D55E: push     0x1005b7e0  ; 'GET %s?%s HTTP/1.0\r\nHost: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nConnection: Close\r\n\r\n' <==
+    0002D563: lea      eax, [ebp - 0x1b344]
+    0002D569: push     0x18fff
+    0002D56E: push     eax
+    0002D56F: call     dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002D575: add      esp, 0x14
+    0002D578: mov      dword ptr [edi + 0x118], 1
+    0002D582: jmp      0x2d7b7
+    0002D587: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D58E: cmovae   ecx, dword ptr [ebp - 0xa4]
+    0002D595: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D59C: push     ecx
+    0002D59D: push     dword ptr [ebp - 0x94]
+    0002D5A3: cmovae   eax, dword ptr [ebp - 0xbc]
+    0002D5AA: push     eax
+    0002D5AB: push     0x1005b8b0  ; 'POST %s HTTP/1.1\r\nHost: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nContent-Length: %d\r\nConnection: Keep-Alive\r\n\r\n%s'
+    0002D5B0: lea      eax, [ebp - 0x1b344]
+    0002D5B6: push     0x18fff
+    0002D5BB: push     eax
+    0002D5BC: call     dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002D5C2: add      esp, 0x18
+    0002D5C5: mov      dword ptr [edi + 0x118], 2
+    0002D5CF: jmp      0x2d7b7
+    0002D5D4: add      edi, 0xcc
+    0002D5DA: mov      ecx, edi
+    0002D5DC: lea      edx, [ecx + 1]
+    0002D5DF: nop      
+    0002D5E0: mov      al, byte ptr [ecx]
+    0002D5E2: inc      ecx
+    0002D5E3: test     al, al
+    0002D5E5: jne      0x2d5e0
+    0002D5E7: sub      ecx, edx
+    0002D5E9: je       0x2d638
+    0002D5EB: mov      edx, dword ptr [ebp + 8]
+    0002D5EE: add      edx, 0x8c
+    0002D5F4: mov      ecx, edx
+    0002D5F6: lea      esi, [ecx + 1]
+    0002D5F9: lea      esp, [esp]
+    0002D600: mov      al, byte ptr [ecx]
+    0002D602: inc      ecx
+    0002D603: test     al, al
+    0002D605: jne      0x2d600
+    0002D607: sub      ecx, esi
+    0002D609: je       0x2d638
+    0002D60B: mov      esi, dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002D611: lea      eax, [ebp - 0x204]
+    0002D617: push     edx
+    0002D618: push     edi
+    0002D619: push     0x1005b998  ; '%s:%s'
+    0002D61E: push     0xff
+    0002D623: push     eax
+    0002D624: call     esi
+    0002D626: mov      edi, dword ptr [ebp + 8]
+    0002D629: add      esp, 0x14
+    0002D62C: mov      byte ptr [ebp - 0x105], 0
+    0002D633: jmp      0x2d6ba
+    0002D638: mov      ecx, edi
+    0002D63A: lea      edx, [ecx + 1]
+    0002D63D: lea      ecx, [ecx]
+    0002D640: mov      al, byte ptr [ecx]
+    0002D642: inc      ecx
+    0002D643: test     al, al
+    0002D645: jne      0x2d640
+    0002D647: sub      ecx, edx
+    0002D649: je       0x2d674
+    0002D64B: mov      esi, dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002D651: lea      eax, [ebp - 0x204]
+    0002D657: push     edi
+    0002D658: push     0x1005b9a0  ; '%s:'
+    0002D65D: push     0xff
+    0002D662: push     eax
+    0002D663: call     esi
+    0002D665: mov      edi, dword ptr [ebp + 8]
+    0002D668: add      esp, 0x10
+    0002D66B: mov      byte ptr [ebp - 0x105], 0
+    0002D672: jmp      0x2d6ba
+    0002D674: mov      edi, dword ptr [ebp + 8]
+    0002D677: lea      edx, [edi + 0x8c]
+    0002D67D: mov      ecx, edx
+
+== 区域3: POST %s HTTP/1.1 引用 (0x0002D560 ~ 0x0002D730, mark=0x0002D5AB) ==
+  -- 反汇编 0x0002D560 ~ 0x0002D730 --
+    0002D560: mov      bh, 5
+    0002D562: adc      byte ptr [ebp - 0x1b3437b], cl
+    0002D568: jmp      ptr [eax - 1]
+    0002D56B: pop      dword ptr [ecx]
+    0002D56D: add      byte ptr [eax - 1], dl
+    0002D570: adc      eax, 0x10053318
+    0002D575: add      esp, 0x14
+    0002D578: mov      dword ptr [edi + 0x118], 1
+    0002D582: jmp      0x2d7b7
+    0002D587: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D58E: cmovae   ecx, dword ptr [ebp - 0xa4]
+    0002D595: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D59C: push     ecx
+    0002D59D: push     dword ptr [ebp - 0x94]
+    0002D5A3: cmovae   eax, dword ptr [ebp - 0xbc]
+    0002D5AA: push     eax
+    0002D5AB: push     0x1005b8b0  ; 'POST %s HTTP/1.1\r\nHost: deliver.kuwo.cn\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\nCache-Control: no-cache\r\nAccept-Encoding: zlib\r\nContent-Length: %d\r\nConnection: Keep-Alive\r\n\r\n%s' <==
+    0002D5B0: lea      eax, [ebp - 0x1b344]
+    0002D5B6: push     0x18fff
+    0002D5BB: push     eax
+    0002D5BC: call     dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002D5C2: add      esp, 0x18
+    0002D5C5: mov      dword ptr [edi + 0x118], 2
+    0002D5CF: jmp      0x2d7b7
+    0002D5D4: add      edi, 0xcc
+    0002D5DA: mov      ecx, edi
+    0002D5DC: lea      edx, [ecx + 1]
+    0002D5DF: nop      
+    0002D5E0: mov      al, byte ptr [ecx]
+    0002D5E2: inc      ecx
+    0002D5E3: test     al, al
+    0002D5E5: jne      0x2d5e0
+    0002D5E7: sub      ecx, edx
+    0002D5E9: je       0x2d638
+    0002D5EB: mov      edx, dword ptr [ebp + 8]
+    0002D5EE: add      edx, 0x8c
+    0002D5F4: mov      ecx, edx
+    0002D5F6: lea      esi, [ecx + 1]
+    0002D5F9: lea      esp, [esp]
+    0002D600: mov      al, byte ptr [ecx]
+    0002D602: inc      ecx
+    0002D603: test     al, al
+    0002D605: jne      0x2d600
+    0002D607: sub      ecx, esi
+    0002D609: je       0x2d638
+    0002D60B: mov      esi, dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002D611: lea      eax, [ebp - 0x204]
+    0002D617: push     edx
+    0002D618: push     edi
+    0002D619: push     0x1005b998  ; '%s:%s'
+    0002D61E: push     0xff
+    0002D623: push     eax
+    0002D624: call     esi
+    0002D626: mov      edi, dword ptr [ebp + 8]
+    0002D629: add      esp, 0x14
+    0002D62C: mov      byte ptr [ebp - 0x105], 0
+    0002D633: jmp      0x2d6ba
+    0002D638: mov      ecx, edi
+    0002D63A: lea      edx, [ecx + 1]
+    0002D63D: lea      ecx, [ecx]
+    0002D640: mov      al, byte ptr [ecx]
+    0002D642: inc      ecx
+    0002D643: test     al, al
+    0002D645: jne      0x2d640
+    0002D647: sub      ecx, edx
+    0002D649: je       0x2d674
+    0002D64B: mov      esi, dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002D651: lea      eax, [ebp - 0x204]
+    0002D657: push     edi
+    0002D658: push     0x1005b9a0  ; '%s:'
+    0002D65D: push     0xff
+    0002D662: push     eax
+    0002D663: call     esi
+    0002D665: mov      edi, dword ptr [ebp + 8]
+    0002D668: add      esp, 0x10
+    0002D66B: mov      byte ptr [ebp - 0x105], 0
+    0002D672: jmp      0x2d6ba
+    0002D674: mov      edi, dword ptr [ebp + 8]
+    0002D677: lea      edx, [edi + 0x8c]
+    0002D67D: mov      ecx, edx
+    0002D67F: lea      esi, [ecx + 1]
+    0002D682: mov      al, byte ptr [ecx]
+    0002D684: inc      ecx
+    0002D685: test     al, al
+    0002D687: jne      0x2d682
+    0002D689: sub      ecx, esi
+    0002D68B: mov      esi, dword ptr [0x10053318]  ; MSVCR120.dll!_snprintf
+    0002D691: je       0x2d6b3
+    0002D693: push     edx
+    0002D694: push     0x1005b9a4  ; ':%s'
+    0002D699: lea      eax, [ebp - 0x204]
+    0002D69F: push     0xff
+    0002D6A4: push     eax
+    0002D6A5: call     esi
+    0002D6A7: add      esp, 0x10
+    0002D6AA: mov      byte ptr [ebp - 0x105], 0
+    0002D6B1: jmp      0x2d6ba
+    0002D6B3: mov      byte ptr [ebp - 0x204], 0
+    0002D6BA: lea      ecx, [ebp - 0x204]
+    0002D6C0: lea      edx, [ecx + 1]
+    0002D6C3: mov      al, byte ptr [ecx]
+    0002D6C5: inc      ecx
+    0002D6C6: test     al, al
+    0002D6C8: jne      0x2d6c3
+    0002D6CA: sub      ecx, edx
+    0002D6CC: je       0x2d704
+    0002D6CE: push     ecx
+    0002D6CF: lea      edx, [ebp - 0x204]
+    0002D6D5: lea      ecx, [ebp - 0x304]
+    0002D6DB: call     0x44cf0
+    0002D6E0: lea      eax, [ebp - 0x304]
+    0002D6E6: push     eax
+    0002D6E7: push     0x1005b9a8  ; 'Proxy-Authorization: Basic %s\r\n'
+    0002D6EC: lea      eax, [ebp - 0x204]
+    0002D6F2: push     0xff
+    0002D6F7: push     eax
+    0002D6F8: call     esi
+    0002D6FA: add      esp, 0x14
+    0002D6FD: mov      byte ptr [ebp - 0x105], 0
+    0002D704: cmp      byte ptr [ebp - 0x17], 1
+    0002D708: jne      0x2d75d
+    0002D70A: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D711: lea      ecx, [ebp - 0xa4]
+    0002D717: lea      edx, [ebp - 0x204]
+    0002D71D: cmovae   ecx, dword ptr [ebp - 0xa4]
+    0002D724: lea      eax, [ebp - 0xbc]

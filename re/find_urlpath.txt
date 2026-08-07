@@ -1,0 +1,69 @@
+== .rdata 中以 '/' 开头的路径串 ==
+  RVA=0x00055C75 VA=0x10055C75  '/L'
+  RVA=0x00055D08 VA=0x10055D08  '/)I'
+  RVA=0x0005664F VA=0x1005664F  '/:'
+  RVA=0x000567BC VA=0x100567BC  '/7'
+  RVA=0x000568BE VA=0x100568BE  '/m'
+  RVA=0x00056B50 VA=0x10056B50  '/P8i'
+  RVA=0x00056C49 VA=0x10056C49  '/?'
+  RVA=0x00056DD1 VA=0x10056DD1  '/yQA'
+  RVA=0x0005B764 VA=0x1005B764  '/yl_res_manage.search'
+  RVA=0x0005E4C0 VA=0x1005E4C0  '/>'
+  RVA=0x0005E4CC VA=0x1005E4CC  '/>'
+
+== 找 0x0002AEBE 所在函数入口 ==
+  函数入口 VA=0x0002ABF0 (RVA off=0x29BF0)
+  扫描对 ebp-0xbc / ebp-0xa4 / ebp-0x94 的写入...
+    0002ADFB: mov      byte ptr [ebp - 0xb0], 0
+    0002AE08: lea      ecx, [ebp - 0xb0]
+    0002AE27: lea      eax, [ebp - 0xb0]
+    0002AE38: cmovae   eax, dword ptr [ebp - 0xb0]
+    0002AF74: mov      dword ptr [ebp - 0xbc], 0
+
+== 找 0x0002D55E 所在函数入口 ==
+  函数入口 VA=0x0002D1D0
+  函数内字符串引用 + ebp-0xbc/0xa4 写入:
+    0002D1F9: lea      ecx, [ebp - 0xbc]
+    0002D207: push     0x1005b764  ; '/yl_res_manage.search'
+    0002D215: mov      dword ptr [ebp - 0xa8], 0xf
+    0002D225: mov      byte ptr [ebp - 0xbc], bl
+    0002D264: push     0x1005b784  ; '_'
+    0002D289: push     0x1005b77c  ; '.txt'
+    0002D33B: lea      ecx, [ebp - 0xa4]
+    0002D386: push     0x10053f1c  ; 'CDownloadTask'
+    0002D3D6: push     0x1005b788  ; 'Ê¹ÓÃ·þÎñÆ÷ %s ½øÐÐ×ÊÔ´¼ìË÷, <%u,%u>'
+    0002D457: push     0x10053f1c  ; 'CDownloadTask'
+    0002D46A: push     0x1005b7ac  ; 'HTTPÄ£Ê½ÏÂÁ¬½Ó¼ìË÷·þÎñÆ÷'
+    0002D4CC: push     0x10053f1c  ; 'CDownloadTask'
+    0002D4EF: push     0x1005b7c8  ; 'Á¬½Ó¼ìË÷·þÎñÆ÷³É¹¦'
+    0002D532: lea      ecx, [ebp - 0xa4]
+    0002D538: lea      eax, [ebp - 0xbc]
+    0002D540: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D547: cmovae   ecx, dword ptr [ebp - 0xa4]
+    0002D54E: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D556: cmovae   eax, dword ptr [ebp - 0xbc]
+    0002D587: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D58E: cmovae   ecx, dword ptr [ebp - 0xa4]
+    0002D595: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D59D: push     dword ptr [ebp - 0x94]
+    0002D5A3: cmovae   eax, dword ptr [ebp - 0xbc]
+    0002D619: push     0x1005b998  ; '%s:%s'
+    0002D658: push     0x1005b9a0  ; '%s:'
+    0002D694: push     0x1005b9a4  ; ':%s'
+    0002D6E7: push     0x1005b9a8  ; 'Proxy-Authorization: Basic %s\r\n'
+    0002D70A: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D711: lea      ecx, [ebp - 0xa4]
+    0002D71D: cmovae   ecx, dword ptr [ebp - 0xa4]
+    0002D724: lea      eax, [ebp - 0xbc]
+    0002D72A: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D732: cmovae   eax, dword ptr [ebp - 0xbc]
+    0002D75D: cmp      dword ptr [ebp - 0x90], 0x10
+    0002D764: lea      eax, [ebp - 0xa4]
+    0002D76A: lea      ecx, [ebp - 0xbc]
+    0002D770: cmovae   eax, dword ptr [ebp - 0xa4]
+    0002D777: cmp      dword ptr [ebp - 0xa8], 0x10
+    0002D77F: cmovae   ecx, dword ptr [ebp - 0xbc]
+    0002D78D: push     dword ptr [ebp - 0x94]
+    0002D7B9: push     0x10053f1c  ; 'CDownloadTask'
+    0002D7E3: push     0x1005bb84  ; '·¢ËÍ¼ìË÷ÇëÇó\n%s'
+    0002D838: mov      dword ptr [ebp - 0x2344], 0x100583f0  ; 'Ð\x16'
