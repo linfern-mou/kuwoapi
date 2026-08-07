@@ -24,6 +24,8 @@
   <div id="search-song"></div>
   <h2>歌词与播放</h2>
   <div id="lyric-play"></div>
+  <h2>排行榜</h2>
+  <div id="rank"></div>
   <h2>用户与登录</h2>
   <div id="user"></div>
   <h2>歌单与列表</h2>
@@ -40,6 +42,10 @@
       ],
       'lyric-play': [
         { path: '/lyric', desc: '歌词 (id/musicId)', src: 'newlyric.kuwo.cn/newlyric.lrc' },
+      ],
+      'rank': [
+        { path: '/rank', desc: '排行榜内容 (id, pn, rn, bangid) id: 16=热歌 17=新歌 93=飙升 132=亚洲', src: 'kbangserver.kuwo.cn/ksong.s' },
+        { path: '/rank/list', desc: '曲库分类树/节点信息 (cont, node) cont: tree/ninfo', src: 'qukudata.kuwo.cn/q.k' },
       ],
       'user': [
         { path: '/login', desc: '酷我账号登录 (username, password, dev_id)', src: 'pc.i.kuwo.cn/US_NEW/kuwo/login_kw' },

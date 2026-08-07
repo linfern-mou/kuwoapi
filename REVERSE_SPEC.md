@@ -414,7 +414,81 @@
 | `http://down.shouji.kuwo.cn/star/mobile/kwplayer_ar_mbox.apk` | 安卓下载 |
 | `http://down.shouji.kuwo.cn/star/mobile/kwplayerhd_ar_mbox.apk` | 安卓HD下载 |
 
-### 3.10 CDN 域名（压缩包确认）
+### 3.10 排行榜接口（来源：html/webdata/netsong/js/channel_bang.js、content_bang.js）
+
+#### 3.10.1 排行榜内容
+- **端点**: `https://kbangserver.kuwo.cn/ksong.s`
+- **方法**: GET
+- **URL 模板**（压缩包确认）:
+  ```
+  https://kbangserver.kuwo.cn/ksong.s?from=pc&fmt=json&type=bang&data=content&id={bangid}&pn=0&rn=200&isbang=1&show_copyright_off=0&pcmp4=1&bangid={bangid}&t={timestamp}
+  ```
+- **参数说明**:
+
+| 参数 | 值/格式 | 说明 |
+|------|---------|------|
+| from | `pc` | 固定值 |
+| fmt | `json` | 返回格式 |
+| type | `bang` | 固定值 |
+| data | `content` | 取榜单内容 |
+| id | `%d` | 榜单 ID |
+| pn | `%d` | 页码，从 0 开始 |
+| rn | `%d` | 每页数量（频道页 20，内容页 200） |
+| isbang | `1` | 固定值 |
+| show_copyright_off | `0` | 固定值 |
+| pcmp4 | `1` | 固定值 |
+| bangid | `%d` | 子榜单 ID（可选） |
+| t | `%d` | 时间戳，防缓存 |
+
+- **已知榜单 ID**（来源：channel_bang.html 的 `c-id` / `c-sourceid` 属性）:
+
+| id | sourceid | 名称 |
+|----|----------|------|
+| 16 | 26 | 酷我热歌榜 |
+| 17 | 25 | 酷我新歌榜 |
+| 93 | 80358 | 酷我飙升榜 |
+| 132 | -99 | 酷音乐亚洲排行榜 |
+
+#### 3.10.2 曲库分类树（榜单列表入口）
+- **端点**: `http://qukudata.kuwo.cn/q.k`
+- **方法**: GET
+- **URL 模板**（压缩包确认）:
+  ```
+  http://qukudata.kuwo.cn/q.k?op=query&cont=tree&node=2&pn=0&rn=20&fmt=json&src=mbox&level=2
+  ```
+- **参数说明**:
+
+| 参数 | 值/格式 | 说明 |
+|------|---------|------|
+| op | `query` | 固定值 |
+| cont | `tree` | 取分类树 |
+| node | `%d` | 节点 ID（默认 2） |
+| pn | `0` | 页码 |
+| rn | `20` | 每页数量 |
+| fmt | `json` | 返回格式 |
+| src | `mbox` | 固定值 |
+| level | `2` | 树层级 |
+
+#### 3.10.3 曲库节点信息（榜单简介）
+- **端点**: `http://qukudata.kuwo.cn/q.k`
+- **方法**: GET
+- **URL 模板**（压缩包确认）:
+  ```
+  http://qukudata.kuwo.cn/q.k?op=query&cont=ninfo&node={sourceid}&pn=0&rn=10&fmt=json&src=mbox
+  ```
+- **参数说明**:
+
+| 参数 | 值/格式 | 说明 |
+|------|---------|------|
+| op | `query` | 固定值 |
+| cont | `ninfo` | 取节点信息 |
+| node | `%d` | 节点 ID（榜单的 sourceid） |
+| pn | `0` | 页码 |
+| rn | `10` | 每页数量 |
+| fmt | `json` | 返回格式 |
+| src | `mbox` | 固定值 |
+
+### 3.11 CDN 域名（压缩包确认）
 
 ```
 win.player.ra01.sycdn.kuwo.cn
