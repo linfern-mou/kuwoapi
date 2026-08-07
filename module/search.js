@@ -1,41 +1,37 @@
 /**
  * @fileoverview 酷我音乐搜索接口
  *
- * 调用酷我音乐 API 进行歌曲搜索，支持设置每页数量和页码。
+ * 接口来源：default.zip 中 DLL strings 分析
+ * 端点：http://search.kuwo.cn/r.s?client=kt&all=%s&pn=%d&rn=%d&ft=music&newsearch=1&cluster=0&strategy=2012&itemset=reco&ver=%s&pcmp4=1
  *
  * 路由: /search
- *
- * @example
- * // GET /search?key=海阔天空&pn=1&rn=30
- * const res = await api.search({ key: '海阔天空', pn: 1, rn: 30 });
- *
- * @example
- * // 编程式调用
- * const api = require('./main');
- * const res = await api.search({ key: '海阔天空', pn: 1, rn: 30 });
  *
  * @module search
  */
 
+const { clientver } = require('../util/config.json');
+
 module.exports = (params, useAxios) => {
   const dataMap = {
-    all: params?.key || '',
-    pn: params?.pn || 1,
-    rn: params?.rn || 30,
-    vipver: 1,
+    client: 'kt',
+    all: params?.key || params?.all || '',
+    pn: params?.pn || 0,
+    rn: params?.rn || 10,
     ft: 'music',
-    clientver: params?.clientver || '8.7.4.0',
-    platform: 'android',
-    product: 'KuwoPlayer',
-    encoding: 'utf8',
+    newsearch: 1,
+    cluster: 0,
+    strategy: 2012,
+    itemset: 'reco',
+    ver: params?.ver || clientver,
+    pcmp4: 1,
   };
 
   return useAxios({
-    url: '/openapi/v1/search',
+    baseURL: 'http://search.kuwo.cn',
+    url: '/r.s',
     method: 'GET',
     params: dataMap,
-    encryptType: 'android',
-    headers: { 'x-router': 'search.kuwo.cn' },
     cookie: params?.cookie || {},
+    injectVer: false,
   });
 };

@@ -1,125 +1,119 @@
 /**
  * @fileoverview 酷我音乐 API HTTP 请求封装
  *
- * 本模块是所有 API 请求的底层发送函数，负责：
- * 1. 注入网页端默认参数（plat、httpsStatus、reqId）
- * 2. 生成 Secret 请求头（基于 Hm_Iuvt cookie 的 LCG+XOR 加密）
- * 3. 配置请求头（User-Agent、Cookie、Referer、CSRF 等）
- * 4. 发送 HTTP 请求（通过 axios）
- * 5. 处理响应（解析 Cookie、错误处理）
+ * 基于 default.zip 中 KwHttp.dll / KwHttpRequestMgr.dll 分析所得的请求逻辑。
+ *
+ * 请求方式：
+ * - PC 客户端通过 KwHttp.dll 发送 HTTP/1.0 GET/POST 请求
+ * - User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10
+ * - 部分接口需要 sign 参数（由 KwLib.dll 的 Sig::CalcSign 生成，此处用 MD5 实现）
+ *
+ * 接口端点均来源于压缩包内 DLL/exe 的 strings 分析。
  *
  * @module request
  */
 
 const axios = require('axios');
-const { parseCookieString } = require('./util');
-const { generateKuwoSecret, generateReqId } = require('./crypto');
-const { baseURL, hmCookie } = require('./config.json');
+const { cryptoMd5 } = require('./crypto');
+const { parseCookieString, randomString } = require('./util');
+const { clientver } = require('./config.json');
 const { resolveProxy } = require('./runtime');
 
+// 签名盐值（来源于压缩包内 KwLib.dll 的 Sig::CalcSign 关联分析）
+// PC 客户端签名逻辑：对请求参数做 MD5，sign 参数格式为 hex
+const SIGN_SALT = 'yeelion';
+
 /**
- * 从 cookie 对象构建 cookie 字符串
+ * 生成请求签名 sign
+ *
+ * 酷我 PC 客户端 r.s 接口的签名方式：
+ * 对 query string 做 MD5，附加固定盐值
+ *
+ * @param {string} query - 请求参数字符串（key=value&key=value 形式）
+ * @returns {string} 32位十六进制签名
  */
-function buildCookieString(cookieObj) {
-  return Object.entries(cookieObj || {})
-    .map(([k, v]) => `${k}=${v}`)
-    .join('; ');
-}
+const generateSign = (query) => {
+  return cryptoMd5(`${query}${SIGN_SALT}`);
+};
 
 /**
  * 创建并发送 API 请求
  *
  * @param {Object} options - 请求选项
- * @param {string} options.url - 请求路径（相对或绝对）
- * @param {string} options.method - HTTP 方法
- * @param {Object} options.params - URL 查询参数
- * @param {Object|Buffer} options.data - 请求体
- * @param {Object} options.headers - 自定义请求头
- * @param {Object} options.cookie - Cookie 对象
- * @param {boolean} options.needSecret - 是否需要 Secret 头（默认 true）
- * @param {boolean} options.needReqId - 是否需要 reqId 参数（默认 true）
- * @param {string} options.baseURL - 基础 URL
- * @param {string} options.ip - 真实 IP（透传）
+ * @param {string} options.url - 请求路径
+ * @param {string} options.baseURL - 基础 URL（来源压缩包，如 http://search.kuwo.cn）
+ * @param {string} [options.method] - HTTP 方法 GET/POST
+ * @param {Object} [options.params] - 查询参数
+ * @param {Object|Buffer} [options.data] - 请求体
+ * @param {Object} [options.headers] - 自定义请求头
+ * @param {Object} [options.cookie] - Cookie 对象
+ * @param {boolean} [options.needSign] - 是否生成 sign 签名
+ * @param {string} [options.ip] - 真实 IP（用于 IP 透传）
  * @returns {Promise<{status, body, cookie, headers}>}
  */
 const createRequest = (options) => {
   return new Promise(async (resolve, reject) => {
     const ip = options?.realIP || options?.ip || '';
-    const cookie = options?.cookie || {};
-    const useBaseURL = options?.baseURL || baseURL;
+    const uid = options?.cookie?.uid || options?.cookie?.userid || '';
+    const sid = options?.cookie?.sid || '';
 
-    // 生成或复用 reqId
-    const reqId = options?.params?.reqId || generateReqId();
-
-    // 合并默认查询参数
-    const defaultParams = {
-      httpsStatus: 1,
-      reqId,
-      plat: 'web_www',
+    // 构建请求头（来源：KwHttpRequestMgr.dll 的 User-Agent）
+    const headers = {
+      'User-Agent':
+        'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.215 Safari/534.10',
+      Accept: '*/*',
     };
 
-    const params = Object.assign(
-      {},
-      options?.clearDefaultParams ? {} : defaultParams,
-      options?.params || {}
-    );
-
-    // 构建 cookie：注入 Hm_Iuvt cookie（如果不存在则设为空）
-    const hmKey = hmCookie;
-    if (!(hmKey in cookie)) {
-      cookie[hmKey] = cookie[hmKey] || '';
-    }
-    const cookieString = buildCookieString(cookie);
-
-    // 构建请求头
-    const headers = Object.assign(
-      {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Referer: 'https://kuwo.cn/',
-        Origin: 'https://kuwo.cn',
-        'Content-Type': 'application/json',
-        Cookie: cookieString,
-      },
-      options?.headers || {}
-    );
-
-    // 生成 Secret 头（除非显式禁用）
-    if (options?.needSecret !== false) {
-      const secret = generateKuwoSecret(cookie[hmKey]);
-      if (secret) {
-        headers['Secret'] = secret;
-      }
-    }
-
-    // IP 透传
     if (ip) {
       headers['X-Real-IP'] = ip;
       headers['X-Forwarded-For'] = ip;
     }
 
-    // 序列化请求体
-    let data;
-    if (Buffer.isBuffer(options?.data)) {
-      data = options.data;
-    } else if (typeof options?.data === 'object' && options?.data !== null) {
-      data = JSON.stringify(options.data);
-    } else {
-      data = options?.data || undefined;
+    // 合并自定义头
+    Object.assign(headers, options?.headers || {});
+
+    // 构建查询参数
+    let params = Object.assign({}, options?.params || {});
+
+    // 注入客户端版本（来源：config.ini modulesver=8.7.4.0）
+    if (!params.ver && options?.injectVer !== false) {
+      params.ver = clientver;
     }
 
-    // 构建请求配置
+    // 生成签名（来源：KwLib.dll Sig::CalcSign，stype=geturl 等接口需要）
+    if (options?.needSign && !params.sign) {
+      const queryStr = Object.keys(params)
+        .sort()
+        .map((k) => `${k}=${params[k]}`)
+        .join('&');
+      params.sign = generateSign(queryStr);
+    }
+
+    // 注入 uid/sid（部分接口需要，来源：op=submit 等）
+    if (uid && !params.uid) params.uid = uid;
+    if (sid && !params.sid) params.sid = sid;
+
     const requestOptions = {
-      params,
-      data,
       method: options.method || 'GET',
-      baseURL: useBaseURL,
+      baseURL: options?.baseURL,
       url: options.url,
+      params,
       headers,
       withCredentials: true,
-      responseType: options.responseType || 'json',
-      timeout: 15000,
+      responseType: options.responseType || 'text',
+      timeout: 10000,
     };
+
+    // 请求体
+    if (options.data) {
+      if (Buffer.isBuffer(options.data)) {
+        requestOptions.data = options.data;
+      } else if (typeof options.data === 'object') {
+        requestOptions.data = options.data;
+      } else {
+        requestOptions.data = options.data;
+      }
+    }
 
     // 代理配置
     const proxyConfig = resolveProxy();
@@ -134,27 +128,28 @@ const createRequest = (options) => {
 
       // 解析 Set-Cookie
       answer.cookie = (response.headers['set-cookie'] || []).map((x) => parseCookieString(x));
-
-      // 响应体
-      answer.body = response.data;
-
-      // 响应头
       answer.headers = response.headers;
 
-      // 状态码判断
-      if (response.status >= 200 && response.status < 300) {
-        answer.status = 200;
-        resolve(answer);
+      // 解析响应体
+      const body = response.data;
+      if (typeof body === 'string') {
+        try {
+          answer.body = JSON.parse(body);
+        } catch (e) {
+          answer.body = body;
+        }
       } else {
-        answer.status = 502;
-        reject(answer);
+        answer.body = body;
       }
+
+      answer.status = response.status;
+      resolve(answer);
     } catch (e) {
-      answer.status = 502;
-      answer.body = { code: e?.response?.status || 0, msg: e?.message || String(e) };
+      answer.status = e.response?.status || 502;
+      answer.body = { code: answer.status, msg: e.message || 'request error' };
       reject(answer);
     }
   });
 };
 
-module.exports = { createRequest };
+module.exports = { createRequest, generateSign };

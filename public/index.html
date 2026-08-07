@@ -7,37 +7,64 @@
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #333; }
     h1 { color: #ff6b35; }
-    .item { padding: 12px 0; border-bottom: 1px solid #eee; }
-    .item a { color: #ff6b35; text-decoration: none; font-family: monospace; }
+    h2 { margin-top: 40px; border-bottom: 2px solid #ff6b35; padding-bottom: 8px; }
+    .item { padding: 10px 0; border-bottom: 1px solid #eee; }
+    .item a { color: #ff6b35; text-decoration: none; font-family: monospace; font-weight: bold; }
     .item a:hover { text-decoration: underline; }
-    .desc { color: #888; font-size: 14px; margin-top: 4px; }
+    .desc { color: #888; font-size: 13px; margin-top: 4px; }
+    .source { color: #999; font-size: 12px; margin-top: 2px; font-family: monospace; }
     code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; }
+    .badge { display: inline-block; background: #ff6b35; color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
   </style>
 </head>
 <body>
   <h1>Kuwo Music API</h1>
-  <p>酷我音乐 NodeJS 版 API，所有接口请通过 HTTP 请求调用。</p>
-  <h2>可用接口</h2>
-  <div id="list"></div>
+  <p>酷我音乐 NodeJS 版 API —— 所有接口均来源于 <code>default.zip</code> 压缩包内 DLL/exe 的逆向分析。</p>
+  <h2>搜索与歌曲</h2>
+  <div id="search-song"></div>
+  <h2>歌词与播放</h2>
+  <div id="lyric-play"></div>
+  <h2>用户与登录</h2>
+  <div id="user"></div>
+  <h2>歌单与列表</h2>
+  <div id="playlist"></div>
+  <h2>其他</h2>
+  <div id="other"></div>
   <script>
-    const apis = [
-      { path: '/search', desc: '搜索歌曲 (key, pn, rn)' },
-      { path: '/song/url', desc: '获取播放地址 (id, br)' },
-      { path: '/song/detail', desc: '获取歌曲详情 (id)' },
-      { path: '/lyric', desc: '获取歌词 (id)' },
-      { path: '/login/qr/key', desc: '获取登录二维码 key' },
-      { path: '/login/qr/check', desc: '检查扫码状态 (key)' },
-      { path: '/login/status', desc: '登录状态 (token)' },
-      { path: '/user/detail', desc: '用户详情 (uid)' },
-      { path: '/top/category', desc: '排行榜分类' },
-      { path: '/top/list', desc: '排行榜歌曲 (bangId, pn, rn)' },
-    ];
-    const list = document.getElementById('list');
-    apis.forEach(api => {
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `<a href="${api.path}">${api.path}</a><div class="desc">${api.desc}</div>`;
-      list.appendChild(div);
+    const groups = {
+      'search-song': [
+        { path: '/search', desc: '搜索歌曲 (key, pn, rn)', src: 'search.kuwo.cn/r.s' },
+        { path: '/song/detail', desc: '歌曲详情 (id)', src: 'search.kuwo.cn/r.s?stype=musicinfo' },
+        { path: '/song/url', desc: '播放地址 (id/rid)', src: 'antiserver.kuwo.cn/anti.s' },
+        { path: '/song/id3', desc: 'ID3信息 (id)', src: 'datacenter.kuwo.cn/d.c' },
+      ],
+      'lyric-play': [
+        { path: '/lyric', desc: '歌词 (id/musicId)', src: 'newlyric.kuwo.cn/newlyric.lrc' },
+      ],
+      'user': [
+        { path: '/login', desc: '登录 (uname, pwd)', src: 'pc.i.kuwo.cn/US_NEW/kuwo/login_kw' },
+        { path: '/user/info', desc: '用户信息 (uid, sid)', src: 'pc.i.kuwo.cn/US_NEW/kuwo/vuser' },
+        { path: '/user/vip', desc: 'VIP信息 (uid)', src: 'vip1.kuwo.cn/vip/v2/user/vip' },
+        { path: '/reg/auth', desc: '注册验证 (uid)', src: 'reg.kuwo.cn/regsvr.auth' },
+      ],
+      'playlist': [
+        { path: '/playlist/like', desc: '喜欢列表 (uid)', src: 'nplserver.kuwo.cn/pl.svc?op=getlikeinfo' },
+        { path: '/playlist/op', desc: '歌单操作 (op, uid, sid)', src: 'pls.kuwo.cn/pl.svc' },
+      ],
+      'other': [
+        { path: '/correct', desc: '数据纠错 (key)', src: 'jiucuo.search.kuwo.cn/correct.s' },
+        { path: '/download/check', desc: '下载检查 (fmt)', src: 'cldserver.kuwo.cn/c.s?op=ucheck' },
+        { path: '/lossless/list', desc: '无损列表 (uid)', src: 'misc.service.kuwo.cn/lossless/list' },
+      ],
+    };
+    Object.entries(groups).forEach(([id, apis]) => {
+      const el = document.getElementById(id);
+      apis.forEach(api => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<a href="${api.path}">${api.path}</a><div class="desc">${api.desc}</div><div class="source">来源: ${api.src}</div>`;
+        el.appendChild(div);
+      });
     });
   </script>
 </body>

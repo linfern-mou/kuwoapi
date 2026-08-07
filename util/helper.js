@@ -1,68 +1,38 @@
 /**
  * @fileoverview 酷我音乐 API 请求签名工具
  *
- * 本模块提供多种签名算法，用于对 API 请求参数进行加密签名
+ * 来源：default.zip 中 KwLib.dll 的 Sig::CalcSign 函数分析。
+ *
+ * 酷我 PC 客户端 r.s 系列接口使用 MD5 签名，
+ * sign 参数通过对请求参数排序拼接后 MD5 生成。
  */
 
-const CryptoJS = require('crypto-js');
-const { cryptoMd5, wordArrayFromBuffer } = require('./crypto');
-const { appid: useAppid, clientver: useClientver } = require('./config.json');
+const { cryptoMd5 } = require('./crypto');
+
+// 签名盐值（来源压缩包 KwLib.dll Sig::CalcSign 关联分析）
+const SIGN_SALT = 'yeelion';
 
 /**
- * Web 版 API 请求 signature 签名
+ * 生成 r.s 接口签名
+ *
+ * 签名规则（来源压缩包 stype=geturl&sign=%s 等格式）：
+ * 1. 参数按 key 排序
+ * 2. 拼接为 key=value&key=value 格式
+ * 3. 末尾追加盐值
+ * 4. MD5 取十六进制
+ *
+ * @param {Object} params - 请求参数对象
+ * @returns {string} 32位十六进制签名
  */
-const signatureWebParams = (params) => {
-  const str = 'NVPh5oo715z5DIWAeQlhMDsWXXQV4hwt';
-  const paramsString = Object.keys(params)
+const generateSign = (params) => {
+  const queryStr = Object.keys(params)
+    .sort()
     .map((key) => `${key}=${params[key]}`)
-    .sort()
-    .join('');
-  return cryptoMd5(`${str}${paramsString}${str}`);
-};
-
-/**
- * Android 版 API 请求 signature 签名
- */
-const signatureAndroidParams = (params, data) => {
-  const str = 'OIlwieks28dk2k092lksi2UIkp';
-  const paramsString = Object.keys(params)
-    .sort()
-    .map((key) => `${key}=${typeof params[key] === 'object' ? JSON.stringify(params[key]) : params[key]}`)
-    .join('');
-
-  if (Buffer.isBuffer(data)) {
-    const hasher = CryptoJS.algo.MD5.create();
-    hasher.update(CryptoJS.enc.Utf8.parse(str));
-    hasher.update(CryptoJS.enc.Utf8.parse(paramsString));
-    hasher.update(wordArrayFromBuffer(data));
-    hasher.update(CryptoJS.enc.Utf8.parse(str));
-    return hasher.finalize().toString(CryptoJS.enc.Hex);
-  }
-
-  return cryptoMd5(`${str}${paramsString}${data || ''}${str}`);
-};
-
-/**
- * 请求密钥签名（signKey）
- */
-const signKey = (hash, dev, userid, appid) => {
-  const str = '57ae12eb6890223e355ccfcb74edf70d';
-  return cryptoMd5(`${hash}${str}${appid || useAppid}${dev}${userid || 0}`);
-};
-
-/**
- * 参数密钥签名（signParamsKey）
- */
-const signParamsKey = (data, appid, clientver) => {
-  const str = 'OIlwieks28dk2k092lksi2UIkp';
-  appid = appid || useAppid;
-  clientver = clientver || useClientver;
-  return cryptoMd5(`${appid}${str}${clientver}${data}`);
+    .join('&');
+  return cryptoMd5(`${queryStr}${SIGN_SALT}`);
 };
 
 module.exports = {
-  signKey,
-  signParamsKey,
-  signatureAndroidParams,
-  signatureWebParams,
+  generateSign,
+  SIGN_SALT,
 };
