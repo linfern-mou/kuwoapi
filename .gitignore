@@ -25,3 +25,7 @@ bin/*
 *.sln
 *.sw?
 .env
+
+# 大文件/压缩包
+default.zip
+default_extracted/
