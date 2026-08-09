@@ -1,20 +1,20 @@
 package module
 
 import (
-	"bytes"
-	"compress/zlib"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 	"kuwoapi/util"
 )
 
-// Search 搜索接口
-// 来源：KwMusicDLL.dll strings
-// URL模板：http://search.kuwo.cn/r.s?client=kt&all=%s%%20%s&pn=0&rn=10&ft=music&newsearch=1&cluster=0&strategy=2012&itemset=reco&ver=%s&mp4=1
-// 响应格式：8字节头 + zlib压缩的KV文本（当 result=zip 时）或纯KV文本
+// Search 搜索接口（APK 版）
+// 来源：酷我 Android 客户端（kuwoapk 分支）
+// URL模板：http://search.kuwo.cn/r.s?client=kt&all=%s&pn=%d&rn=%d&ft=music&cluster=0&strategy=2012&ver=mbox&show_copyright_off=1&encoding=utf8&rformat=json&mobi=1&vipver=1&issubtitle=1&correct=1&newver=1&vermerge=1&srcfrom=preference_bl
+// 响应格式：JSON（rformat=json），顶层含 TOTAL/SHOW/PN/RN/HIT/abslist/searchgroup
 func Search(params map[string]interface{}, r *http.Request) (map[string]interface{}, error) {
 	key := util.GetString(params, "key", "")
 	if key == "" {
@@ -22,23 +22,20 @@ func Search(params map[string]interface{}, r *http.Request) (map[string]interfac
 	}
 
 	pn := util.GetInt(params, "pn", 0)
-	rn := util.GetInt(params, "rn", 10)
+	rn := util.GetInt(params, "rn", 25)
 
-	// URL 来源：KwMusicDLL.dll strings
-	// http://search.kuwo.cn/r.s?client=kt&all=%s%%20%s&pn=0&rn=10&ft=music&newsearch=1&cluster=0&strategy=2012&itemset=reco&ver=%s&mp4=1
-	u := fmt.Sprintf("http://search.kuwo.cn/r.s?client=kt&all=%s&pn=%d&rn=%d&ft=music&newsearch=1&cluster=0&strategy=2012&itemset=reco&ver=8.7.4.0&pcmp4=1",
+	// URL 来源：kuwoapk（酷我 Android 客户端搜索请求）
+	u := fmt.Sprintf("http://search.kuwo.cn/r.s?client=kt&all=%s&pn=%d&rn=%d&ft=music&cluster=0&strategy=2012&ver=mbox&show_copyright_off=1&encoding=utf8&rformat=json&mobi=1&vipver=1&issubtitle=1&correct=1&newver=1&vermerge=1&srcfrom=preference_bl",
 		url.QueryEscape(key), pn, rn)
 
 	req, _ := http.NewRequest("GET", u, nil)
-	// 请求头来源：KwHttpRequestMgr.dll strings
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.215 Safari/534.10")
-	req.Header.Set("Accept", "application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5")
-	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.8")
-	req.Header.Set("Accept-Charset", "GBK,utf-8;q=0.7,*;q=0.3")
-	req.Header.Set("Accept-encoding", "gzip, deflate")
-	req.Header.Set("Connection", "Close")
+	// 请求头来源：kuwoapk（酷我 Android 客户端）
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9")
 
-	resp, err := util.HTTPClient.Do(req)
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("搜索请求失败: %v", err)
 	}
@@ -49,111 +46,76 @@ func Search(params map[string]interface{}, r *http.Request) (map[string]interfac
 		return nil, err
 	}
 
-	// 响应格式判断
-	var text string
-	if len(body) > 8 && body[8] == 0x78 {
-		// 8字节头 + zlib 压缩
-		reader, err := zlib.NewReader(bytes.NewReader(body[8:]))
-		if err != nil {
-			text = string(body)
-		} else {
-			defer reader.Close()
-			decompressed, err := io.ReadAll(reader)
-			if err != nil {
-				text = string(body)
-			} else {
-				text = string(decompressed)
-			}
-		}
-	} else {
-		// 纯文本
-		text = string(body)
+	// 响应格式：JSON（rformat=json）
+	var raw map[string]interface{}
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return map[string]interface{}{"code": 200, "data": string(body)}, nil
 	}
 
-	// 解析 KV 文本
-	// 来源：KwMusicDLL.dll strings - SONGNAME=, ARTIST=, ALBUM=, MUSICRID=, FORMATS=
-	songs := parseSearchKV(text)
+	songs := parseAbslist(raw)
 
-	return map[string]interface{}{"code": 200, "data": songs}, nil
+	return map[string]interface{}{
+		"code": 200,
+		"data": map[string]interface{}{
+			"total": util.GetInt(raw, "TOTAL", 0),
+			"show":  util.GetInt(raw, "SHOW", 0),
+			"pn":    util.GetInt(raw, "PN", pn),
+			"rn":    util.GetInt(raw, "RN", rn),
+			"hit":   util.GetInt(raw, "HIT", 0),
+			"songs": songs,
+		},
+	}, nil
 }
 
-// parseSearchKV 解析搜索响应 KV 文本
-// 来源：KwMusicDLL.dll strings
-func parseSearchKV(text string) []map[string]interface{} {
+// parseAbslist 解析 APK 搜索响应中的 abslist 歌曲数组
+// 字段来源：kuwoapk（酷我 Android 客户端 JSON 响应）
+func parseAbslist(raw map[string]interface{}) []map[string]interface{} {
 	var songs []map[string]interface{}
-	var current map[string]interface{}
 
-	for _, line := range strings.Split(text, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			if current != nil && len(current) > 0 {
-				songs = append(songs, current)
-				current = nil
-			}
-			continue
-		}
-
-		idx := strings.Index(line, "=")
-		if idx < 0 {
-			continue
-		}
-
-		key := strings.TrimSpace(line[:idx])
-		val := strings.TrimSpace(line[idx+1:])
-
-		// 来源：KwMusicDLL.dll strings
-		switch key {
-		case "SONGNAME":
-			if current != nil && len(current) > 0 {
-				songs = append(songs, current)
-			}
-			current = map[string]interface{}{"name": val}
-		case "ARTIST":
-			if current != nil {
-				current["artist"] = val
-			}
-		case "ALBUM":
-			if current != nil {
-				current["album"] = val
-			}
-		case "MUSICRID":
-			if current != nil {
-				current["rid"] = val
-			}
-		case "ALBUMID":
-			if current != nil {
-				current["albumid"] = val
-			}
-		case "ARTISTID":
-			if current != nil {
-				current["artistid"] = val
-			}
-		case "FORMATS":
-			if current != nil {
-				current["formats"] = val
-			}
-		case "PAY":
-			if current != nil {
-				current["pay"] = val
-			}
-		case "DURATION":
-			if current != nil {
-				current["duration"] = val
-			}
-		case "MP3RID":
-			if current != nil {
-				current["mp3rid"] = val
-			}
-		case "MKVRID", "MVRID":
-			if current != nil {
-				current["mvrid"] = val
-			}
-		}
+	abs, ok := raw["abslist"].([]interface{})
+	if !ok {
+		return songs
 	}
 
-	if current != nil && len(current) > 0 {
-		songs = append(songs, current)
+	for _, item := range abs {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		song := map[string]interface{}{
+			"rid":       util.GetString(m, "MUSICRID", ""),
+			"name":      firstNonEmpty(util.GetString(m, "SONGNAME", ""), util.GetString(m, "NAME", "")),
+			"artist":    util.GetString(m, "ARTIST", ""),
+			"artistid":  util.GetString(m, "ARTISTID", ""),
+			"album":     util.GetString(m, "ALBUM", ""),
+			"albumid":   util.GetString(m, "ALBUMID", ""),
+			"duration":  util.GetString(m, "DURATION", ""),
+			"format":    util.GetString(m, "FORMAT", ""),
+			"mvflag":    util.GetString(m, "MVFLAG", ""),
+			"mvquality": util.GetString(m, "MVQUALITY", ""),
+			"mvpic":     util.GetString(m, "MVPIC", ""),
+			"pay":       util.GetString(m, "PAY", ""),
+			"subtitle":  util.GetString(m, "SUBTITLE", ""),
+			"minfo":     util.GetString(m, "MINFO", ""),
+			"n_minfo":   util.GetString(m, "N_MINFO", ""),
+			"online":    util.GetString(m, "ONLINE", ""),
+		}
+		// 保留 APK 原始字段，便于调用方直接使用
+		song["raw"] = m
+
+		songs = append(songs, song)
 	}
 
 	return songs
+}
+
+// firstNonEmpty 返回第一个非空字符串
+func firstNonEmpty(vals ...string) string {
+	for _, v := range vals {
+		if strings.TrimSpace(v) != "" {
+			return v
+		}
+	}
+	return ""
 }

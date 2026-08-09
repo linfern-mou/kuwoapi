@@ -5,3 +5,7 @@ kuwoapi.exe
 *.so
 .env
 node_modules/
+
+# APK 分析产物（本分支的接口来源参考，不提交大文件）
+*.apk
+apk-unpacked/
