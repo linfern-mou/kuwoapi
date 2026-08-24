@@ -1152,3 +1152,16 @@ sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NS
   ⇒ 匿名 uid ∈ [1e8,2e8)，**服务器无预校验**；登录态 uid(如15277654<1e8) 由前端覆盖传入
 - p2pcheck 升级(commit 1e4a6b3)：stage0 UDP 对照(DNS@223.5.5.5/8.8.8.8 区分运营商封UDP vs 服务端静默)、
   CSF 握手重试×3、uid 改匿名格式；Session.LocalPort() 新增
+
+## §10.55 面板数据源模块汇总（全部完成并 live 验证）
+
+| 模块 | 路由 | 数据源 | 格式要点 |
+|------|------|--------|----------|
+| 每日推荐 rcm | /rcm | discover=`nmobi.kuwo.cn/mobi.s?...type=rcm_discover`; personal/taste/history=`rcm.kuwo.cn/rec.s?cmd=` | taste 返回对象 {taste:[],listened:{}} |
+| 电台 radio | /radio | tree=`qukudata.kuwo.cn/q.k?op=query&cont=tree&node=87235&sourceset=tag_radio&extend=gxh`; songs=`gxh2.kuwo.cn/newradio.nr?type=4&fid=<叶子节点>` | GBK TSV: 首行 fid\tcnt，行=rid\tartist\ttitle\tsig1,sig2\tflag；fid 必须叶子(如-26711)，根节点报 fail |
+| 歌手 artist | /artist | list=`artistlistinfo.kuwo.cn/mb.slist?stype=artistlist&category=1..8`; info/songs/albums/mvs=`search.kuwo.cn/r.s?stype=artistinfo|artist2music|albumlist|mvlist&artistid=` | category: 1华语男2华语女3欧美男4欧美女5日本男6日本女7韩国8其他; r.s 单引号 JSON→singleQuoteToJSON |
+| MV mv | /mv | `r.s?stype=mvlist&artistid=&sortby=1` | 老频道 album.kuwo.cn/album/mv2015 已死(302)；web playMv 要 csrf |
+| 新歌速递 newsong | /newsong | source=album/mv: `js01.kuwo.cn/star/MusicTopToday/js01/topmusic/recAlbum.js|recMv.js` (JSONP `try{var jsondata={...};handleIndex(jsondata);}catch(e){}`)；source=playlist: playlist_info(id=1082685104「每日最新单曲」) | jdtlist[].list[] 按 huayu/oumei/rihan 分类；JSONP 提取需大括号配对扫描(尾部有 handleIndex 调用，LastIndex 会取错) |
+
+- 新歌速递前端入口 index.js: new_song_sourceid=1082685104 → 即「每日最新单曲」歌单，playlist_info 直接可用。
+- 全部路由注册于 server/modules.go；live 测试文件 rcm_live_test.go / mv_live_test.go / newsong_live_test.go 全 PASS。
