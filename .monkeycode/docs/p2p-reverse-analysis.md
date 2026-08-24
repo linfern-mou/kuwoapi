@@ -1142,3 +1142,13 @@ sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NS
 - deliver.kuwo.cn:80 `/yl_res_manage.search`(裸path GET+POST) → 404 IETF nginx ⇒ HTTP 检索端点
   服务端确已下线（含 itoa(sig1)_ip.txt 变体此前亦 404）；唯一活通道 = UDP CSF :25607，
   沙箱 UDP 出站禁用 ⇒ 终验须 PC p2pcheck.exe。
+
+### 10.54 g_login 初始化与匿名 uid 算法（0x1000f888 / 0x10012a20）
+- g_login 填充序列（初始化路径 0x1000f888）：`+0x80=本机IP(call 0x100215d0)`、
+  `+0x84=si(随机端口，0x10012f60 查重循环)`、`+0x7C=uid(call 0x10012a20)`、`+0x86=nat=3`、`+0x94=0`
+- **uid 来源 0x10012a20**：先 `KwLib.dll!GetUserID(buf,127)`(IAT 0x1005312c) 成功→atof 转换；
+  失败→本地生成：`call 0x100458b0` 取机器串 → **FNV1a-32**(素数 0x1000193,13字节) →
+  `uid = (hash mod 1e8) + 1e8`(魔法数 0x55e63b89>>25 除法, @0x10012b21)
+  ⇒ 匿名 uid ∈ [1e8,2e8)，**服务器无预校验**；登录态 uid(如15277654<1e8) 由前端覆盖传入
+- p2pcheck 升级(commit 1e4a6b3)：stage0 UDP 对照(DNS@223.5.5.5/8.8.8.8 区分运营商封UDP vs 服务端静默)、
+  CSF 握手重试×3、uid 改匿名格式；Session.LocalPort() 新增

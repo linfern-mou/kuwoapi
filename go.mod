@@ -1,3 +1,5 @@
 module kuwoapi
 
-go 1.21.13
+go 1.25.0
+
+require golang.org/x/text v0.41.0 // indirect
