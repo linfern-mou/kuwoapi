@@ -47,3 +47,29 @@ func min(a, b int) int {
 	}
 	return b
 }
+
+func TestArtistLive(t *testing.T) {
+	list, err := Artist(map[string]interface{}{"action": "list", "category": 1, "rn": 3}, nil)
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	t.Logf("list ok, data=%v", list["data"] != nil)
+
+	songs, err := Artist(map[string]interface{}{"action": "songs", "artistid": "336", "rn": 2}, nil)
+	if err != nil {
+		t.Fatalf("songs: %v", err)
+	}
+	if d, ok := songs["data"].(map[string]interface{}); ok {
+		ml := d["musiclist"].([]interface{})
+		first := ml[0].(map[string]interface{})
+		t.Logf("songs: %d first=%v", len(ml), first["name"] != nil || first["SONGNAME"] != nil)
+	} else {
+		t.Logf("songs raw: %.150s", songs["raw"])
+	}
+
+	info, err := Artist(map[string]interface{}{"action": "info", "artistid": "336"}, nil)
+	if err != nil {
+		t.Fatalf("info: %v", err)
+	}
+	t.Logf("info ok, data=%v", info["data"] != nil)
+}
