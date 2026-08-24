@@ -1165,3 +1165,15 @@ sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NS
 
 - 新歌速递前端入口 index.js: new_song_sourceid=1082685104 → 即「每日最新单曲」歌单，playlist_info 直接可用。
 - 全部路由注册于 server/modules.go；live 测试文件 rcm_live_test.go / mv_live_test.go / newsong_live_test.go 全 PASS。
+
+## §10.56 播放器音质按钮 PL_BTN_Quality 切换逻辑（KwMusicDLL.dll）
+
+- 按钮本体 KwMusic.xml:1343 文本动态显示当前音质("高品"等)，无歌曲时 enabled=false。
+- 点击链路: DuiLib Notify(UTF-16 控件名 PL_BTN_Quality) → KwMusicDLL.dll 转 ANSI 消息 BTNNAME:BTN_QUALITY(字符串区 0x38c9c8 附近, 同模式 BT_More→BTNNAME:BTN_MORE)。
+- 弹窗 skin\base\NetSongPlayQualityWnd.xml (175x148) 四行:
+  hq_perfect 无损 APE(金色+vip_logo) / hq_super 超品320K(VIP) / hq_high 高品128K / hq_generic 流畅WMA。
+- 动态填充: 控件后缀 _code/_bitrate/_img/_play; bitrate 文本运行时填 "APE"/"320"/"192"/"WMA"(0x395660 处 '192'/'320'); 可用性取决于当前歌曲音源格式。MV 播放时换五档 quality_*_play_mv.png: PlayQuality_MV_AUTO/1080/720/540/480。
+- 选档埋点(ANSI 串 0x38f510): Qulity_Perfect|Super|High|General Click + "...Click With Eff"(音效联动变体), 酷我官方拼写即 Qulity。
+- VIP 档(无损/超品): 先走 musicpay.kuwo.cn/music.pay 计费确认 — ?uid=%s&sid=%s&ver=%s&src=mbox&op=query|submit&action=%s&pid=%s&id=%s&br=%d&fmt=%s&accttype=1(CChargeQueryTool/CChargeData); 未开通弹升权。
+- 生效: 通知播放核心按新 br 重取链接; AAC 走 PlayerCore.dll 的 anti.s?key=kwmusic&body=..format=aac&type=convert_url&rid=%s&response=url&loginid=%s&ch=%s。
+- 附带: "什么是无损音乐?"说明弹窗(Title_Ape_Explain); UpqualitySelect.html 是另一功能(本地歌曲一键升高音质批量升级)。
