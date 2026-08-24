@@ -1177,3 +1177,11 @@ sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NS
 - VIP 档(无损/超品): 先走 musicpay.kuwo.cn/music.pay 计费确认 — ?uid=%s&sid=%s&ver=%s&src=mbox&op=query|submit&action=%s&pid=%s&id=%s&br=%d&fmt=%s&accttype=1(CChargeQueryTool/CChargeData); 未开通弹升权。
 - 生效: 通知播放核心按新 br 重取链接; AAC 走 PlayerCore.dll 的 anti.s?key=kwmusic&body=..format=aac&type=convert_url&rid=%s&response=url&loginid=%s&ch=%s。
 - 附带: "什么是无损音乐?"说明弹窗(Title_Ape_Explain); UpqualitySelect.html 是另一功能(本地歌曲一键升高音质批量升级)。
+
+## §10.57 播放/暂停按钮(Play/Pause)控制链路
+
+- XML: KwMusic.xml:1317 TabLayout name="Play_Pause" 内叠放两个按钮 — Play(playbtn.png, tooltip 播放(Ctrl+F5)) / Pause(pausebtn.png, 暂停(Ctrl+F5)); Tab 页随播放状态互切。
+- 控件名复用: 同名 "Play"/"Pause"/"Play_Pause"/"Pre"/"Next" 也注册给托盘菜单(字符串区 0x382300: Play_Pause/tray_Pre/Play+tray_menu_play.png/Pause+tray_menu_pause.png/Next+"播放控制"+TrayMenuVolumeSlider), 主界面与托盘共用一套 Notify 处理。
+- UI→引擎: KwMusicDLL.dll(UI层) 不直接导入播放器; 通过 CPlayMedia::Play/_PlayNet 起播(取链后 PlayerSetURL), 暂停/恢复/停止调用 CKuwoPlayer.dll 工厂 CreateKuwoPlayer 返回的接口方法 Play/Pause/Stop/SetVolume; 输出走 DSOUND。
+- 状态广播: 引擎状态回调后 UI 发 NotifyPlayPaused/NotifyPlayStopped/NotifyPlayResumed/NotifyPlayFinished/NotifyDownloadFailed(0x39f978 区), 通知网页层(CDDealWebAction::CallHtmlJS)、托盘、歌词等观察者; 失败时 CPlaylistData::_AutoPlayNext 自动切下一首("Play Failed %d, Auto Play Next")。
+- 附带: 进度条 CPlayProgressUI(DuiLib 自定义控件, SetDownPercent 显示缓冲)与 GetCuriDurationByPoint 支持点击定位。
