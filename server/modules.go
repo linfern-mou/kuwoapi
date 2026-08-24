@@ -21,4 +21,5 @@ func (s *Server) loadModules() {
 	s.modules["rcm"] = module.Rcm
 	s.modules["radio"] = module.Radio
 	s.modules["artist"] = module.Artist
+	s.modules["mv"] = module.MV
 }
