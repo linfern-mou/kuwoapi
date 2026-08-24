@@ -1185,3 +1185,15 @@ sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NS
 - UI→引擎: KwMusicDLL.dll(UI层) 不直接导入播放器; 通过 CPlayMedia::Play/_PlayNet 起播(取链后 PlayerSetURL), 暂停/恢复/停止调用 CKuwoPlayer.dll 工厂 CreateKuwoPlayer 返回的接口方法 Play/Pause/Stop/SetVolume; 输出走 DSOUND。
 - 状态广播: 引擎状态回调后 UI 发 NotifyPlayPaused/NotifyPlayStopped/NotifyPlayResumed/NotifyPlayFinished/NotifyDownloadFailed(0x39f978 区), 通知网页层(CDDealWebAction::CallHtmlJS)、托盘、歌词等观察者; 失败时 CPlaylistData::_AutoPlayNext 自动切下一首("Play Failed %d, Auto Play Next")。
 - 附带: 进度条 CPlayProgressUI(DuiLib 自定义控件, SetDownPercent 显示缓冲)与 GetCuriDurationByPoint 支持点击定位。
+
+## §10.58 P2P 服务器地址来源：全部为 KwMV.dll 内置默认值
+
+- 心跳列表硬编码 .rdata@0x581fd(文件偏移): 字符串序 BoardcastHeartbeat → "211.100.49.14:25607,60.29.226.173:25607,60.28.205,36:25607" → "HeartbeatServer" → ","。代码逻辑=GetConfig("HeartbeatServer") 按逗号分列; 安装包 Conf/default/config.ini 无此键 ⇒ 实际跑的就是内置默认。
+- ⚠ 内置串含官方 typo: 第三条写作 60.28.205,36:25607(点写成逗号), 按逗号 split 得到坏 token "60.28.205"/"36:25607" ⇒ 有效心跳目标实际可能只有前两条(211.100.49.14 / 60.29.226.173)。Go 端 DefaultHeartbeatServers 需修正此认知。
+- 完整默认 XML 配置(@0x58560 区, GB2312):
+  IndexSvr=search.kuwo.cn:80 | Tracker=deliver.kuwo.cn:25607 |
+  HelpSvr1=uh1.kuwo.cn:6718 | HelpSvr2=uh2.kuwo.cn:6721 |
+  ResUpSvr=deliver.kuwo.cn:80 | ResSeaSvr=deliver.kuwo.cn:80 |
+  RecommendSvr=tuijian.kuwo.cn:80 | MeasurePath=/stat/zidane.rm | Version=1.2.3.0
+- 新通道线索: ResSeaSvr=deliver.kuwo.cn:80 即资源查询也有 HTTP 80 形态(Android POST /yl_res_manage.search 同 host); HelpSvr1/2(uh1/uh2.kuwo.cn:6718/6721)为打洞/辅助服务器, 此前从未测试。
+- 日志格式串区(0x587d8 后): "sessiontm=%d, udppeer=%d, tcppeer=%d, udpconn=%d, tcpconn=%d, udpeff=%d, tcpeff=%d" + task.txt ⇒ tracker 会话同时统计 UDP/TCP peer 与连接效果, 存在 TCP peer 传输形态。
