@@ -10,6 +10,7 @@
 package main
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -19,6 +20,9 @@ import (
 
 	"kuwoapi/module/p2p"
 )
+
+// public DNS used because Android lacks /etc/resolv.conf
+const dnsServer = "8.8.8.8:53"
 
 func main() {
 	sig1, sig2 := uint32(3264614461), uint32(1651339078)
@@ -32,12 +36,21 @@ func main() {
 	fmt.Println("== stage 1: heartbeat registration ==")
 	hbAddr := &net.UDPAddr{IP: net.ParseIP("211.100.49.14"), Port: 25607}
 	trkAddr := &net.UDPAddr{IP: net.ParseIP("175.102.178.96"), Port: 25607} // act.log fallback
-	if ips, err := net.LookupIP("deliver.kuwo.cn"); err == nil && len(ips) > 0 {
-		trkAddr = &net.UDPAddr{IP: ips[0], Port: 25607}
+	// Android has no /etc/resolv.conf so Go's resolver defaults to [::1]:53 and
+	// fails; query a public DNS explicitly instead.
+	resolver := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{Timeout: 3 * time.Second}
+			return d.DialContext(ctx, "udp", dnsServer)
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ips, err := resolver.LookupNetIP(ctx, "ip4", "deliver.kuwo.cn")
+	if err == nil && len(ips) > 0 {
+		trkAddr = &net.UDPAddr{IP: net.IP(ips[0].AsSlice()), Port: 25607}
 		fmt.Println("tracker resolves to", trkAddr)
-	} else {
-		fmt.Println("WARN: DNS lookup for deliver.kuwo.cn failed:", err)
-		fmt.Println("falling back to legacy IP 175.102.178.96 (from act.log)")
 	}
 
 	uc, err := net.ListenUDP("udp", &net.UDPAddr{Port: 0})
