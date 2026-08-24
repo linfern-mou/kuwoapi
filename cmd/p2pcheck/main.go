@@ -11,6 +11,7 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -60,8 +61,17 @@ func main() {
 	}
 	defer uc.Close()
 
+	// outbound IP for the heartbeat packet (g_login+0x80 equivalent)
+	conn, err := net.DialTimeout("udp", dnsServer, 3*time.Second)
+	if err != nil {
+		fmt.Println("local ip probe:", err)
+		return
+	}
+	localIP := net.ParseIP(conn.LocalAddr().(*net.UDPAddr).IP.String()).To4()
+	conn.Close()
+
 	for i := 0; i < 5; i++ {
-		hb := p2p.Heartbeat{Seq: uint8(i), UID: uid, NAT: 3, Port: uint16(uc.LocalAddr().(*net.UDPAddr).Port)}
+		hb := p2p.Heartbeat{UID: uid, NAT: 3, Port: uint16(uc.LocalAddr().(*net.UDPAddr).Port), IP: binary.BigEndian.Uint32(localIP)}
 		pkt := hb.Marshal()
 		uc.WriteTo(pkt, hbAddr)
 		uc.WriteTo(pkt, trkAddr)

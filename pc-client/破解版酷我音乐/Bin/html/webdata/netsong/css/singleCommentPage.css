@@ -1,0 +1,233 @@
+﻿h2 {font-size:18px;color:rgba(255,255,255,0.6);font-weight: 500;margin-bottom:15px;}
+body {background: #191919}
+.rtop { float:left; position:absolute; display:none; width:26px; height:26px; background:url(../img/singleComment/top.png) no-repeat 0 0; z-index:99; right:10px; bottom:10px;}
+.rtop:hover { float:left; position:absolute; width:26px; height:26px; background:url(../img/singleComment/top_hover.png) no-repeat 0 0;}
+
+#noSingle {position: absolute;width: 100%;height: 100%;top:0;left:0;z-index: 999}
+.noSingleHeader {position: absolute;width: 100%;height: 100%;top:0;left:0;background:rgba(0,0,0,0.5);z-index: 2}
+.noSingleTips p {text-align: center;font-size:16px;color:#ffffff;position: absolute;top:50%;left:0;width: 100%;margin-top:-10px;}
+.noSingleTips p.noNet {margin-top:-21px;}
+
+.wrapBgDefault,.headerBgDefault {position: absolute;top:0;left:0;width:100%;}
+.wrapBg,.headerBg {position: absolute;top:0;left:0;width:100%;}
+.fadeIn {animation: fadeIn 1s linear forwards;}
+@keyframes fadeIn {
+  0% { 
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+#header {position: fixed;width:100%;height:50px;top:0;left:0;z-index: 3;overflow: hidden;transition:height 0.5s;}
+#header.slide {height:121px;box-shadow:0px 0px 5px 7px rgba(0,0,0,0.1);}
+#header .headerCon {width:100%;height:100%;position: absolute;z-index: 1;top:0;right: 0;background:rgba(0,0,0,0.5);}
+
+.headerCon a {float: right;opacity: 0.5}
+.headerCon  a.minimize {width:16px;height: 11px;margin:27px 21px 0 0;}
+.headerCon  a.minimize span {width:16px;height: 1px;background:rgba(255,255,255,0.8);margin-top:5px;display: block;}
+.headerCon a.window {width:16px;height: 16px;background:url(../img/singleComment/window.png);margin:24px 26px 0 0;}
+.headerCon a.doRestore {width:16px;height: 16px;background:url(../img/singleComment/doReset.png);margin:24px 26px 0 0;}
+.headerCon a.close {width:20px;height: 11px;background:url(../img/singleComment/minimize.png);margin:26px 24px 0 0;}
+.headerCon a:hover {opacity: 1}
+
+.miniLrcBox {width:100%;height:71px;position: absolute;;left: 0;top: 50px;z-index: 2}
+.miniLrcBox .miniLrc {max-width:1210px;padding:0 7.68%;margin: 0 auto;overflow: hidden;height: 71px;font-size: 14px;}
+.miniLrcBox .miniLrc .miniSingleInfo {float:left;height: 100%;width: 30.8%}
+
+.miniLrcBox .miniLrc .singleCoverMini {float:left;width:50px;height: 50px;cursor: pointer;}
+.miniLrcBox .miniLrc .miniSingleInfo .info {margin-left:60px;}
+.miniLrcBox .miniLrc .miniSingleInfo .info .name {cursor: text;color:rgba(255,255,255,0.8);font-size: 18px;display: block;max-width: 100%;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;}
+.miniLrcBox .miniLrc .miniSingleInfo .info span {color:rgba(255,255,255,0.3);margin-top:6px;display: block;font-size: 12px;}
+.miniLrcBox .miniLrc .miniSingleInfo .info span a {color:rgba(255,255,255,0.3);display: inline-block;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;vertical-align: middle;}
+.miniLrcBox .miniLrc .miniSingleInfo .info span a.artist {max-width: 35%;}
+.miniLrcBox .miniLrc .miniSingleInfo .info span a.album {max-width: 60%;}
+
+.miniLrcBox .miniLrc .miniLrcCon {height:50px;text-align: center;line-height: 25px;overflow: hidden;color: rgba(255,255,255,0.6);}
+.miniLrcBox .miniLrc .miniLrcCon .miniLrcList .miniCurrent {font-size: 16px;color:#ffea00;}
+.miniLrcBox .miniLrc .miniLrcCon .noLrc {line-height: 20px;}
+.miniLrcBox .miniLrc .miniLrcCon .noLrc a {display: block;color: rgb(255,234,0);}
+
+#wrap {background:rgba(0,0,0,0.5);position:relative;z-index: 1; top:0;left: 0;width: 100%;}
+#content {width:100%;margin-top:50px;}
+.titleBox {width:100%;height: 77px;margin-top:15px;}
+.singleInfo {float:right;width:59.77%;font-size: 12px;}
+.singleInfo h1 {font-size: 24px;color: rgba(255,255,255,0.8);font-weight: 500;max-width: 100%;display: inline-block; overflow: hidden;text-overflow:ellipsis;white-space: nowrap;}
+.singleInfo span {color:rgba(255,255,255,0.3);line-height:46px}
+.singleInfo span.albumName {margin-right: 52px;}
+.singleInfo a {line-height:17px;margin-top:14px;display:inline-block;vertical-align: top;max-width:37%;color:rgba(255,255,255,0.8);overflow: hidden;text-overflow:ellipsis;white-space: nowrap;}
+#lrcArea {position: relative;max-width:1210px;padding:0 7.68%;margin: 0 auto;overflow: hidden;}
+#lrcLeft {float:left;width:30.23%;margin-right:10%;text-align: center;min-height: 313px;overflow: hidden;}
+.singleCover {position: relative;}
+.singleCover img {width:96%;margin-top:20px;cursor: pointer;}
+.singleCover .coverLine {width:89.58%;height: 10px;background: rgba(255,255,255,0.3);position: absolute;top:10px;left:5.21%;}
+.singleCover .coverLineBig {width:79.58%;height: 20px;background: rgba(255,255,255,0.08);position: absolute;top:0;left:10.21%;}
+.singleTools {height: 52px;text-align: center;}
+.singleTools a {width:68px;height: 30px;display: inline-block;border:1px solid rgba(255,255,255,0.3);margin:20px 6% 0 0;color:#ffffff;line-height: 30px;text-indent: 30px;text-align: left;opacity:0.5;}
+.singleTools a.hover:hover {opacity: 1}
+.singleTools a.singleShare {background: url(../img/singleComment/singleShare.png) no-repeat 10px center;}
+.singleTools a.noShare {background: url(../img/singleComment/singleShare.png) no-repeat 10px center;opacity: 0.3}
+.singleTools a.singleDown {background: url(../img/singleComment/singleDown.png) no-repeat 10px center;}
+.singleTools a.noDown {background: url(../img/singleComment/singleDown.png) no-repeat 10px center;opacity: 0.3}
+.singleTools a.singleAdd {background: url(../img/singleComment/singleAdd.png) no-repeat 11px center;margin-right: 0}
+#lrcRight {float:left;width:59.77%;overflow: hidden;position:relative;margin-top:14px;}
+#lrcContent {text-align: left;-webkit-user-select: none;float:left;width:89.6%;}
+#lrcContent p {color:rgba(255,255,255,0.8);}
+#lrcContent .noLrc {text-align:center;}
+#lrcContent .noLrc a {text-indent: 0;line-height: 30px;position: absolute;left: 50%;top:50%;margin:10px 0 0 -21px;color: rgb(255,234,0);}
+#lrcContent .lrcItem {-webkit-user-select: none;}
+#lrcContent .lrcItem.current {color:#ffea00;font-size: 20px;}
+.pageScrollbar{-webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;}
+#mCSB_1_scrollbar_vertical {width:6px;z-index: 3;top:50px;}
+/*#mCSB_1_scrollbar_vertical:hover {width:8px;}*/
+/*#mCSB_1_scrollbar_vertical .mCSB_dragger_bar:hover {width:8px;border-radius: 4px}*/
+/*#mCSB_1_scrollbar_vertical .mCSB_dragger_onDrag,#mCSB_1_scrollbar_vertical.mCSB_scrollTools_onDrag,#mCSB_1_scrollbar_vertical .mCSB_dragger_onDrag .mCSB_dragger_bar {width:8px;border-radius: 4px}*/
+
+#mCSB_2_scrollbar_vertical {width:4px;}
+#mCSB_1_dragger_vertical .mCSB_dragger_bar {width:6px;background-color: rgba(255,255,255,0.3);border-radius: 3px}
+#mCSB_2_dragger_vertical .mCSB_dragger_bar {width:4px;background-color: rgba(255,255,255,0.3);border-radius: 2px}
+.mCSB_draggerRail {background: none !important}
+#lrcControlBox {float:right;}
+#lrcControlBox a {width:32px;height:32px;margin-bottom: 10px;display: block;opacity: 0.5}
+#lrcControlBox a.hover:hover {opacity: 1}
+#lrcControlBox a.prevTime {background: url(../img/singleComment/prevTime.png);}
+#lrcControlBox a.noPrev {background: url(../img/singleComment/prevTime.png);opacity: 0.3}
+#lrcControlBox a.resetTime {background: url(../img/singleComment/resetTime.png);}
+#lrcControlBox a.noReset {background: url(../img/singleComment/resetTime.png);opacity: 0.3}
+#lrcControlBox a.nextTime {background: url(../img/singleComment/nextTime.png);}
+#lrcControlBox a.noNext {background: url(../img/singleComment/nextTime.png);opacity: 0.3}
+#lrcControlBox a.moreMenu {background: url(../img/singleComment/moreMenuBtn.png);position: absolute;bottom: 0;right: 0;margin-bottom:0px;}
+
+#rcmAreaCon {width:100%;margin-top:65px;background: -webkit-linear-gradient(top, rgba(25,25,25,0), rgba(25,25,25,1) 230px, rgba(25,25,25,1));}
+.rcmAreaCon {max-width:1210px;padding:0 7.68%;margin: 0 auto;overflow: hidden;}
+.rcmAreaLeft {float:left;width:30.23%;min-height:100px;margin-right:10%;font-size: 12px;}
+.rcmPl {padding-bottom:15px;border-bottom: 1px solid rgba(255,255,255,0.05);margin-bottom: 25px;}
+.rcmPl li {height: 55px;padding-top:15px;}
+.rcmPl li:hover {background:rgba(255,255,255,0.05);}
+.plcover {float:left;width:40px;height: 40px;margin-right:10px;position: relative;}
+.plcover .playPlay {position:absolute;top:0;left:0;width:40px;height: 40px;background:rgba(0,0,0,0.5);display: none}
+.plcover .playPlay i {cursor:pointer;display: block;width: 20px;height: 20px;background: url(../img/singleComment/playIcon.png);margin:10px 0 0 10px;}
+.plcover:hover .playPlay {display: block !important;}
+.plcover img {width:40px;height: 40px;}
+.rcmPl span {display: block;}
+.rcmPl span.listenNum {color:rgba(255,255,255,0.3);display: inline-block; height: 14px;background: url(../img/singleComment/listenIcon.png) no-repeat;text-indent: 24px;margin-top:5px;}
+.rcmPl a {max-width:80%;display: inline-block;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;color:rgba(255,255,255,0.8);}
+
+.rcmMusic {padding-bottom:15px;border-bottom: 1px solid rgba(255,255,255,0.05);margin-bottom: 25px;}
+.rcmMusic ul {overflow: hidden;}
+.miniRcmMusic {max-height: 160px;}
+.rcmMusic ul li {height: 32px;line-height: 32px;position: relative;}
+.rcmMusic ul li:hover {background: rgba(255,255,255,0.05);}
+.rcmMusic ul li .name {margin-right: 70px;height: 32px;overflow: hidden;}
+.rcmMusic ul li .name a {max-width:100%;display: inline-block;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;color:rgba(255,255,255,0.8);}
+.rcmMusic ul li .right {width: 60px;position: absolute;right: 0px;top:0px;}
+.rcmMusic ul li .right .artist a {max-width:100%;display: block;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;color:rgba(255,255,255,0.3);}
+.rcmMusic ul li .right .tools {position: absolute;top:0;left: 0;z-index: 1;display: none}
+.rcmMusic ul li .right .tools a {display: inline-block;vertical-align: middle;width: 13px;height: 13px;}
+.rcmMusic ul li .right .tools a.add {background: url(../img/singleComment/rcmAdd.png);}
+.rcmMusic ul li .right .tools a.down {background: url(../img/singleComment/rcmDown.png);margin-left: 11px;}
+.rcmMusic ul li .right .tools a.down.notAllow {opacity: 0.3}
+.rcmMusic ul li .right .tools a.more {background: url(../img/singleComment/rcmMore.png) no-repeat 0px 5px;margin-left: 10px;}
+
+.hotMusic {margin-bottom:25px;}
+.hotMusic h2 a {max-width: 58%;display: inline-block;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;vertical-align: top;color:rgba(255,255,255,0.8);}
+.hotMusic ul {overflow: hidden;}
+.miniHotMusic {max-height: 300px;}
+.hotMusic ul li {height: 60px;position: relative;overflow: hidden;}
+.hotMusic ul li:hover {background: rgba(255,255,255,0.05);}
+.hotMusic ul li a {max-width:100%;display: inline-block;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;color:rgba(255,255,255,0.3);vertical-align: middle}
+.hotMusic ul li .name {display: block;margin:10px 0 5px 0;position: relative;}
+.hotMusic ul li .name .tools {position: absolute;top:0;right:0;z-index: 1;display: none;}
+.hotMusic ul li .name .tools a {display: inline-block;vertical-align: middle;width: 13px;height: 13px;}
+.hotMusic ul li .name .tools a.add {background: url(../img/singleComment/rcmAdd.png);}
+.hotMusic ul li .name .tools a.down {background: url(../img/singleComment/rcmDown.png);margin-left: 11px;}
+.hotMusic ul li .name .tools a.down.notAllow {opacity: 0.3}
+.hotMusic ul li .name .tools a.more {background: url(../img/singleComment/rcmMore.png) no-repeat 0px 5px;margin-left: 10px;}
+
+.hotMusic ul li .name .w_name {color:rgba(255,255,255,0.8);display:block;overflow: hidden;text-overflow:ellipsis;white-space: nowrap; }
+.hotMusic ul li .album {display: block;margin-right: 70px;}
+.hotMusic ul li .artist {position: absolute;right: 0;bottom:7px;color:rgba(255,255,255,0.3);width:60px;} 
+
+
+.lookMore {width:100%;text-align: center;margin-top:5px;display:none;}
+.lookMore a {color:rgba(255,255,255,0.6);display: inline-block;}
+.lookMore a i {display: inline-block;width:13px;height:7px;background: url(../img/singleComment/lookMoreIcon.png) no-repeat right;margin-left: 10px;}
+.lookMore a i.upMore {-webkit-transform:rotate(180deg);}
+
+/*评论样式修改开始*/
+/*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/
+.scrollBox::-webkit-scrollbar{width: 6px;height: 6px;background-color:rgba(0,0,0,0) !important;}
+/*定义滚动条轨道 内阴影+圆角*/
+.scrollBox::-webkit-scrollbar-track{background-color:rgba(0,0,0,0) !important;}
+/*定义滑块 内阴影+圆角*/
+.scrollBox::-webkit-scrollbar-thumb{border-radius: 3px;background-color:rgba(255,255,255,0.1) !important;}
+.singlecommentBox {float:left;width:59.77%;overflow: hidden;position:relative;}
+.singlecommentBox #commentArea{padding:0;display: none}
+
+.singlecommentBox #commentArea #message {height: 138px;}
+.singlecommentBox #commentArea #messageCon {height: 66px;font-size:12px;line-height: 21px;}
+.singlecommentBox #commentArea .word {margin-right: 6px;font-size: 12px;}
+.singlecommentBox #commentArea .textBox{height:90px;border:0;background: rgba(255,255,255,0.05);border-radius: 3px}
+.singlecommentBox #commentArea #messageCon{padding:0;background: none;color:rgba(255,255,255,0.6);}
+.singlecommentBox #commentArea #messageBtn {border:0;background: #282828;color:rgba(255,255,255,0.6);background: rgba(255,255,255,0.1);}
+.singlecommentBox #commentArea #messageBtn:hover{background:#ca9d63;}
+.singlecommentBox #commentArea #messageBtn:hover{background:#ca9d63;}
+
+/*.singlecommentBox #commentArea #message {width:520px;height: 268px;position: fixed;top:50%;left:50%;background: #26282b;border-radius: 4px;margin:-134px 0 0 -260px;z-index:1;box-shadow: 0 0 14px 7px rgba(0,0,0,0.3)}
+
+.singlecommentBox #commentArea .textBox{width: 469px;height: 130px;border:0;background: rgba(255,255,255,0.05);border-radius: 3px}
+.singlecommentBox #commentArea #messageCon {font-size:12px;padding:0;background:none;color:rgba(255,255,255,0.6);}
+.singlecommentBox #commentArea #messageBtn {border:0;background: #282828;color:rgba(255,255,255,0.6);background: rgba(255,255,255,0.1);}
+.singlecommentBox #commentArea #messageBtn:hover{background:#ca9d63;}
+.singlecommentBox #commentArea #messageBtn:hover{background:#ca9d63;}
+.singlecommentBox #commentArea .word {margin-right: 6px;font-size: 12px;}*/
+
+
+
+.singlecommentBox #commentArea .user a:hover,.singlecommentBox #commentArea .info_ a:hover,.singlecommentBox #commentArea .info_ a:hover,.singlecommentBox #commentArea .userComment a:hover{color:#c2ab8c;}
+.singlecommentBox #commentArea #list img{vertical-align:baseline;}
+.singlecommentBox #commentArea .title_ {font-size:18px; font-weight:500; color:rgba(255,255,255,0.6);}
+.singlecommentBox #commentArea span.emotion {background: url(../img/cdpack/second/commentIcon.png);}
+.singlecommentBox #commentArea span.emotion:hover {background-position: 0 0}
+.singlecommentBox #commentArea .faceBox {background: #282828;border:0;top:135px;}
+.singlecommentBox #commentArea .scrollBox::-webkit-scrollbar-track{-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0);border-radius: 0px;background-color: #282828;}
+.singlecommentBox #commentArea .scrollBox::-webkit-scrollbar-thumb{border-radius: 5px;background-color: #2e2e2e;}
+.singlecommentBox #commentArea,.singlecommentBox #commentArea .userComment,.singlecommentBox #commentArea .userComment a {font-size:12px;color:rgba(255,255,255,0.6);}
+.singlecommentBox #commentArea .user a,.singlecommentBox #commentArea .time  {font-size:12px;color:rgba(255,255,255,0.3);}
+.singlecommentBox #commentArea #list.noComment,.singlecommentBox #commentArea span.replyCon {color:rgba(255,255,255,0.6);}
+.singlecommentBox #commentArea #list.noComment {padding-bottom: 13px;}
+.singlecommentBox #commentArea span.replyCon {color:rgba(255,255,255,0.6);display: inline-block;line-height: 26px;}
+.singlecommentBox #commentArea span.replyCon img {vertical-align: top}
+.singlecommentBox #commentArea .box {border-bottom: 1px solid rgba(255,255,255,0.04)}
+.singlecommentBox #commentArea .listBox h4 {color:rgba(255,255,255,0.6);border-bottom: 0}
+.singlecommentBox #commentArea .info_ .praise {height: 16px;background: url(../img/cdpack/second/cancelLike.png) no-repeat right top;font-size:12px;color: rgba(255,255,255,0.6);}
+.singlecommentBox #commentArea .info_ .praise:hover {background: url(../img/cdpack/second/like.png) no-repeat right top;color:#c2ab8c;}
+.singlecommentBox #commentArea .info_ .praised {background: url(../img/cdpack/second/like.png) no-repeat right top;color:#c2ab8c;}
+.singlecommentBox #commentArea .info_ .reply,.singlecommentBox #commentArea .info_ .delete {font-size: 12px;color: rgba(255,255,255,0.6);}
+.singlecommentBox #commentArea .info_ span {background: rgba(255,255,255,0.6);margin-top:3px;}
+.singlecommentBox #commentArea .commentBox {background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.6);}
+.singlecommentBox .pageComment .current {color: #ffea00;border:1px solid #ffea00;opacity: 1;background:none;}
+.singlecommentBox .pageComment a {color:#fff;opacity: 0.6}
+.singlecommentBox .pageComment a:hover {color:#ffea00;opacity: 1;background:none;} 
+.singlecommentBox .pageComment .nonext,.singlecommentBox .pageComment .noprev {opacity: 0.3}
+.singlecommentBox .pageComment .nonext:hover,.singlecommentBox .pageComment .noprev:hover {color:#fff;opacity: 0.3;cursor: default;}
+.singlecommentBox #commentArea .contentComment {overflow: hidden;padding:0;}
+.singlecommentBox #commentArea .replyBox {font-size: 12px;}
+.end_box {background: rgba(0,0,0,0.8) !important;}
+.singlecommentBox #commentArea p.title_ span {color:rgba(255,255,255,0.3);}
+/*评论样式修改结束*/
+
+#noSingle {display: none}
+#noSingle span {display: block;font-size: 16px;}
+
+/*loading*/
+.loading {text-align: center;display: none}
+.loading img {width:20px;animation: animateLoading 1.2s infinite linear;}
+@keyframes animateLoading {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}

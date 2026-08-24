@@ -19,14 +19,20 @@ func TestHeaderMarshal(t *testing.T) {
 }
 
 func TestHeartbeatMarshal(t *testing.T) {
-	hb := Heartbeat{Seq: 1, UID: 123434546, IP: 0, Port: 12345, NAT: 3}
+	hb := Heartbeat{UID: 123434546, IP: 0x6F43F70A, Port: 12345, NAT: 3}
 	b := hb.Marshal()
 	// 23-byte layout per 0x100187c0
 	if len(b) != 23 {
 		t.Fatalf("len=%d", len(b))
 	}
+	if b[4] != 0 || b[5] != 0 || b[6] != 0 || b[7] != 0 {
+		t.Fatalf("bytes 4-7 must be zero, got %v", b[4:8])
+	}
+	if b[8] != 0x6F { // first byte of the IP
+		t.Fatalf("byte8=%d", b[8])
+	}
 	p, ok := ParseHeartbeat(b)
-	if !ok || p.UID != hb.UID || p.Port != hb.Port || p.NAT != hb.NAT {
+	if !ok || p.UID != hb.UID || p.Port != hb.Port || p.NAT != hb.NAT || p.IP != hb.IP {
 		t.Fatalf("roundtrip failed: %+v ok=%v", p, ok)
 	}
 }

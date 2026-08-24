@@ -1044,3 +1044,26 @@ module/p2p/ 目录规划：
   - 心跳有 REPLY → 注册层正确，看回包定外网 IP 字段
   - 握手成功但查询无应答 → U_QRY 文本字段需按回包微调
   - 全程无响应 → 该 tracker 已停服（需抓真实客户端流量拿新服务器列表）
+
+### 10.50 服务端 P2P 基础设施全面下线验证（2026-08-24）
+- 真机（用户 Termux，无 VPN）+ 沙箱双重验证，所有端点死亡：
+  - deliver.kuwo.cn:25607 TCP(39.156.121.53/.34, 211.100.49.14, 175.102.178.96,
+    27.18.39.80) → connect 后任何数据立即 EOF（负载均衡 accept 即关，无服务）
+  - deliver.kuwo.cn:25607 UDP 心跳/U_QRY/CSF-SYN → 全部静默
+  - deliver.kuwo.cn:80 /yl_res_manage.search → 404 Not Found（nginx 在、路径删）
+  - search.kuwo.cn:80 / → 200 Content-Length:0
+  - config.kuwo.cn/kwmvconf.ini → 200 空（Last-Modified 2024-01-19）
+  - resua.kuwo.cn(111.13.240.252)/103.235.253.250 各端口 → OPEN 但同样 accept-close
+- 用户手机网络到 39.156.x:25607 TCP 超时（运营商拦非常规端口），但沙箱可连，
+  故沙箱 EOF 结论有效：服务端确实下线
+- 新版客户端包对比（github release default.zip = kuwomusic/8.7.4.0_BDS1）：
+  - KwMV.dll 与旧版**同一二进制**（453616B 同尺寸，字符串地址仅 +9 偏移），
+    协议字符串(U_QRY/FormatVer/PEERS/DENY_IP/RES_DEL/FILE_LEN/tcpproxy/
+    deliver/search/resua/211.100/25607)全部一致
+  - 包内 Log/KwService_P2PDll.txt 仅含 "PlayChannel:Restart KwMV B/E" 反复
+    重启记录，零 tracker/心跳/握手日志 ⇒ 该日志级别不输出协议细节，
+    且无法证明 P2P 曾成功
+- 结论：酷我官方已在服务端整体下线旧 P2P 链路（tracker/资源服务/配置下发全空）
+- 待确认：用户称"PC 客户端可用"的具体含义——普通播放下载走新版云 API
+  （nmobi/kuwo.cn/api 直链），与 KwMV P2P 无关的可能性最大；
+  需用户提供 PC 端最新 act.log 或 netstat 实测远程 IP 才能定论

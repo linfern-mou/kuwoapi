@@ -1,0 +1,2 @@
+for /f "delims=" %%p in ('dir /b/ad') do move %%p\*.*
+pause

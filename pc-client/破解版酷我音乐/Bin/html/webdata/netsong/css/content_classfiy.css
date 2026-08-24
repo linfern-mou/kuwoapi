@@ -1,0 +1,8 @@
+/*电台样式修改*/
+.br_wrap{margin-right:13px;}
+.b_wrap {height: 167px;}
+.b_wrap .playlistname { height: 43px;margin:0px;color:#666666; text-align:left;position: relative;overflow: hidden;text-overflow: ellipsis;display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;word-break: break-all;white-space:normal;}
+.b_wrap .b_name a {color:#666666;}
+.b_wrap .b_name{color:#666666;}
+.b_wrap .b_name:hover a {color:#07b2e5;}
+.b_wrap .b_info a {color:#666666; }
