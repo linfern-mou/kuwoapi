@@ -16,4 +16,6 @@ func (s *Server) loadModules() {
 	s.modules["song_detail"] = module.SongDetail
 	s.modules["rank"] = module.Rank
 	s.modules["rank_list"] = module.RankList
+	s.modules["playlist_rcm"] = module.PlaylistRcm
+	s.modules["playlist_info"] = module.PlaylistInfo
 }
