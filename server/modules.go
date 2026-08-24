@@ -22,4 +22,5 @@ func (s *Server) loadModules() {
 	s.modules["radio"] = module.Radio
 	s.modules["artist"] = module.Artist
 	s.modules["mv"] = module.MV
+	s.modules["newsong"] = module.Newest
 }
