@@ -31,12 +31,13 @@ func main() {
 
 	fmt.Println("== stage 1: heartbeat registration ==")
 	hbAddr := &net.UDPAddr{IP: net.ParseIP("211.100.49.14"), Port: 25607}
-	trkAddr := &net.UDPAddr{IP: net.ParseIP(net.JoinHostPort("", "")), Port: 0}
+	trkAddr := &net.UDPAddr{IP: net.ParseIP("175.102.178.96"), Port: 25607} // act.log fallback
 	if ips, err := net.LookupIP("deliver.kuwo.cn"); err == nil && len(ips) > 0 {
 		trkAddr = &net.UDPAddr{IP: ips[0], Port: 25607}
 		fmt.Println("tracker resolves to", trkAddr)
 	} else {
-		return
+		fmt.Println("WARN: DNS lookup for deliver.kuwo.cn failed:", err)
+		fmt.Println("falling back to legacy IP 175.102.178.96 (from act.log)")
 	}
 
 	uc, err := net.ListenUDP("udp", &net.UDPAddr{Port: 0})
