@@ -32,9 +32,39 @@ func main() {
 		b, _ := strconv.ParseUint(os.Args[2], 10, 32)
 		sig1, sig2 = uint32(a), uint32(b)
 	}
-	uid := uint32(123434546)
+	// anonymous uid per KwMV.dll 0x10012b21: (FNV1a(machine) mod 1e8) + 1e8
+	uid := uint32(152776543)
 
-	fmt.Println("== stage 1: heartbeat registration ==")
+	fmt.Println("== stage 0: UDP egress sanity (standard DNS over UDP) ==")
+	stage0OK := false
+	for _, dns := range []string{"223.5.5.5:53", "8.8.8.8:53"} {
+		dc, err := net.DialTimeout("udp", dns, 3*time.Second)
+		if err != nil {
+			fmt.Printf("  %s dial: %v\n", dns, err)
+			continue
+		}
+		// standard query: A record for www.kuwo.cn
+		q := []byte{
+			0x12, 0x34, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			3, 'w', 'w', 'w', 4, 'k', 'u', 'w', 'o', 2, 'c', 'n', 0,
+			0x00, 0x01, 0x00, 0x01,
+		}
+		dc.SetReadDeadline(time.Now().Add(2500 * time.Millisecond))
+		if _, err := dc.Write(q); err != nil {
+			fmt.Printf("  %s write: %v\n", dns, err)
+		} else {
+			buf := make([]byte, 512)
+			if n, err := dc.Read(buf); err != nil {
+				fmt.Printf("  %s: NO REPLY (%v) -> UDP egress blocked/filtered\n", dns, err)
+			} else {
+				stage0OK = true
+				fmt.Printf("  %s: DNS reply %dB -> UDP egress OK\n", dns, n)
+			}
+		}
+		dc.Close()
+	}
+
+	fmt.Println("\n== stage 1: heartbeat registration ==")
 	hbAddr := &net.UDPAddr{IP: net.ParseIP("211.100.49.14"), Port: 25607}
 	trkAddr := &net.UDPAddr{IP: net.ParseIP("175.102.178.96"), Port: 25607} // act.log fallback
 	// Android has no /etc/resolv.conf so Go's resolver defaults to [::1]:53 and
@@ -84,11 +114,24 @@ func main() {
 		time.Sleep(300 * time.Millisecond)
 	}
 
-	fmt.Println("\n== stage 2: CSF session + U_QRY ==")
-	sess, err := p2p.Dial("", trkAddr)
-	if err != nil {
-		fmt.Println("handshake:", err)
-		fmt.Println("(no SYNACK — either the legacy tracker is gone or a firewall eats UDP)")
+	fmt.Println("\n== stage 2: CSF session + U_QRY (3 attempts) ==")
+	var sess *p2p.Session
+	for attempt := 1; attempt <= 3; attempt++ {
+		s, err := p2p.Dial("", trkAddr)
+		if err == nil {
+			sess = s
+			fmt.Printf("handshake OK on attempt %d (lport=%d)\n", attempt, s.LocalPort())
+			break
+		}
+		fmt.Printf("attempt %d: %v\n", attempt, err)
+		time.Sleep(500 * time.Millisecond)
+	}
+	if sess == nil {
+		if stage0OK {
+			fmt.Println("(all 3 attempts no SYNACK while DNS-over-UDP works -> server ignores our SYN or port 25607/udp is specifically filtered)")
+		} else {
+			fmt.Println("(no SYNACK and even DNS over UDP fails -> carrier blocks UDP egress)")
+		}
 		return
 	}
 	defer sess.Close()

@@ -163,6 +163,11 @@ func (s *Session) Recv() ([]byte, error) {
 }
 
 // Close tears the session down with a RST.
+// LocalPort returns the local UDP port bound for this session.
+func (s *Session) LocalPort() int {
+	return s.conn.LocalAddr().(*net.UDPAddr).Port
+}
+
 func (s *Session) Close() error {
 	s.mu.Lock()
 	if s.closed {

@@ -1090,3 +1090,55 @@ module/p2p/ 目录规划：
   但 act.log httpmode:0 证明真实流量未走此路，404 与线上行为一致
 - 27B LAN 广播包函数 0x1002a540→sendto 包装 0x1001e690(len 0x1b) 复核一致
 - commit d580542 已推 arm64 二进制，待用户真机重测心跳
+
+### 10.52 【闭环】点击"下载到电脑"完整参数流（画质选择框 → P2P 引擎）
+UI 弹窗元数据（rid=18877092 例；无损FLAC 49.1MB / 超品320K 9.02MB / 高品128K 3.61MB / 流畅WMA 3.11MB，
+链接 www.kuwo.cn/down/single/{rid}）来自前端侧服务器接口；引擎收到的只有下述结构体。
+
+**导出表仅 4 个**：StartP2P/StartP2P_V1/StopP2P/StopUpload——任务下发全走隐藏窗口 "KwMV" WM_COPYDATA。
+
+WndProc@0x1000f010 跳转表@0x1000f4b0 实测（stub 形如 push [ecx+8](lpData); call handler）：
+- wParam=1 → 0x10015870 **新建下载任务**
+- wParam=2 → 0x100157c0 → 0x100264e0 **停止任务**(malloc 0x4C 仅头部; sprintf "StopDownloadTask Fid: %u %u WinName %s reason:%d";
+  downMode==2→state=4("Timeout") else 5("User"); 0x10025c80(fid1,fid2) 查表 → 0x10033f90 停止)
+- wParam=5 → 0x1000f0fd 配置/状态查询类(fid1,fid2+[g_10069bec+0x18] 校验+JSON 拼接)
+- wParam=6 → 0x1000f289 任务信息查询(call 0x10026100)
+- wParam=11(b) → 0x10015830 (malloc 0x48+memcpy 0x12 dwords)
+
+**★ 新建任务 DLREQ 全布局（0x16E=366B，handler malloc 同尺寸 memcpy 0x5B dwords+1 word）**
+```
+struct KwMV_DLREQ {         // 由前端(KwMusicCore/KwModDownload)构造
+  u32  sig1;    // +0x000 ★ 即 fid1；U_QRY <sig1,sig2> 与 act.log S1 的最终来源（前端生成）
+  u32  sig2;    // +0x004 ★ 即 fid2；S2 来源
+  u32  numPkt;  // +0x008 日志 NumPacket
+  char winName[]; // +0x00C 回调窗口类名（strlen 定界，非定长 0x44）
+  ...           // +0x010..0x4B 中间字段（部分读入 desc：+0x10 判空、+0x44、+0x4C）
+  s32  fileType;// +0x050 音质档位编码（日志 FileType）
+  s32  downMode;// +0x054 ==3 走特殊分支（日志 DownMode）
+  u32  ts;      // +0x058 TimeStamp
+  char fileName[];// +0x060 目标文件名
+  ...
+  char extra[]; // +0x164 尾部附加串（拼进搜索描述）
+};            // 总长 0x16E
+```
+处理链：0x10015870 malloc+copy → _beginthreadex(threadproc=**0x10015810**) → **call 0x10026810(buf)** → free。
+大函数内：sprintf "NewDownloadTask, Fid: %u %u, NumPacket:%u, WinName:%s, FileName:%s, FileType:%d,
+DownMode:%d TimeStamp:%u"(fmt@0x10059fe0，参数序即上表)；**desc 头两 dword(sig1/sig2 槽 esp+0x6c/0x70)
+← [ebx]/[ebx+4]**（0x10026977/0x1002697b，铁证）；拼串(全局 0x1006b4fc + DLREQ+0x164)；
+call 0x100083a0(&desc, strA, strB, byte[0x1006b6c7])；数值槽 ← DLREQ+0x4C/+0x8；
+call 0x10025700 创建任务(malloc 0x408 任务体，desc 深拷贝@0x10009020 至 **task+0x124**)。
+后续：状态机 0x10031ce0 → state=8 → 0x1002abf0 发 U_QRY → PEERS/主HTTP下载/kmap 块管理 → 经 winName 回推进度。
+
+**结论修正**：此前 10.10/10.11 把 sig1/sig2 记为 COPYDATA+0x50/+0x54 是错的——那是 fileType/downMode；
+sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NSIG1/NSIG2 字段**（§9 已实测：榜单/歌单/搜索
+返回即带），前端仅将其透传进 DLREQ（fid1/fid2 只是 UI→引擎的传输载体）；Go 侧 getSongMeta/refreshSig
+→ SearchResource(rid,sig1,sig2) 与此完全对齐，无需自行计算 sig。
+
+### 10.53 sig 实测复核（2026-08-24，module/live_sig_test.go TestLiveRankSig）
+- Rank(id=16) 第一首《山风山风等等我》musicrid=MUSIC_624683929, param链 nsig1=2608621834,
+  nsig2=2438534005 —— 与 §9 记录**逐位一致** ⇒ 榜单/歌单/搜索返回的 NSIG 对即 P2P 查询签名，
+  长期稳定，直接取用（音质档位 S1/S2/SIZE/BT 同源于 getSongMeta 的 KV 文本）。
+- refreshSig(rid.kuwo.cn/sig.s) 沙箱 DNS 解析失败（no such host），PC 环境可用。
+- deliver.kuwo.cn:80 `/yl_res_manage.search`(裸path GET+POST) → 404 IETF nginx ⇒ HTTP 检索端点
+  服务端确已下线（含 itoa(sig1)_ip.txt 变体此前亦 404）；唯一活通道 = UDP CSF :25607，
+  沙箱 UDP 出站禁用 ⇒ 终验须 PC p2pcheck.exe。
