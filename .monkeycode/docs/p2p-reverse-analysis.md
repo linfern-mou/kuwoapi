@@ -1067,3 +1067,26 @@ module/p2p/ 目录规划：
 - 待确认：用户称"PC 客户端可用"的具体含义——普通播放下载走新版云 API
   （nmobi/kuwo.cn/api 直链），与 KwMV P2P 无关的可能性最大；
   需用户提供 PC 端最新 act.log 或 netstat 实测远程 IP 才能定论
+
+### 10.51 用户实测 act.log.out 反转结论：P2P 链路活着 + 心跳布局修正（2026-08-24）
+- 用户提供刚跑过的完整客户端包(release 2.0.4 kuwomusic.zip)，
+  Log/act.log.out(468KB, 91 条 P2P_DOWN_FILE) 决定性证据：
+  - seares:SUCC 77/91 次，ressuccsvr=39.156.121.53(64次)/39.156.123.34(13次)
+    = deliver.kuwo.cn 现行 IP ⇒ **tracker 查询在真实客户端上持续成功**
+  - peernum 最高 100 / usedp 66 / nconn 43 ⇒ peer 连接也建立
+  - peerpack 全 0、serpack==total ⇒ 数据仍全部来自服务器型节点
+  - httpmode:0 / useurl:0 / ressucway:2 ⇒ 成功通道是 UDP CSF（HTTP wrapper 未用）
+  - kid:15277654 == 日志尾 U:15277654 ⇒ **kid 来自登录账号 UID**，
+    推翻"本地随机生成"假设（未登录时才走本地生成）
+- 由此判定：我们 UDP 探测失败的原因是包构造错误，服务端在线
+- **心跳包真实布局修正**（0x100187c0 + 调用者 0x100239d0 精读）：
+  - +0 u32 LE cmd=0xE2103；+4 u32 恒零（旧版误写 seq+uid）
+  - +8 u8 = 本机 IP 首字节（g_login+0x80 的内存首字节，网络序）
+  - +9 uid / +13 ip / +17 port|nat<<16 / +21 proxy
+  - Go heartbeat.go 已修正+测试更新；p2pcheck 增加 UDP dial 出口 IP 填充
+- HTTP 查询路径精确格式（0x1002d1d0）：
+  `GET {sig1}_{本机IP}.txt?<U_QRY文本> Host: deliver.kuwo.cn`，
+  arg+0x11C=sig1(task+0x124)、arg+4=4字节IP→"%d.%d.%d.%d"(fmt@0x100535cc)；
+  但 act.log httpmode:0 证明真实流量未走此路，404 与线上行为一致
+- 27B LAN 广播包函数 0x1002a540→sendto 包装 0x1001e690(len 0x1b) 复核一致
+- commit d580542 已推 arm64 二进制，待用户真机重测心跳
