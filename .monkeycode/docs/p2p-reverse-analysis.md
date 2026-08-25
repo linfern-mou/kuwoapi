@@ -1197,3 +1197,12 @@ sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NS
   RecommendSvr=tuijian.kuwo.cn:80 | MeasurePath=/stat/zidane.rm | Version=1.2.3.0
 - 新通道线索: ResSeaSvr=deliver.kuwo.cn:80 即资源查询也有 HTTP 80 形态(Android POST /yl_res_manage.search 同 host); HelpSvr1/2(uh1/uh2.kuwo.cn:6718/6721)为打洞/辅助服务器, 此前从未测试。
 - 日志格式串区(0x587d8 后): "sessiontm=%d, udppeer=%d, tcppeer=%d, udpconn=%d, tcpconn=%d, udpeff=%d, tcpeff=%d" + task.txt ⇒ tracker 会话同时统计 UDP/TCP peer 与连接效果, 存在 TCP peer 传输形态。
+
+## §10.59 配置下发接口编码算法（KwModConfig.dll 反汇编确认）
+
+- 端点: http://config.kuwo.cn/uc/s?m=（活, 任意参数回 FAIL）
+- 编码: std_base64(XOR循环"yeelion " 8字节) — KwLib.dll Base64Encode@0x10013fd0→表查询0x10014070, 字母表@0x100527b0=标准A-Za-z0-9+/
+- 构造函数(KwModConfig.dll @0x1000ed30): 依次读取 configsvr/serverlist 值、GetUserID、GetInstallSRC、version, 拼 uid;serverlist,src,config → 调 MakeHttpParam@0x1000fa00 → 编码作为 m= 值
+- 实测真实配置: version=MUSIC_8.7.4.0_BDS1, channel=kwmusic_web_1_bds_20171206 (Conf/default/config.ini)
+- 候选 payload 编码后请求全回 FAIL —— 明文 payload 精确格式仍需真实抓包样例
+- ResSeaSvr 备信道扫径: deliver.kuwo.cn:80 /yl_res_manage.search GET/POST→404; /res/yl.s→403; HelpSvr(uh1/uh2.kuwo.cn:6718/6721) TCP 不可达(ICE慕)。
