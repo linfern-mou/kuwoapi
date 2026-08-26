@@ -131,7 +131,6 @@ func main() {
 			return
 		}
 	}
-	defer uc.Close()
 	fmt.Printf("local udp port: %d (server-pushed P2P port is 6000)\n", uc.LocalAddr().(*net.UDPAddr).Port)
 	p2p.Verbose = true
 
@@ -234,6 +233,8 @@ func main() {
 		}
 		time.Sleep(300 * time.Millisecond)
 	}
+
+	uc.Close() // free :6000 for the stage-2 sessions
 
 	fmt.Println("\n== stage 2: CSF session + U_QRY (3 attempts per tracker) ==")
 	var sess *p2p.Session
