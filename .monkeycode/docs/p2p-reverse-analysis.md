@@ -1760,3 +1760,16 @@ GetDataByCmd/SetOpenChargeSong; 键: DNS2CONF / SearchServerDNS1/2/3
 | bin/data/YYYY-M-D.dat | 84B×5 | 二进制日期标记 (PHZ头+时间戳+192.168网段片段) | DONE浅 |
 | KWMUSIC/Conf/user/config.ini | — | 用户态配置副本 | TODO diff |
 | bin/Conf/default/config.ini | — | 默认配置 ([SigServer]所在) | DONE §10.67 |
+
+| KWMUSIC/Conf/user/config.ini | 0B | **空文件(2017)** — 云端从未下发覆盖, SigServer=rid.kuwo.cn 自2018未变 | DONE |
+| bin/WriteMbox.exe | 268K | NSIS 打包工具 (开发用, 与运行时无关) | DONE |
+| bin/ShellDl.exe | 81K | **独立P2P下载器**: CDownloader/CP2PProxy/IP2PProxy, 导入KwDataDef+KwMusicCore+ccenter; 串 "cp2pproxy::p2pgetresinfo" "[sign: %u %u] [path: %s]" — GetResInfo 的外部消费方 | DONE |
+| bin/KwPuller.exe | 200K | 拉流器 CKwPuller ("pullret:%d"), WININET HTTP拉流 | DONE |
+| bin/QyHelper.exe | 203K | 青云统计上报 (webstat.kuwo.cn/logtjsj/mbox_qi...) | DONE |
+| bin/Encode.exe | 50K | 转码工具 (导入KwLib/KwModConfig) | DONE |
+| bin/ReconEngine.exe | 209K | 音频指纹识别引擎 (听歌识曲后端) | DONE |
+| bin/KwReconEngine.exe | 28K | 识别引擎宿主壳 (同PDB路径 KwResource) | DONE |
+| bin/KwKnowSong.exe | 113K | 听歌识曲入口 | DONE |
+| bin/kwAdb.exe | 757K | Android ADB (设备管理 KwModAndroidMgr 用) | DONE |
+| bin/kuwovip-patch.exe | 63K | **非官方文件**: dup2patcher.dll 加载器, 第三方VIP破解补丁 — 安装包已被改动 | DONE |
+| bin/DumpReport.exe | 87K | 崩溃转储上报 | DONE |
