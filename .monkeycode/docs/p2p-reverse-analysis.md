@@ -1645,3 +1645,52 @@ SigServer=http://rid.kuwo.cn/sig.s?w=
 2. 若 rid.kuwo.cn 在用户网络可解析 → 预期拿到非占位包 (1467B 级)
 3. 继续反汇编 pd.dll StartDown/InsertDownload ("InsertDownload RID:%s, Sign:%u,%u"@0x100114e0, "PlayChannel Sig : %u, %u"@0x100117a4) 补全播放链细节
 4. 链路通后改 download.go: getSongMeta 的 sig 改走 sig.s 签发流程
+
+## 10.68 pd.dll DownTask 全流程还原 (2026-08-26)
+
+### 调用链实锤
+```
+KwService.exe → pd.dll!StartDown@0x10007210 (薄封装, 构造 std::string 后 jmp 0x1000d5c0)
+             → pd.dll!DownTask@0x10008110 (核心, 日志 "DownTask In")
+                ├─ 0x10008ab0 参数校验
+                ├─ task+0x18/+0x1c == 0 ? → "Resource Sig Is NULL"
+                │    └─ GetResourceSig@0x10009470 签发 (§10.67)
+                │         失败 → "Get Resource Sig Failed" → vtbl+0xC(2) 通知上层 → return false
+                │         成功 → 新 sig 写回 [ebp-0x40/-0x3c]
+                ├─ engine->vtbl+0x18(&ctx, &sig, &rid) = InsertDownload
+                │    内部日志: "InsertDownload RID:%s, Sign:%u,%u, Priority:%d,
+    │               P2PObserver:%u filetype=%d downmode=%d" @VA 0x10011000 区 (file 0xfee0)
+                ├─ 注册全局 map: 0x100155a8/0x15608/0x15610/0x15618/0x15620
+    ├─ 0x10003d80 入队 + 0x10003c70 建节点插链表 (0x10015600 头, 按 [+0x10] 优先级排序)
+    └─ call RealDown@0x100076c0 ("RealDown In") 启动真实调度
+```
+
+### task 结构体布局 (DownTask 参数, esi)
+| 偏移 | 含义 |
+|------|------|
+| +0x00 | rid std::string (SSO buf@0 size@0x10 cap@0x14) |
+| +0x18 | sig1 (旧值, 为0则触发签发) |
+| +0x1c | sig2 |
+| +0x24 | edi 回调/observer |
+| +0x28 | ebx 回调/observer |
+| +0x2c | P2P engine 对象 (vtbl+0x4=AddChannel通知, +0xC=失败通知, +0x18=InsertDownload) |
+| +0x30 | priority |
+
+### GetResourceSig 错误路径串 (file offset → 全部 VA=0x10011000 区基址)
+- "GetResourceSig: Find RID Failed"@0x104b4 — 本地 RID 表先查
+- "SigServer"@0x104d4 / "getressig url=%s"@0x104e8
+- "GetResourceSig: ParseURL Failed"@0x104fc
+- "GetResourceSig: Read Data From Serv Failed"@0x10620
+- 解析锚点 "sig1=%u"@0x10610 / "sig2=%u"@0x10618
+- 成功日志 "GetResourceSig: RID=%s, old_sig=<%u,%u> new_sig=<%u,%u> Ret=%d"@0x10650
+
+### sig 生命周期其他证据串
+- "RemoveDownload Sign %u,%u"@0xff7c / "StopChannel Sig : %u, %u"@0x10280
+- "Empty Sign in DeliverTimeoutDanger"@0xffac — sig 用于超时熔断
+- "sign = <%u,%u> old_stamp=%u new_stamp=%u skip"@0x10350 — sig+时间戳去重
+- "OnRecvChanStat Sig %u %u %u %u state:%u"@0x10328
+
+### 结论 (对 Go 客户端的意义)
+PC 端 DownTask 的全部网络前置动作 = FetchSig + SearchResource, Go 侧均已实现。
+RealDown@0x100076c0 之后为 PC 本地调度 (文件分块/peer 管理), 手机端直接用
+SearchResponse.Peers 进 stage2 CSF 握手即可, 无需复刻。
