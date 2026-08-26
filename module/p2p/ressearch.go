@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -55,10 +56,12 @@ func FetchSig(rid string, timeout time.Duration) (uint32, uint32, error) {
 		}
 	}
 	if len(ips) == 0 {
-		// Android has no usable system resolver ([::1]:53 refused); ask
-		// public resolvers explicitly, then Kuwo's private KwDNS last.
+		// Android has no usable system resolver ([::1]:53 refused). The live
+		// PC client resolves rid.kuwo.cn through the LAN router's DNS
+		// (act.log DEVICE_INFO <dns:192.168.1.1>), so try the default
+		// gateway first, then public resolvers, then Kuwo's private KwDNS.
 		var errs []string
-		for _, dns := range []string{"223.5.5.5:53", "114.114.114.114:53", "8.8.8.8:53", kwDNSAddr} {
+		for _, dns := range append(gatewayDNS(), []string{"223.5.5.5:53", "114.114.114.114:53", "8.8.8.8:53", kwDNSAddr}...) {
 			ip, err := resolveViaUDPDNS(dns, sigServerHost, timeout)
 			if err == nil {
 				ips = append(ips, ip)
@@ -207,6 +210,26 @@ answers:
 		i += rdlen
 	}
 	return "", errors.New("no A record")
+}
+
+// gatewayDNS reads /proc/net/route and returns "<gateway>:53" for the
+// default route; common home-router addresses are appended as fallback.
+func gatewayDNS() []string {
+	var out []string
+	b, err := os.ReadFile("/proc/net/route")
+	if err == nil {
+		for _, line := range strings.Split(string(b), "\n")[1:] {
+			f := strings.Fields(line)
+			if len(f) > 3 && f[1] == "00000000" && f[2] != "00000000" {
+				h, err := strconv.ParseUint(f[2], 16, 32)
+				if err == nil {
+					ip := net.IPv4(byte(h), byte(h>>8), byte(h>>16), byte(h>>24))
+					out = append(out, net.JoinHostPort(ip.String(), "53"))
+				}
+			}
+		}
+	}
+	return append(out, "192.168.1.1:53", "192.168.0.1:53")
 }
 
 const (
