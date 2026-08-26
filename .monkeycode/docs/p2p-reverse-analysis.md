@@ -1752,7 +1752,9 @@ GetDataByCmd/SetOpenChargeSong; 键: DNS2CONF / SearchServerDNS1/2/3
 | bin/KwDataDef.dll | 200K | 数据模型 Sign类/CNetResource/CCloudResource | DONE §10.67 |
 | bin/KwShareMemMgr.dll | 36K | 跨进程配置共享内存 | DONE §10.69 |
 | bin/KwMusicDLL.dll(+BAK) | 5M | 主业务DLL, 含 dns2conf/mbox 引用 | TODO深挖 |
-| bin/KwLog.dll | 146K | 日志, 含 deliver.kuwo | TODO |
+| bin/KwLog.dll | 146K | 埋点上报: log.kuwo.cn + log.deliver.kuwo.cn; 导出 LogP2PLWActMsg/LogABActMsg/MakeHttpParam; 格式 "|PROD:MUSIC\|VER:%s\|PLAT:WIN32..." — **act.log 各行即本模块生成** (ACT:P2P_DOWN_FILE 等来自 LogP2PLWActMsg) | DONE |
+| KWMUSIC/ModuleData/ModMusicTool/conf.txt | 2K | **UI工具栏预签发sig对**: 12条目含7组真实(rid,sig1,sig2) — 证实客户端批量预取sig.s并持久化 | DONE §10.71 |
+| KWMUSIC/Res,cache / ModuleData其余 / Skin / html / res | ~20M | UI资源: XML布局(Skin/base)/皮肤包(serverskin编号)/歌手列表NetSong-artists.pl(r.s?ft=music)/下载图标/歌词主题 | DONE归类 |
 | bin/MediaInfo.dll | 1.6M | 媒体信息解析 (mbox串误报) | LOW |
 | bin/temp/KMusic/*.flac | 24M+33M | **P2P下载产物实锤** (2026-8-26/8-24落盘) | DONE |
 | bin/Log/act.log(.out) | 17K | 埋点日志: P2P_DOWN_FILE/DEVICE_INFO(dns:192.168.1.1)/LOCAL_INDEXER | DONE |
@@ -1841,3 +1843,22 @@ op4: 标志位 @0x19093b: 01 -> 00
 **重放结果与现场 KwMusicDLL.dll 5,010,928 字节完全一致 — 零残差。**
 结论: 安装包内 KwMusicDLL.dll 即该补丁产物, 无其他未知篡改;
 解密算法/脚本解析/执行语义三层全部逆向正确。
+
+## 10.71 ModMusicTool/conf.txt — 客户端预签发 sig 对实锤 (2026-08-26)
+
+UI 工具栏配置持久化了 7 组 (rid, sig1, sig2):
+```
+id=167 酷我游戏盒   sig1=3133918546 sig2=1222805338
+id=185 酷我秀场     sig1=12978532   sig2=658577042
+id=100 酷我K歌      sig1=3913291655 sig2=3362666904
+id=165 复制工具     sig1=1834598554 sig2=2756411536
+id=104 铃声制作工具 sig1=1028253771 sig2=3207978189
+id=126 评书小说     sig1=2028208185 sig2=116804145
+id=123 广播电台     sig1=3163641641 sig2=1424104331
+(id=333/14/12/13/11 无 sig — 未走P2P分发)
+```
+意义:
+1. 证实 sig 批量预取机制: 服务端下发工具列表时直接携带签名对,
+   客户端无需对每个 rid 单独请求 sig.s
+2. 提供新的真机测试向量: p2pcheck 可用这些配对测试 U_QRY 搜索
+   (如 `./p2pcheck 2028208185 116804145 MUSIC_126`)
