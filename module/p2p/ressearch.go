@@ -259,29 +259,37 @@ var ResSearchServers = []string{
 	"39.156.123.34",
 }
 
-// PCQueryParams carries the U_QRY fields. Computer name / user name /
-// loginid stay empty: the live server rejects non-empty values with 404 and
-// accepts the empty form (docs §10.66).
+// PCQueryParams carries the U_QRY fields. The sprintf template recovered
+// verbatim from KwMV.dll 0x1005bd28 is:
+//
+//	<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|<uip:%s>|<new>|<nat:%u>|
+//	<flags:%u><speer>|<ipdeny:no>%s|<loginid:%s>\r\n
+//
+// Slot 5 is the literal "rid": resource lookup is keyed by the sig pair
+// alone (content addressing), so RidOverride should stay empty in normal use.
 type PCQueryParams struct {
-	Sig1    uint32 // task+0x124
-	Sig2    uint32 // task+0x128
-	UID     uint32 // g_login+0x7C
-	NAT     uint16 // g_login+0x86
-	LocalIP string // dotted quad reported as uip
-	Rid     string // numeric rid the sig was issued for (fmt slot 5)
+	Sig1        uint32 // task+0x124
+	Sig2        uint32 // task+0x128
+	UID         uint32 // g_login+0x7C
+	NAT         uint16 // g_login+0x86
+	LocalIP     string // dotted quad reported as uip
+	Computer    string // fmt slot 3b (PC host name; empty accepted)
+	User        string // fmt slot 3c (login user name; empty accepted)
+	Flags       uint32 // flags field (observed 0)
+	RidOverride string // when set replaces the literal <rid> slot 5
 }
 
-// BuildPCUQRY renders the exact sprintf layout @0x1002aec9:
-//
-//	<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<%s>|<uip:%s>|<new>|<nat:%u>|
-//	<flags:%u><speer>|<ipdeny:no>%s|<loginid:%s>
-//
-// Slot 5 is the real rid: a literal "rid" placeholder never matches the
-// sig pair and the server answers with its constant 33-byte placeholder.
+// BuildPCUQRY renders the exact sprintf layout including the trailing CRLF
+// that the original client sends.
 func BuildPCUQRY(p PCQueryParams) string {
+	slot5 := p.RidOverride
+	if slot5 == "" {
+		slot5 = "rid"
+	}
 	return fmt.Sprintf(
-		"<001><U_QRY>|<%d,%d>|<%d><>|<%s>|<%s>|<uip:%s>|<new>|<nat:%d>|<flags:0><speer>|<ipdeny:no>|<loginid:>",
-		p.Sig1, p.Sig2, p.UID, p.LocalIP, p.Rid, p.LocalIP, p.NAT)
+		"<001><U_QRY>|<%d,%d>|<%d><%s><%s>|<%s>|<%s>|<uip:%s>|<new>|<nat:%d>|<flags:%d><speer>|<ipdeny:no>%s|<loginid:%s>\r\n",
+		p.Sig1, p.Sig2, p.UID, p.Computer, p.User,
+		p.LocalIP, slot5, p.LocalIP, p.NAT, p.Flags, "", "")
 }
 
 // SearchResource posts the U_QRY text to each search server in turn and
@@ -324,7 +332,7 @@ func searchOne(addr, qry string, timeout time.Duration) ([]byte, error) {
 			"Cache-Control: no-cache\r\n"+
 			"Accept-Encoding: zlib\r\n"+
 			"Content-Length: %d\r\n"+
-			"Connection: Close\r\n\r\n%s",
+			"Connection: Keep-Alive\r\n\r\n%s",
 		resSearchPath, resSearchHost, resSearchUA, len(qry), qry)
 	if _, err := conn.Write([]byte(req)); err != nil {
 		return nil, err

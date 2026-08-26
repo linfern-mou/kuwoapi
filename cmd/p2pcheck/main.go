@@ -336,12 +336,23 @@ func main() {
 			return
 		}
 
+		// Original client sends the literal <rid> slot (sig pair is the key).
+		// Try that first; on 404 retry with the numeric rid as a fallback.
 		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
 			Sig1: sig1, Sig2: sig2, UID: uid,
-			NAT: 3, LocalIP: "192.168.1.8", Rid: searchRid,
+			NAT: 3, LocalIP: "192.168.1.8",
 		})
 		fmt.Printf("U_QRY (%dB):\n%s\n", len(qry), qry)
 		plain, via, err := p2p.SearchResource(servers, qry, 6*time.Second)
+		if err != nil {
+			fmt.Println("literal-rid search failed:", err)
+			qry = p2p.BuildPCUQRY(p2p.PCQueryParams{
+				Sig1: sig1, Sig2: sig2, UID: uid,
+				NAT: 3, LocalIP: "192.168.1.8", RidOverride: searchRid,
+			})
+			fmt.Printf("retry with numeric rid (%dB):\n%s\n", len(qry), qry)
+			plain, via, err = p2p.SearchResource(servers, qry, 6*time.Second)
+		}
 		if err != nil {
 			fmt.Println("http search failed:", err)
 		} else {
