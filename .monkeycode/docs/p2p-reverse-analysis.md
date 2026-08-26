@@ -1797,3 +1797,35 @@ GetDataByCmd/SetOpenChargeSong; 键: DNS2CONF / SearchServerDNS1/2/3
 
 分享侧: lidx.dll StartLocalIndexer → CalcSign(本地文件) → POST yl_res_manage.up 注册
 ```
+
+## 10.70 kuwovip-patch.exe 补丁取证 (2026-08-26)
+
+### 三层结构
+```
+kuwovip-patch.exe (63KB loader, 仅kernel32导入)
+  └─ RT_RCDATA"DLL" 57KB 熵8.00 全加密载荷
+       ├─ 解密: 自定义流密码 @0x401000
+       │    key=0xdeadbeef; 循环: xor低字节 → ror1 → xor密文back → add剩余长度
+       └─ 释放 %TEMP%\dup2patcher.dll → LoadLibrary("load_patcher") → 自删
+dup2patcher.dll (57KB) = diablo2oo2's Universal Patcher (dUP2) 引擎
+  导出: load_patcher/SearchAndReplace/LoadFileMapping/SetRegDword/
+        Reg_Delete_Value/write_disk_file/PCRE支持/WOW64重定向/校验和修复
+```
+
+### 补丁身份
+- 作者 Mrack, 2017-12-02, http://mrack.lofter.com/, "Just For Fun"
+- 目标: KuWoVIP.8.7.* → KwMusic.exe + KwMusicDLL.dll
+- 宣称: 豪华VIP/无广告/MV下载/无损/下载加速/付费试听下载
+
+### 对 KwMusicDLL.dll 的实际修改 (vs .BAK, 仅16字节/4处)
+| 文件偏移 | 原始(BAK) | 补丁后 | 语义 |
+|---------|----------|--------|------|
+| 0x19093b | 01 | 00 | 配置布尔标志清零 |
+| 0x1cb576 | 74 1A (je+0x1A) | 90 90 | 权限校验失败跳转被NOP, 强制走已授权分支 |
+| 0x263c22 | cmp [ecx+8],1; sete al | inc eax; ret | isXXX()成员函数无条件返回真 |
+| 0x263c32 | cmp [ecx+8],eax; setge al | inc eax; ret | 同上 (等级/到期比较短路) |
+
+### 对本项目的影响评估
+- 改动全部集中于 VIP 权限判断, P2P/网络协议代码零触碰
+- → 此前基于该 DLL 的协议分析结论全部有效
+- KwMusicDLL.dll.BAK 为纯净原版备份, 后续分析可用它做基线
