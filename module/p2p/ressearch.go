@@ -55,10 +55,22 @@ func FetchSig(rid string, timeout time.Duration) (uint32, uint32, error) {
 		}
 	}
 	if len(ips) == 0 {
-		_, sysErr := net.LookupHost(sigServerHost)
-		_, kwErr := resolveViaUDPDNS(kwDNSAddr, sigServerHost, timeout)
-		return 0, 0, fmt.Errorf("cannot resolve %s (system: %v; KwDNS %s: %v)",
-			sigServerHost, sysErr, kwDNSAddr, kwErr)
+		// Android has no usable system resolver ([::1]:53 refused); ask
+		// public resolvers explicitly, then Kuwo's private KwDNS last.
+		var errs []string
+		for _, dns := range []string{"223.5.5.5:53", "114.114.114.114:53", "8.8.8.8:53", kwDNSAddr} {
+			ip, err := resolveViaUDPDNS(dns, sigServerHost, timeout)
+			if err == nil {
+				ips = append(ips, ip)
+				break
+			}
+			errs = append(errs, dns+"="+err.Error())
+		}
+		if len(ips) == 0 {
+			_, sysErr := net.LookupHost(sigServerHost)
+			return 0, 0, fmt.Errorf("cannot resolve %s (explicit dns: %s; system: %v)",
+				sigServerHost, strings.Join(errs, "; "), sysErr)
+		}
 	}
 
 	var lastErr error = errors.New("no sig server reachable")
