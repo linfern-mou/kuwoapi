@@ -2008,3 +2008,76 @@ IsAGt(x){ return this->f8 >= x }        ← patched -> return true ; 0x10264830
 A. CDN 直连路线: 完善 r.s/nmobi 取链路, 放弃 P2P
 B. 新版协议路线: 分析 APK 13.10.5 libDownloadProxy.so (6.4MB 新引擎)
 C. 存档路线: 8.x P2P 协议还原已完备(§10.55-10.75), 归档收尾
+
+## 10.77 【2026-08-26 重大反转】P2P 后端存活——UDP 7788 实证 + 未登录无损链闭合
+
+### 背景
+用户报告: PC(8.7.4+vip补丁,未手动登录)播放任意会员无损歌曲成功,缓存目录
+`temp/KMusic/N.flac`(数字递增编号)实时落盘真无损(24-35MB FLAC,含完整
+Vorbis COMMENT:《多远都要在一起》/邓紫棋、《自作自受》/杨丞琳)。
+此前 anti.s 匿名请求(`quality=flac`)返回的 kw-bj URL 经用户确认为**提示音**
+(file 588957081.mp3,非正曲),对应 act.log `P2P_DOWN_FILE total:1467 filetype:26`。
+
+### 关键证据链
+1. **PC 有匿名登录态**: act.log.out `LOGIN_TYPE:KUWO|LOGIN_RESULT:SUCCESS`
+   (08-26 14:29:44,先 LOGINTO TIMEOUT 后成功),uid=15277654。客户端自动
+   虚拟账号登录(vuser 接口)。
+2. **现场实验**(用户配合): 播放新歌 → 12.flac(35.8MB)/13.flac(26.8MB) 实时
+   落盘;UI 层任意音质可选无灰色(vip patch 解锁 VTYPE 判断生效)。
+3. **netstat 决定性抓取**(播放中,PID 过滤):
+   - `KwMusic.exe(10404) UDP 0.0.0.0:63483 <-> 39.156.121.20:7788` ← 唯一活跃数据会话!
+   - IPv6 CDN([2409:8c00:8401:2000::5a]:80 等)全部 SYN_SENT(用户 IPv6 不通)
+   - KwService.exe 仅 LISTEN :6000(TCP/UDP 本地服务端口)
+   - 无任何 ESTABLISHED TCP → **26MB 全走该 UDP 会话(CSF 可靠传输)**
+4. **39.156.121.20 与 act.log 的 resserver 39.156.123.34 同属移动云段**,均由
+   config.kuwo.cn 动态下发(deliver.kuwo.cn DNS 解析=39.156.121.53/123.34)。
+
+### 判定修正(推翻 §10.76"全死")
+- 死亡的: 老机房 IP(60.28.x/211.100.x/60.29.x/221.238.x)TCP:80 HTTP 搜索通道
+  (用户 PC 实测同样 i/o timeout);sig.s 域名(DNS 无记录);rid.kuwo.cn。
+- 存活的: **UDP tracker 网络**,真实端口 **7788**(非经典 25607);
+  musicinfo 元数据(r.s,带 alflac=1 即返 ALFLAC sig 对)。
+- 沙箱误判原因: 沙箱 UDP 全堵(既有约束),UDP timeout 不能定罪服务器。
+
+### 未登录无损播放全链(修正版)
+```
+启动 → vuser 匿名登录(pc.i.kuwo.cn/US_NEW/kuwo/vuser) → uid/token
+点击播放 → r.s musicinfo(alflac=1&pcmp4=1&ids=MUSIC_rid) → 27格式+11组sig
+→ UI 按音质选择取 sig 对(vip patch 使任意音质可选)
+→ PlayerCore.dll → pd.dll StartDown(sig1,sig2,path=temp/KMusic/N.flac)
+→ connected-UDP tracker 会话(39.156.x:7788) U_QRY → CSF 数据流拉取
+→ N.flac 落盘 → 播放器读缓存文件
+```
+anti.s 仅 AAC 试听路径(PlayerCore.dll CPlayAAC::SetAACUrl,模板带
+loginid/ch/instsrc 参数)。LOCAL_RIGHT|ERROR:GETURL = HTTP 直链获取失败,
+随后回退 P2P 通道(ressucway:2)。
+
+### PlayerCore.dll 新发现(0x1c828-0x1c9a8 区)
+- 网络检测样例: `60.29.226.182;win.player.ri05.sycdn.kuwo.cn/resource/n2/
+  11/64/2614324263.mp3;www.baidu.com;deliver.kuwo.cn;search.kuwo.cn/`
+  (sycdn=音源 CDN 域名模式,resource/n2/... 结构与 kw-bj 一致)
+- AAC anti.s 模板: `anti.s?key=kwmusic&body=...&format=aac&type=convert_url&
+  rid=%s&response=url&loginid=%s&ch=%s&instsrc=%s&version=&ver=%s&cid=%s`
+- 日志格式串: `|PLAYSIGN:(%u,%u)`、P2POb_DownStart/Finish/Failed/SigChange、
+  `sig1: %u, sig2: %u, FileSize: %d, Path: %s`
+- 导入 pd.dll: StartDown/StopDown/DelRes
+- 配置键: P2PPlaySongMinimumLeftTime/HttpPlaySongMinimumLeftTime/
+  PercentNeedToStartPlaySong(边下边播水位控制)
+
+### KwSongCache.dll
+musicinfo 请求模板: `r.s?stype=musicinfo&itemset=music_2014&alflac=1&
+pcmp4=1&ids=` —— alflac=1 使响应含 ALFLAC sig 对;查询带 cookie 字段
+(ASYN_QuerySong 日志)。
+
+### p2pcheck 迭代(本轮)
+- trackerPorts={25607,7788},trackerAddrs() 双端口展开;默认加 39.156.121.20
+- BuildPCUQRY 补 LoginID/CDNReq 字段(模板尾两槽原硬编码空串)
+- stage 1d: 裸 connected-UDP U_QRY(4s 超时,逐 tracker 打印原始响应+解析)——
+  netstat 证明真客户端搜索走此通道,无 HTTP 无 CSF 握手前置
+- 新增 windows/amd64 构建(.gitignore *.exe 需 git add -f):
+  d82a190 dist/p2pcheck_windows_amd64.exe
+
+### 待办
+- [ ] 用户 PC 跑新版,采集 stage1d 各 tracker UDP 响应(核心!)
+- [ ] 若 U_QRY 有应答: 按 PEERS/URLS 还原 CSF 拉流,复刻无损下载
+- [ ] vuser 匿名登录接口参数还原(若 tracker 校验 loginid 需先拿合法 uid)
