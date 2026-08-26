@@ -2081,3 +2081,32 @@ pcmp4=1&ids=` —— alflac=1 使响应含 ALFLAC sig 对;查询带 cookie 字�
 - [ ] 用户 PC 跑新版,采集 stage1d 各 tracker UDP 响应(核心!)
 - [ ] 若 U_QRY 有应答: 按 PEERS/URLS 还原 CSF 拉流,复刻无损下载
 - [ ] vuser 匿名登录接口参数还原(若 tracker 校验 loginid 需先拿合法 uid)
+
+### 10.77.1 【2026-08-26 深夜】PC 实测:HTTP 通道有活口(200+加密载荷),CSF 握手全灭
+用户 PC 跑 p2pcheck(ae9d400) 全量输出:
+1. **numeric-rid GET 变体拿到 8 台服务器的 200 OK**(literal `<rid>` 全 404):
+   101.42.130.234 / 101.42.128.167 / 111.206.97.45 / 111.206.98.106 /
+   49.7.250.69 / 49.7.249.154 / 39.156.121.53 / 39.156.123.34 (全部 nginx/1.20.1)
+   - 每台先 POST 404 → 再 GET 200(searchOne 回退链: POST→GET raw→GET esc)
+   - 响应头: Content-Type: text/plain + **Content-Encoding: zlib** + Connection: close
+   - body 33B 完全相同(确定性): `11000000 19000000 | 631af5a49acf7b1a531b6191069ec1f2a20973f4ea758b0423`
+   - 结构: u32 cmd=0x11(17) + u32 len=0x19(25) + 25B **加密载荷**(非 zlib 魔数,
+     单字节 XOR 不中,待从 KwMV.dll 响应处理例程提取算法)
+2. **老机房确认死刑**: 60.28.205.36 / 211.100.49.14 / 60.29.226.173 / 221.238.29.151
+   TCP:80 i/o timeout(真死,连 nginx 都没有)
+3. **CSF handshake(TX-SYN 20B)对全部 16 个 addr(IP×25607/7788) 无 SYNACK**
+   ——握手格式有误或 tracker 会话建立方式不同;netstat 已证明真客户端搜索
+   阶段是裸 connected-UDP,无需前置握手。
+4. 沙箱复现 GET 同参数 → 404:差异在 p2pcheck 用 Host: deliver.kuwo.cn +
+   HTTP/1.0 且 UA MSIE 7.0;沙箱测试用 HTTP/1.1。Host 头或 UA 或 uip 真实性
+   (192.168.1.8 vs 127.0.0.1)可能影响路由,待变量隔离实验。
+
+### KwMV.dll HTTP tracker 函数新地址(CDownloadTask::SearchServer)
+- GET 模板 `GET %s?%s HTTP/1.0\r\nHost: deliver.kuwo.cn...`: file 0x59fe0,
+  VA 0x1005b7e0,被 file 0x2c95f 引用;函数序言 file 0x2c700 (VA 0x1002d300 起)
+- 请求缓冲区 [ebp-0x1b344] 大小 0x19000;模式标记 [task+0x118]:
+  1=GET无代理 2=POST无代理 3=GET带代理 4=POST带代理(对应 act.log mode/ressucway)
+- 代理认证模板: `%s:%s`→Base64→`Proxy-Authorization: Basic %s`(file 0x5b998 区)
+- Accept-Encoding: zlib 为客户端原生请求头(file 0x5a092/0x5a160/0x5a27a/0x5a348 四份模板)
+- 响应读取走虚表 [0x100583f0]/[0x100583b8](对象布局 @0x1002d838 起),
+  解密逻辑在其实现内,未还原
