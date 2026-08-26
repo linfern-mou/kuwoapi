@@ -260,10 +260,17 @@ func main() {
 		servers = append(servers, p2p.ResSearchServers...)
 
 		// Full pd.dll chain: rid -> SigServer fresh sig -> U_QRY search.
+		searchRid := ridArg
+		if searchRid == "" {
+			searchRid = "228720849"
+			fmt.Println("no rid arg; using default 228720849 (sig must match!)")
+		}
 		if ridArg != "" {
 			fmt.Printf("signing rid %s via %s ...\n", ridArg, "rid.kuwo.cn")
-			if a, b, err := p2p.FetchSig(ridArg, 8*time.Second); err != nil {
+			a, b, err := p2p.FetchSig(ridArg, 8*time.Second)
+			if err != nil {
 				fmt.Println("sig fetch failed:", err)
+				fmt.Println("-> falling back to argv sig pair; note sig/rid mismatch yields the placeholder reply")
 			} else {
 				sig1, sig2 = a, b
 				fmt.Printf("fresh sig: %d,%d\n", sig1, sig2)
@@ -271,7 +278,7 @@ func main() {
 		}
 		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
 			Sig1: sig1, Sig2: sig2, UID: uid,
-			NAT: 3, LocalIP: "192.168.1.8",
+			NAT: 3, LocalIP: "192.168.1.8", Rid: searchRid,
 		})
 		fmt.Printf("U_QRY (%dB):\n%s\n", len(qry), qry)
 		plain, via, err := p2p.SearchResource(servers, qry, 6*time.Second)

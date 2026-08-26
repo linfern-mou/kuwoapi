@@ -55,7 +55,10 @@ func FetchSig(rid string, timeout time.Duration) (uint32, uint32, error) {
 		}
 	}
 	if len(ips) == 0 {
-		return 0, 0, errors.New("cannot resolve " + sigServerHost)
+		_, sysErr := net.LookupHost(sigServerHost)
+		_, kwErr := resolveViaUDPDNS(kwDNSAddr, sigServerHost, timeout)
+		return 0, 0, fmt.Errorf("cannot resolve %s (system: %v; KwDNS %s: %v)",
+			sigServerHost, sysErr, kwDNSAddr, kwErr)
 	}
 
 	var lastErr error = errors.New("no sig server reachable")
@@ -222,16 +225,20 @@ type PCQueryParams struct {
 	UID     uint32 // g_login+0x7C
 	NAT     uint16 // g_login+0x86
 	LocalIP string // dotted quad reported as uip
+	Rid     string // numeric rid the sig was issued for (fmt slot 5)
 }
 
 // BuildPCUQRY renders the exact sprintf layout @0x1002aec9:
 //
-//	<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|<uip:%s>|<new>|<nat:%u>|
+//	<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<%s>|<uip:%s>|<new>|<nat:%u>|
 //	<flags:%u><speer>|<ipdeny:no>%s|<loginid:%s>
+//
+// Slot 5 is the real rid: a literal "rid" placeholder never matches the
+// sig pair and the server answers with its constant 33-byte placeholder.
 func BuildPCUQRY(p PCQueryParams) string {
 	return fmt.Sprintf(
-		"<001><U_QRY>|<%d,%d>|<%d><>|<%s>|<rid>|<uip:%s>|<new>|<nat:%d>|<flags:0><speer>|<ipdeny:no>|<loginid:>",
-		p.Sig1, p.Sig2, p.UID, p.LocalIP, p.LocalIP, p.NAT)
+		"<001><U_QRY>|<%d,%d>|<%d><>|<%s>|<%s>|<uip:%s>|<new>|<nat:%d>|<flags:0><speer>|<ipdeny:no>|<loginid:>",
+		p.Sig1, p.Sig2, p.UID, p.LocalIP, p.Rid, p.LocalIP, p.NAT)
 }
 
 // SearchResource posts the U_QRY text to each search server in turn and

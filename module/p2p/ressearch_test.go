@@ -11,10 +11,10 @@ import (
 func TestBuildPCUQRY(t *testing.T) {
 	got := BuildPCUQRY(PCQueryParams{
 		Sig1: 2872976053, Sig2: 860573832, UID: 15277654,
-		NAT: 3, LocalIP: "192.168.1.8",
+		NAT: 3, LocalIP: "192.168.1.8", Rid: "228720849",
 	})
 	want := "<001><U_QRY>|<2872976053,860573832>|<15277654><>|<192.168.1.8>|" +
-		"<rid>|<uip:192.168.1.8>|<new>|<nat:3>|<flags:0><speer>|<ipdeny:no>|<loginid:>"
+		"<228720849>|<uip:192.168.1.8>|<new>|<nat:3>|<flags:0><speer>|<ipdeny:no>|<loginid:>"
 	if got != want {
 		t.Fatalf("got:\n%s\nwant:\n%s", got, want)
 	}
