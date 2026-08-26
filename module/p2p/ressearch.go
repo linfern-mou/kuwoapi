@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -322,14 +323,37 @@ var ResSearchDebug func(server string, hdr, body []byte)
 var SearchAttemptLog func(addr, status string)
 
 func searchOne(addr, qry string, timeout time.Duration) ([]byte, error) {
-	conn, err := net.DialTimeout("tcp", addr, timeout)
-	if err != nil {
-		return nil, err
+	// Primary form per KwMV.dll: POST the plaintext U_QRY.
+	plain, err := httpRoundTrip(addr, buildPostReq(qry), timeout)
+	if err == nil {
+		return plain, nil
 	}
-	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(timeout))
+	// Fallback forms present in the same binary:
+	//   GET %s?%s HTTP/1.0  (query string carried in the URL)
+	getRaw := "GET " + resSearchPath + "?" + qry + " HTTP/1.0\r\n" +
+		"Host: " + resSearchHost + "\r\n" +
+		"User-Agent: " + resSearchUA + "\r\n" +
+		"Cache-Control: no-cache\r\n" +
+		"Accept-Encoding: zlib\r\n" +
+		"Connection: Close\r\n\r\n"
+	if p2, e2 := httpRoundTrip(addr, getRaw, timeout); e2 == nil {
+		return p2, nil
+	}
+	getEsc := "GET " + resSearchPath + "?q=" + url.QueryEscape(qry) + " HTTP/1.0\r\n" +
+		"Host: " + resSearchHost + "\r\n" +
+		"User-Agent: " + resSearchUA + "\r\n" +
+		"Cache-Control: no-cache\r\n" +
+		"Accept-Encoding: zlib\r\n" +
+		"Connection: Close\r\n\r\n"
+	if p3, e3 := httpRoundTrip(addr, getEsc, timeout); e3 == nil {
+		return p3, nil
+	}
+	return nil, err
+}
 
-	req := fmt.Sprintf(
+// buildPostReq renders the exact template from KwMV.dll file offset 0x5a298.
+func buildPostReq(qry string) string {
+	return fmt.Sprintf(
 		"POST %s HTTP/1.1\r\n"+
 			"Host: %s\r\n"+
 			"User-Agent: %s\r\n"+
@@ -338,10 +362,23 @@ func searchOne(addr, qry string, timeout time.Duration) ([]byte, error) {
 			"Content-Length: %d\r\n"+
 			"Connection: Keep-Alive\r\n\r\n%s",
 		resSearchPath, resSearchHost, resSearchUA, len(qry), qry)
+}
+
+// httpRoundTrip writes one raw request and returns the decoded body,
+// logging every status line through SearchAttemptLog.
+func httpRoundTrip(addr, req string, timeout time.Duration) ([]byte, error) {
+	conn, err := net.DialTimeout("tcp", addr, timeout)
+	if err != nil {
+		if SearchAttemptLog != nil {
+			SearchAttemptLog(addr, "dial: "+err.Error())
+		}
+		return nil, err
+	}
+	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(timeout))
 	if _, err := conn.Write([]byte(req)); err != nil {
 		return nil, err
 	}
-
 	resp, err := io.ReadAll(conn)
 	if err != nil && len(resp) == 0 {
 		return nil, err
@@ -350,15 +387,20 @@ func searchOne(addr, qry string, timeout time.Duration) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	statusOK := strings.HasPrefix(string(hdr), "HTTP/") &&
-		strings.Contains(strings.SplitN(string(hdr), "\r\n", 2)[0], " 200 ")
+	statusLine := strings.SplitN(string(hdr), "\r\n", 2)[0]
+	statusOK := strings.HasPrefix(statusLine, "HTTP/") && strings.Contains(statusLine, " 200 ")
 	if SearchAttemptLog != nil {
-		line := strings.SplitN(string(hdr), "\r\n", 2)[0]
-		SearchAttemptLog(addr, line)
+		server := ""
+		for _, l := range strings.Split(string(hdr), "\r\n") {
+			if strings.HasPrefix(strings.ToLower(l), "server:") {
+				server = " [" + strings.TrimSpace(l[7:]) + "]"
+				break
+			}
+		}
+		SearchAttemptLog(addr, statusLine+server)
 	}
 	if !statusOK {
-		line := strings.SplitN(string(hdr), "\r\n", 2)[0]
-		return nil, fmt.Errorf("bad status: %s", line)
+		return nil, fmt.Errorf("bad status: %s", statusLine)
 	}
 	if ResSearchDebug != nil {
 		ResSearchDebug(addr, hdr, body)
