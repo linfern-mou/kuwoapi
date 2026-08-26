@@ -4,18 +4,23 @@
 //
 // Usage:
 //
-//	go run ./cmd/p2pcheck <sig1> <sig2>
+//	go run ./cmd/p2pcheck [sig1 sig2 [rid]]
 //
-// e.g. sig pair for MUSIC_169753: 3264614461 1651339078
+// With a rid but no sig pair the tool walks the full pd.dll DownTask chain:
+// r.s musicinfo -> embedded S1/S2 (fallback: rid.kuwo.cn/sig.s) -> U_QRY.
+// e.g. legacy pair for MUSIC_169753: 3264614461 1651339078
 package main
 
 import (
 	"bytes"
+	"compress/zlib"
 	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -259,23 +264,63 @@ func main() {
 		}
 		servers = append(servers, p2p.ResSearchServers...)
 
-		// Full pd.dll chain: rid -> SigServer fresh sig -> U_QRY search.
+		// Full pd.dll chain: click -> musicinfo -> sig decision -> U_QRY.
 		searchRid := ridArg
 		if searchRid == "" {
 			searchRid = "228720849"
 			fmt.Println("no rid arg; using default 228720849 (sig must match!)")
 		}
-		if ridArg != "" {
-			fmt.Printf("signing rid %s via %s ...\n", ridArg, "rid.kuwo.cn")
-			a, b, err := p2p.FetchSig(ridArg, 8*time.Second)
-			if err != nil {
-				fmt.Println("sig fetch failed:", err)
-				fmt.Println("-> falling back to argv sig pair; note sig/rid mismatch yields the placeholder reply")
-			} else {
-				sig1, sig2 = a, b
-				fmt.Printf("fresh sig: %d,%d\n", sig1, sig2)
+
+		// Step A: KwSongCache.dll musicinfo call (first thing after click).
+		sigSrc := "argv"
+		fmt.Printf("\n[musicinfo] GET r.s ids=MUSIC_%s ...\n", searchRid)
+		qSigs, formats, err := fetchMusicInfo(searchRid)
+		if err != nil {
+			fmt.Println("  musicinfo failed:", err)
+			fmt.Println("  (server returns an empty zlib body for untrusted IPs)")
+		} else {
+			fmt.Printf("  FORMATS=%v\n", formats)
+			for q, s := range qSigs {
+				fmt.Printf("  %-10s sig=%d,%d\n", q, s[0], s[1])
+			}
+			if len(qSigs) == 0 {
+				fmt.Println("  no embedded S1/S2 in reply")
+			} else if len(os.Args) < 3 {
+				// pd.dll DownTask: task.sig comes pre-filled from metadata
+				var pick [2]uint64
+				for _, q := range []string{"2000kflac", "1000kmp3", "320kmp3", "128kmp3"} {
+					if s, ok := qSigs[q]; ok {
+						pick = s
+						break
+					}
+				}
+				if pick[0] == 0 {
+					for _, s := range qSigs {
+						pick = s
+						break
+					}
+				}
+				sig1, sig2 = uint32(pick[0]), uint32(pick[1])
+				sigSrc = "musicinfo S1/S2"
+				fmt.Printf("  -> using metadata sig %d,%d\n", sig1, sig2)
 			}
 		}
+
+		// Step B: sig empty? -> pd.dll GetResourceSig via rid.kuwo.cn/sig.s.
+		if ridArg != "" && sigSrc != "musicinfo S1/S2" {
+			fmt.Printf("\n[sig.s] signing rid %s ...\n", searchRid)
+			a, b, err := p2p.FetchSig(ridArg, 8*time.Second)
+			if err != nil {
+				fmt.Println("  sig fetch failed:", err)
+				fmt.Println("  -> falling back to argv/metadata sig; mismatch yields placeholder reply")
+			} else {
+				sig1, sig2 = a, b
+				sigSrc = "sig.s fresh"
+				fmt.Printf("  fresh sig: %d,%d\n", sig1, sig2)
+			}
+		}
+		fmt.Printf("[sig source] %s -> %d,%d\n", sigSrc, sig1, sig2)
+
 		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
 			Sig1: sig1, Sig2: sig2, UID: uid,
 			NAT: 3, LocalIP: "192.168.1.8", Rid: searchRid,
@@ -372,6 +417,74 @@ outer:
 				p.Kid, p.IP, p.Port, p.Flag1, p.Flag2, p.Flag3, p.Index)
 		}
 	}
+}
+
+// fetchMusicInfo mirrors KwSongCache.dll / song.go: GET r.s?stype=musicinfo,
+// body is an 8-byte header followed by a zlib stream of key=value lines.
+// Quality lines look like "<qname>=S1:<n>|S2:<n>|SIZE:<n>|BT:<n>".
+func fetchMusicInfo(rid string) (map[string][2]uint64, []string, error) {
+	u := fmt.Sprintf(
+		"http://search.kuwo.cn/r.s?stype=musicinfo&itemset=music_2014&alflac=1&pcmp4=1&ids=MUSIC_%s",
+		rid)
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	req.Header.Set("User-Agent", "Kuwo_Music_Box")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close()
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(raw) < 10 {
+		return nil, nil, fmt.Errorf("empty body (%d bytes)", len(raw))
+	}
+	zr, err := zlib.NewReader(bytes.NewReader(raw[8:]))
+	if err != nil {
+		return nil, nil, err
+	}
+	text, err := io.ReadAll(zr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var formats []string
+	sigs := map[string][2]uint64{}
+	for _, line := range strings.Split(string(text), "\n") {
+		line = strings.TrimSpace(line)
+		eq := strings.Index(line, "=")
+		if eq < 0 {
+			continue
+		}
+		key, val := strings.TrimSpace(line[:eq]), line[eq+1:]
+		switch {
+		case key == "FORMATS":
+			formats = strings.Split(strings.TrimSpace(val), "$")
+		case strings.Contains(val, "S1:"):
+			var s1, s2 uint64
+			for _, p := range strings.Split(val, "|") {
+				ci := strings.Index(p, ":")
+				if ci < 0 {
+					continue
+				}
+				v, _ := strconv.ParseUint(strings.TrimSpace(p[ci+1:]), 10, 64)
+				switch p[:ci] {
+				case "S1":
+					s1 = v
+				case "S2":
+					s2 = v
+				}
+			}
+			if s1 != 0 {
+				sigs[key] = [2]uint64{s1, s2}
+			}
+		}
+	}
+	return sigs, formats, nil
 }
 
 func mustAtoi(s string) int {
