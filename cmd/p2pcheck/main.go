@@ -32,8 +32,9 @@ func main() {
 		b, _ := strconv.ParseUint(os.Args[2], 10, 32)
 		sig1, sig2 = uint32(a), uint32(b)
 	}
-	// anonymous uid per KwMV.dll 0x10012b21: (FNV1a(machine) mod 1e8) + 1e8
-	uid := uint32(152776543)
+	// anonymous uid per KwMV.dll 0x10012b21: (FNV1a(machine) mod 1e8) + 1e8;
+	// act.log kid field confirms the live value is 15277654 (docs §10.65)
+	uid := uint32(15277654)
 
 	fmt.Println("== stage 0: UDP egress sanity (standard DNS over UDP) ==")
 	stage0OK := false
@@ -235,6 +236,43 @@ func main() {
 	}
 
 	uc.Close() // free :6000 for the stage-2 sessions
+
+	fmt.Println("\n== stage 1c: PC-style HTTP resource search (TCP:80, ressucway=2) ==")
+	{
+		servers := make([]string, 0, len(trkAddrs)+len(p2p.ResSearchServers))
+		for _, a := range trkAddrs {
+			servers = append(servers, a.IP.String())
+		}
+		servers = append(servers, p2p.ResSearchServers...)
+		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
+			Sig1: sig1, Sig2: sig2, UID: uid,
+			NAT: 3, LocalIP: "192.168.1.8",
+		})
+		fmt.Printf("U_QRY (%dB):\n%s\n", len(qry), qry)
+		plain, via, err := p2p.SearchResource(servers, qry, 6*time.Second)
+		if err != nil {
+			fmt.Println("http search failed:", err)
+		} else {
+			fmt.Printf("reply from %s: %d bytes plaintext\n%s\n", via, len(plain), plain)
+			r := p2p.ParseResponse(string(plain))
+			switch {
+			case r.Denied:
+				fmt.Println("result: DENY_IP")
+			case r.ResourceDel:
+				fmt.Println("result: RES_DEL")
+			default:
+				fmt.Printf("result: ver=%s searchtm=%d filelen=%d peers=%d urls=%d\n",
+					r.FormatVer, r.SearchTM, r.FileLen, len(r.Peers), len(r.URLs))
+				for _, u := range r.URLs {
+					fmt.Println("  URL:", u)
+				}
+				for _, pp := range r.Peers {
+					fmt.Printf("  PEER kid=%d %s:%d flags=%d,%d,%d idx=%d\n",
+						pp.Kid, pp.IP, pp.Port, pp.Flag1, pp.Flag2, pp.Flag3, pp.Index)
+				}
+			}
+		}
+	}
 
 	fmt.Println("\n== stage 2: CSF session + U_QRY (3 attempts per tracker) ==")
 	var sess *p2p.Session

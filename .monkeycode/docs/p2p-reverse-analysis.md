@@ -1375,3 +1375,228 @@ getType(): bit3→9; bit1→1|ack(1=SYN,2=SYNACK); bit0→4|ack(FIN/FINACK);
 uh1/uh2.kuwo.cn 已从 DNS 摘除且 config INI 无 HelpSvr 键 — Android help-server 通道废弃。
 真实入口 = tracker:25607 UDP 的 Swordfish 会话内发 U_QRY (act.log ressucway:2 seares:SUCC 佐证)。
 
+
+## 10.64 【生态终判】 P2P tracker 服务端已下线 (2026-08 实测)
+
+### 测试矩阵 (沙箱 + 用户手机双环境, 结果完全一致)
+| 包型 | 协议代际 | 通道 | 目标 | 结果 |
+|------|---------|------|------|------|
+| PC 心跳 23B (0xE2103) | KwMV.dll | UDP | 10×:25607 (hb+trk) | 零回复 |
+| Android NAT探测 19B (0x29) | libp2p.so | UDP | 10×:25607 | 零回复 |
+| Swordfish SYN 20B {1,uid} | libp2p.so | UDP (srcport 6000) | 10×:25607 | 零回复 |
+| 同上 | - | TCP | 39.156.121.53/.96/.97/.36 :25607 | 建连后静默 |
+| 裸 U_QRY 文本 | SearchPeer | TCP:25607 | deliver IP | 静默 |
+| KwDNS A查询 | config下发 | UDP:53 | 60.28.201.45 | 静默 |
+| HTTP GET | webproxy | TCP:80 | 175.102.178.77 | 建连后静默 |
+| DoH | DNS2CONF | TCP:443 | 103.79.26.13 | 建连后静默 |
+
+### 判定依据
+1. TCP 三次握手全部成功 → IP/LB 层存活; 应用层对任意输入零响应 → 后端进程不存在
+2. 无 ICMP port-unreachable / TCP RST → 防火墙 DROP 规则, 有意关闭
+3. config.kuwo.cn 仍推送 HeartbeatServer/SearchServer 列表 = 静态模板未清理,
+   与 act.log (2024-08 成功记录) 对比证明体系在 2024-2026 间被裁撤
+4. uh1/uh2.kuwo.cn 从 DNS 摘除; HelpSvr 键从 INI 移除 — 运维侧主动退役痕迹
+5. Netsong IP 仅剩 nginx 兜底页 (Content-Length:0)
+
+### 结论
+酷我 P2P 网络 (tracker 注册/NAT穿透/peer数据传输) 在服务端已整体退役。
+任何客户端复刻 (Go 或其他) 均无法恢复功能; 官方现役客户端应已全量切换 CDN。
+
+### 对项目的影响
+- download.go 的 P2P 下载路径保留代码作为协议存档, 但标记 Unreachable
+- 播放功能回归 anti.s HTTP 直连 (已实测可用, 见 §10.55 前 CDN 章节)
+- p2pcheck 工具保留用于未来监控服务是否复活
+
+
+---
+
+## §10.65 【重大突破】2.0.5 安装包日志 + PC HTTP 搜索协议全还原 (2026-08-26)
+
+### 背景
+用户指出 2.0.5 安装包内含日志, 并坚持 P2P 实测可用。§10.64 "服务端已下线"结论被证伪。
+
+### 决定性证据: bin/Log/act.log.out (用户今日 14:30 真实播放)
+```
+[08-26 14:29:01] ACT:clienthb|status:init:OK|server:0.0.0.0|port:0|maxmsgid:21613533
+[08-26 14:30:10] ACT:P2P_DOWN_FILE|S:KwMV|kid:15277654|sip:0.0.0.0|
+  sig1:2872976053|sig2:860573832|seares:SUCC|seatm:109|peernum:0|usedp:8|
+  nconn:0|servtm:109|serpack:1467|sestm:6515|total:1467|filetype:26|
+  down5:563|mode:0|httpmode:0|resserver:39.156.123.34|ressuccsvr:39.156.123.34|ressucway:2
+```
+- seares:SUCC + serpack:1467 = 搜索成功且从服务器收到 1467B 数据
+- resserver=39.156.123.34 正是 INI [ResSearch] SearchServer8 (u32 大端 664566562)
+- ressucway:2 含义见下文
+
+### 教训: 此前 UDP/TCP25607 全灭的根因
+1. **uid 笔误**: 真实 kid=15277654 (8位), 我用了 152776543 (多写一个3)
+2. **通道错误**: PC 搜索走 TCP:80 HTTP, 25607 只是 HeartbeatServer (UDP 心跳)
+3. **包格式错误**: 一直用 Android libp2p.so 的 CSF/SF 格式发 PC 协议服务器
+
+### SearchPeer 搜索主函数 (KwMV.dll @ 0x1002abf0, this=ebx)
+- 入口检查 [ebx+0x124..0x12b] 8 字节非全零 (sig1@+0x124, sig2@+0x128)
+- 服务器列表 vector@[ebx+0x3e8], 元素 {u32 ip_be; u16 port; u16 pad}
+- 列表来源: LoadResServers @0x100146e0:
+  - GetInt("ResSearch","ResServCnt") → N (INI 无此键时默认 9? 实测循环上限)
+  - 循环 i=1..N: sprintf(key,"%s%d","SearchServer",i); GetStr("ResSearch",key)
+  - ip = inet_addr(htonl 解析) — INI 值按**大端**解释成点分十进制
+  - **端口硬编码 0x50=80**: `mov ecx,0x50; mov word [ebp-0x68],cx` @0x100147c0
+  - push_back {ip_be, port=80}; 日志 "Add ResServer %s" @0x1001485f
+- 每服务器 malloc(0x124) 任务项:
+  - +0x00 timeout=5000ms; +0x04 ip; +0x08 port; +0x0c string path; +0x24 query;
+    +0x3c data ptr; +0x40 data len; +0x48 state; +0xcc host串; +0x8c proxy串;
+    +0x110 → {+8 handle=-1, +0xc thread, +0x10 state}; +0x114/0x118 way结果;
+    +0x11c/+0x120 来自 this+0x124/0x128 (sig1/sig2)
+- state==3 时 _beginthreadex(SearchThread @0x1002d1d0)
+- 主循环 WaitForSingleObject(event@[ebx+0x3e4], 4000ms); 超时→下一服务器
+- 成功项: [ebx+0x3f4]=resserver_ip, [ebx+0x3f8]=port, [ebx+0x400]=ressucway;
+  全局 0x1006b544/0x1006b548 同步记录
+- 失败重试间隔 30000ms (0x7530)
+
+### SearchThread @0x1002d1d0 (每服务器一线程)
+1. `call 0x10001dd0` 构造 OIHTTPClientEx 对象 (vtable @0x10054a98, socket@[this+0x84])
+   - vtbl+0x3c @0x10021f10: socket(AF_INET=2, SOCK_STREAM=1, TCP=6)+connect
+   - vtbl+0x44 @0x10021ad0: getsockname
+   - vtbl+8 @0x10021ce0: Send(buf,len)
+   - vtbl+4/vtbl+0(jmp vtbl+4) @0x10021e20: Recv
+   - vtbl+0x1c @0x10021a70: shutdown+close
+2. 连接 item->ip:item->port (=SearchServer_i:80)
+3. 构造请求 (四分支, 即 ressucway):
+   - way1 `[edi+0x118]=1` 直连 GET:  fmt @0x1005b7e0 "GET %s?%s HTTP/1.0"
+   - way2 `[edi+0x118]=2` 直连 POST: fmt @0x1005b8b0 "POST %s HTTP/1.1"
+   - way3/way4 同上但带 Proxy-Authorization: Basic base64(user:pass) (@0x10044cf0 编码)
+   - path=[item+0x0c]= "/yl_res_manage.search" (@0x1005b764, len 0x15)
+   - query=[item+0x24]= U_QRY 报文
+4. 完整请求头 (直连 GET):
+   ```
+   GET /yl_res_manage.search?<U_QRY报文> HTTP/1.0\r\n
+   Host: deliver.kuwo.cn\r\n                                   (@0x1005b8xx 固定串!)
+   User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\n
+   Cache-Control: no-cache\r\n
+   Accept-Encoding: zlib\r\n
+   Connection: Close\r\n\r\n
+   ```
+   POST 版: HTTP/1.1 + body=U_QRY + Content-Length: %d + Connection: Keep-Alive
+   (POST 分支头顺序: Host/UA/Cache-Control/Accept-Encoding/Content-Length/Connection)
+5. 发送后逐字节读响应 (过滤 \r\n 收集行到 0x230c 栈缓冲):
+   - atoi(status line) 必须 200 或 206, 否则失败 "无效的HTTP应答头部 %d"
+   - 解析头: strstr(line,":") 取值; 匹配 "Content-Length"(@0x10053bd0);
+     **匹配 "Content-Encoding"(0x1005bba0) 与值前缀 "zlib"(0x1005bbb4)** → 置二进制标志[ebp-0x3d]
+6. 二进制分支 ([ebp-0x3d]==1, @0x1002db48):
+   - Recv 4B → u32 A; Recv 4B → u32 B; Recv B 字节 payload
+   - payload 存入 0x34344 缓冲 → std::string
+   - call 0x1004cc30 = uncompress(dst=0x1b344缓冲, &outlen, src, srclen) 标准 zlib inflate
+   - 失败 → errcode=5 "结果解压缩失败"; 成功 → 明文进 bigbuf
+7. 文本分支: 读全部 → call 0x10043d30 { strtok(s,"") ; b64decode @0x100434a0 } 
+   - 0x100434a0 = base64 解码 (4字符组→call 0x10043380→3字节, 处理 '=' padding)
+   - 输出二进制明文
+8. item->data = 解码/解压产物; SetEvent 唤醒主循环
+
+### U_QRY 报文格式 (sprintf @0x1002aec9, _snprintf(buf,0x103,...))
+fmt @0x1005bd28:
+```
+<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|<uip:%s>|<new>|<nat:%u>|<flags:%u><speer>|<ipdeny:no>%s|<loginid:%s>
+```
+参数 (压栈逆序=消费序):
+1. %s ← "001"                    (@0x10054884)
+2. %s ← "U_QRY"                  (@0x1005bd20)
+3. %u ← sig1                     ([this+0x124])
+4. %u ← sig2                     ([this+0x128])
+5. %u ← uid                      (g_login+0x7c; g_login=0x10069c2c)
+6. %s ← 全局串A                  (0x1006b514 数据, cap 0x1006b528) — NetID/version 类
+7. %s ← 全局串B                  (0x1006b52c 数据, cap 0x1006b540)
+8. %s ← 本机公网IP串             ("sip:%d.%d.%d.%d" 构造于 [ebp-0x230], 来源 0x10039ac0)
+9. %u ← nat                      (word [g_login+0x86])
+10. %u ← flags                   ([this+0x370], 计算见下)
+11. %s ← edi=[ebp-0xfc]          (NetID 串, Setting/NetID via vtable+0x10 GetSetting("NetID"))
+12. %s ← [ebp-0x28]              (CdnSpeedPolicy, vtable+0x70 GetBool("CdnSpeedPolicy")→"<cdnreq>" 或空)
+
+flags 计算 @0x1002ad42:
+```
+flags = [0x10069be4]+0x34
+if (0x1006b608 != 0) flags |= 0x20000      // 代理?
+if ([this+0x224] == 0) flags |= 0x40000     // uid==0?
+else if ([this+0x224] == 3) flags |= 0x100000  // nat==3 对称?
+```
+
+### 响应解析 (主循环内, [ebp-0x60]=item->data)
+find("<DENY_IP>")(@0x1005be58, find fn 0x10009800) → IP黑名单分支
+find("<RES_DEL>")(@0x1005bec8) → 资源已删除, 日志 "NoRes"/"资源已经删除", [ebx+0xfc]=6
+find("<URL>",5)(0x1005bef8; find fn 0x10003a10(this,needle,start,len)) → URL段解析 ('<'@0x1005b02c '>'@0x100594f8 分割, atoi 转换 0x10043330)
+find("FILE_LEN")(0x1005beec) → 文件长度
+预期明文含 FILE_LEN=<n> 与 <URL>... 结构
+
+### ressucway 语义确认
+| 值 | 路径 |
+|----|------|
+| 1 | GET 直连 |
+| 2 | POST 直连 (用户今日成功路径) |
+| 3 | GET 代理 (Proxy-Authorization Basic) |
+| 4 | POST 代理 |
+
+### 沙箱实测验证 (2026-08-26, 直接命中服务器)
+```
+POST /yl_res_manage.search HTTP/1.1
+Host: deliver.kuwo.cn
+Accept-Encoding: zlib
+body: <001><U_QRY>|<2872976053,860573832>|<15277654><>|<192.168.1.8>|<rid>|<uip:192.168.1.8>|<new>|<nat:3>|<flags:0><speer>|<ipdeny:no>|<loginid:>
+```
+→ **HTTP 200 OK** Server: nginx/1.20.1, Content-Encoding: zlib,
+  body = {u32:17, u32:25} + 25B payload (33B 总长)
+- 不带 Accept-Encoding → 200 + base64 文本 "YlIOYhFJKnB5LHA6MXYoWjE=" (=17B 同内容)
+- **sig 路由**: sig1=2872976053,sig2=860573832 (用户今日真实对) 才命中后端;
+  其他 sig (3264614461,1651339078 等) → nginx 404
+- junk/空 body → 404; nat0/nat3 变体响应相同
+- 17B 内容: 62 52 0e 62 11 49 2a 70 79 2c 70 3a 31 76 28 5a 31 (仍加密或为空结果包)
+- zlib inflate 25B payload 失败 → payload 可能先加密再压缩, 或非标准 deflate
+
+### 待解
+1. 响应体最后一层: 17B 密文的解密算法 (可能在 HTTP 类内部或另有 XOR)
+2. 全局串A/B (0x1006b514/0x1006b52c) 的运行时值与写入者
+3. rid/loginid 的真实填充值
+4. 成功搜索时 serpack:1467 的完整数据形态
+
+### 结论修正
+- §10.64 "服务端退役" 结论作废: tracker 后端在线且按 sig 鉴权
+- P2P 播放路径完全可行: 搜索走 TCP:80 HTTP (无需 UDP CSF)
+- 心跳 (UDP 23B cmd 0xE2103 → :25607) 是否仍必要待验 — clienthb 日志显示 init:OK 但 server:0.0.0.0:port:0 (本地未绑定?)
+
+## 10.66 全局串AB破解 + 服务器行为判定 (2026-08-26)
+
+### U_QRY 参数6/7 = 计算机名 + Windows用户名
+- 赋值函数 0x100104e0 (SearchPeer 同文件, ref strA@0x100105f2 / strB@0x100105a8):
+  - strB (@0x1006b52c) ← getter 0x10012920: `GetUserNameA(buf,0x1ff)` ([0x10053128]) → **Windows 登录用户名**
+  - strA (@0x1006b514) ← getter 0x100129b0 (SEH 包装, 单例 [0x10053180]) → **计算机名** (GetComputerName)
+- 报文片段 `<%u><%s><%s>` 实际形态: `<uid><计算机名><用户名>`
+- 空串版 `<15277654><>|` 是 PC 端未取到值时的合法降级形态
+
+### way5 裸 TCP 二进制协议分支 (@0x1002ded7, SearchThread 内 [ebp-0x15]!=1 时)
+- 日志串: "使用直接的数据传输协议进行请求"(0x1005bc24 GBK) / "连接服务器代理模块成功"(0x1005bc44)
+- 序列: connect → Send(&[item+0x1c],4) → Send(U_QRY原文,len) → Recv(4B len) → Recv(len→item->data)
+- **无任何编码/解密层 — 明文二进制协议**, 触发条件 [ebp-0x15] 初始=1 恒走 HTTP 分支
+- 结论: 存在备用裸 TCP 通道, 但默认路径是 HTTP
+
+### 服务器严格语法校验 (沙箱实测矩阵)
+| 变体 | 结果 |
+|------|------|
+| `<%u><>|` (空计算机名/用户名) | 200 + 固定17B包 |
+| `<%u><DESKTOP><admin>}` | **404** |
+| flags=0x10000 | 200 + 同一固定17B包 |
+| nat=2/3 | 200 + 同一固定17B包 |
+| GET HTTP/1.0 (way1 形态) | 200 + 同一固定17B包 |
+| `<rid>12345` (破坏闭合结构) | **404** |
+| 漏尖括号 `\|192.168.1.8\|` | **404** |
+
+- nginx 404 = 后端 CGI 解析失败; 200 = 结构通过
+- **17B 固定包对所有合法变体恒定不变** (`62 52 0e 62 11 49 2a 70 79 2c 70 3a 31 76 28 5a 31`)
+- 文本分支 b64 解码后恰为同 17B; 二进制分支 A 字段=17 一致 → 双编码同一逻辑应答
+
+### 17B 包性质判定
+- 静态占位应答 (无效查询的统一拒绝/空结果), 密码学穷举价值低, 停止手工分析
+- 真实成功应答 serpack=1467B 需真机会话特征: 有效在线 uid / loginid / 出口 IP 可信
+- zlib 分支 payload 25B 解不开的原因: 占位应答可能未经正常压缩管线生成
+
+### 下一步 (Go 实现)
+1. module/p2p/ressearch.go: TCP:80 POST /yl_res_manage.search + U_QRY 报文 (空 comp/user/loginid)
+2. 响应双编码处理: Content-Encoding: zlib → {u32 A,u32 B,B字节} inflate; 否则 base64 文本
+3. p2pcheck 新增 stage3: 遍历 8 个 SearchServer IP 打真实请求, 输出原始应答
+4. 用户真机运行: 真实网络环境下观察是否拿到 1467B 级别的真数据
