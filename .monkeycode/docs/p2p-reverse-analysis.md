@@ -1694,3 +1694,69 @@ KwService.exe → pd.dll!StartDown@0x10007210 (薄封装, 构造 std::string 后
 PC 端 DownTask 的全部网络前置动作 = FetchSig + SearchResource, Go 侧均已实现。
 RealDown@0x100076c0 之后为 PC 本地调度 (文件分块/peer 管理), 手机端直接用
 SearchResponse.Peers 进 stage2 CSF 握手即可, 无需复刻。
+
+## 10.69 全目录系统分析 I: dns2/lidx 双模块定性与 sig 语义修正 (2026-08-26)
+
+### 启动链
+```
+KwMusic.exe (bin/, 主进程 UI)
+  ├─ Module.xml 加载 UI/data 模块 (KwModLyric/KwModDownload/UIAvMgr/UIDownload...)
+  └─ 拉起 KwService.exe → LoadLibrary KwMV.dll (P2P 引擎)
+```
+
+### dns2.dll (39KB) — 私有 HTTP-DNS 代理模块
+- 导出: Dns2_Init(host,port) / DNS2_GetAddressByName / DNS2_CacheLookup /
+  DNS2_IsHostSupportted / Dns2_Enable / DNS2_CreateProxyRequest(IProxyRequest) /
+  Proxy_Pro{F,G,O,P}_RequestHeader (四种代理协议头构造)
+- 通道: [DNS2CONF] host=103.79.26.13 port=443; 硬编码备用 IP 60.28.201.13@0x560c
+- **域名白名单(硬编码)**: cldserver/config/gxh2/i/log/loginserver/newlyric/
+  nplserver/rlhserver/search/skeylist/tips .kuwo.cn
+- **rid.kuwo.cn 不在白名单 → dns2.dll 不解析 SigServer 域名**
+- PDB: MusicBox_PUBLIC_RELESE_17-11-15_8.7.4.0\...\dns2.pdb
+
+### lidx.dll (78KB) — P2P 资源发布端 (LOCAL_INDEXER)
+- 导出: StartLocalIndexer/SetUID/SetShareDir/AddShareDirs/AddItemToIndex/
+  QueryItem/RemoveIndexItem/UploadAllRes/GetInfo/CloseLocalIndexer
+- 网络: `POST /yl_res_manage.up HTTP/1.0` (@0xde98, deliver.kuwo.cn 同域搜索)
+- 日志串: "AddItem | Insert: filepath=%s, filesize=%d, file.sign=%u %u,
+  partfile.sign=%u %u"; "QueryItem: Sign not found(%u %u)"
+- act.log LOCAL_INDEXER 行: file_count:217 keep_per:80 → 本机 217 个音频参与分享
+
+### sig 语义修正 (重要)
+sig.s 返回的是 **rid → 文件内容签名对(file.sign)** 映射:
+```
+播放: rid ──sig.s──> file.sign(a,b) ──search──> 持有该内容的 peer 列表
+发布: 本地文件 ──计算sign──> yl_res_manage.up 注册 ──> 可被他人搜到
+```
+- seares:SUCC + serpack:1467 + peernum:0 = 查询成功但无人分享该内容
+- 404 = rid 无映射或 sig 与 rid 不匹配 (服务器校验配对)
+
+### KwShareMemMgr.dll (36KB)
+跨进程配置共享内存: 导出 InitShareMem/SetConfig/SetUserState/SetVer/
+GetDataByCmd/SetOpenChargeSong; 键: DNS2CONF / SearchServerDNS1/2/3
+
+## 附录A: 安装目录文件档案 (持续更新)
+
+| 文件 | 大小 | 结论 | 状态 |
+|------|------|------|------|
+| readme.txt | 2K | 版本 changelog | DONE |
+| KwMusic.exe (根/bin) | — | 主进程入口 | DONE |
+| bin/Module.xml | 3K | UI/data 模块加载清单 (KwModLyric等11模块) | DONE |
+| bin/msvcp120.dll/msvcr120.dll | — | VC12 运行库 | DONE |
+| bin/Uninstall.exe | — | 卸载器 | SKIP |
+| bin/KwService.exe | 1.6M | P2P 宿主进程, 静态导入 KwMV.dll/pd.dll/KwLib/ccenter | DONE §10.67 |
+| bin/pd.dll | 92K | 资源调度中枢: GetResourceSig@0x10009470/DownTask@0x10008110/InsertDownload | DONE §10.68 |
+| bin/KwMV.dll | 453K | P2P 引擎: SearchPeer/U_QRY/OIHTTPClientEx | DONE §10.x |
+| bin/dns2.dll | 39K | 私有HTTP-DNS代理, 白名单无rid.kuwo.cn | DONE §10.69 |
+| bin/lidx.dll | 78K | P2P资源发布端 /yl_res_manage.up | DONE §10.69 |
+| bin/KwDataDef.dll | 200K | 数据模型 Sign类/CNetResource/CCloudResource | DONE §10.67 |
+| bin/KwShareMemMgr.dll | 36K | 跨进程配置共享内存 | DONE §10.69 |
+| bin/KwMusicDLL.dll(+BAK) | 5M | 主业务DLL, 含 dns2conf/mbox 引用 | TODO深挖 |
+| bin/KwLog.dll | 146K | 日志, 含 deliver.kuwo | TODO |
+| bin/MediaInfo.dll | 1.6M | 媒体信息解析 (mbox串误报) | LOW |
+| bin/temp/KMusic/*.flac | 24M+33M | **P2P下载产物实锤** (2026-8-26/8-24落盘) | DONE |
+| bin/Log/act.log(.out) | 17K | 埋点日志: P2P_DOWN_FILE/DEVICE_INFO(dns:192.168.1.1)/LOCAL_INDEXER | DONE |
+| bin/Log/KwService_P2PDll.txt | 12K | 仅 PlayChannel:Restart KwMV B/E 循环 | DONE |
+| bin/data/YYYY-M-D.dat | 84B×5 | 二进制日期标记 (PHZ头+时间戳+192.168网段片段) | DONE浅 |
+| KWMUSIC/Conf/user/config.ini | — | 用户态配置副本 | TODO diff |
+| bin/Conf/default/config.ini | — | 默认配置 ([SigServer]所在) | DONE §10.67 |
