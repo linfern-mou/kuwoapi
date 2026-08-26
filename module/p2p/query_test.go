@@ -10,7 +10,8 @@ func TestHeaderMarshal(t *testing.T) {
 	if len(b) != HeadLen {
 		t.Fatalf("len=%d", len(b))
 	}
-	want := []byte{0, 0, 0, 1, 0, 0, 0, 0, 0x0C, 0x01, 0x80, 0x00}
+	// little-endian layout per libp2p.so Packet ctor (docs §10.63)
+	want := []byte{1, 0, 0, 0, 0, 0, 0, 0, VerByte, FlagSYN, 0x80, 0x00}
 	for i := range want {
 		if b[i] != want[i] {
 			t.Fatalf("byte %d = %02x want %02x", i, b[i], want[i])

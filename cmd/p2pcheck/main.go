@@ -234,7 +234,7 @@ func main() {
 outer:
 	for _, trk := range trkAddrs {
 		for attempt := 1; attempt <= 3; attempt++ {
-			s, err := p2p.Dial("", trk)
+			s, err := p2p.Dial("", trk, uid)
 			if err == nil {
 				sess = s
 				fmt.Printf("handshake OK via %v on attempt %d (lport=%d)\n", trk, attempt, s.LocalPort())

@@ -1,13 +1,15 @@
 package p2p
 
 import (
+	"encoding/binary"
 	"net"
 	"sync"
 	"testing"
 	"time"
 )
 
-// loopbackPeer answers a CSF handshake as a tracker would, then echoes PSH.
+// loopbackPeer answers a Swordfish handshake as a tracker would, then echoes
+// one data packet.
 func loopbackPeer(t *testing.T, pc *net.UDPConn, done chan struct{}) {
 	defer close(done)
 	buf := make([]byte, 2048)
@@ -19,37 +21,42 @@ func loopbackPeer(t *testing.T, pc *net.UDPConn, done chan struct{}) {
 		return
 	}
 	h := ParseHeader(buf[:HeadLen])
-	if h.Flags != FlagSYN {
-		t.Errorf("want SYN got %02x", h.Flags)
+	if h.Flags != FlagSYN || h.Type() != 1 {
+		t.Errorf("want SYN got flags=%02x type=%d", h.Flags, h.Type())
 		return
 	}
-	synack := Header{Seq: 100, Ack: h.Seq + 1, Flags: FlagSYN | FlagACK, Window: defaultWin}
-	pc.WriteTo(synack.Marshal(), addr)
-	// expect ACK
+	if binary.LittleEndian.Uint32(buf[12:16]) != 1 {
+		t.Errorf("SYN payload ver != 1: % x", buf[12:n])
+	}
+	const srvISN = uint32(100)
+	synack := Header{Seq: srvISN, Flags: FlagSYN | FlagACK, Window: defaultWin}
+	pkt := synack.Marshal()
+	trailer := make([]byte, 8) // {u32 ?, u32 srvISN} shape per recvSYNACKE
+	binary.LittleEndian.PutUint32(trailer[4:8], srvISN)
+	pkt = append(pkt, trailer...)
+	pc.WriteTo(pkt, addr)
+	// expect ACK reusing our ISN
 	n, _, err = pc.ReadFrom(buf)
 	if err != nil {
 		t.Errorf("peer read ACK: %v", err)
 		return
 	}
 	h = ParseHeader(buf[:HeadLen])
-	if h.Flags != FlagACK || h.Ack != 101 {
-		t.Errorf("want ACK(101) got flags=%02x ack=%d", h.Flags, h.Ack)
+	if h.Seq != srvISN || h.Ack != srvISN+1 || h.Type() != 2 {
+		t.Errorf("want ACK reuse(seq=%d ack=%d type=2) got seq=%d ack=%d type=%d",
+			srvISN, srvISN+1, h.Seq, h.Ack, h.Type())
 		return
 	}
-	// expect PSH payload
+	// expect data packet
 	n, _, err = pc.ReadFrom(buf)
 	if err != nil {
-		t.Errorf("peer read PSH: %v", err)
+		t.Errorf("peer read data: %v", err)
 		return
 	}
 	h = ParseHeader(buf[:HeadLen])
-	if h.Flags&FlagPSH == 0 {
-		t.Errorf("want PSH got %02x", h.Flags)
-		return
-	}
 	payload := string(buf[HeadLen:n])
-	// echo it back with a fresh seq
-	echo := Header{Seq: 101, Ack: h.Seq + uint32(n-HeadLen) + 1, Flags: FlagPSH | FlagACK}.Marshal()
+	// echo it back as a bare data packet (type 3)
+	echo := Header{Seq: srvISN + 1, Window: defaultWin}.Marshal()
 	echo = append(echo, []byte("resp:"+payload)...)
 	pc.WriteTo(echo, addr)
 }
@@ -65,7 +72,7 @@ func TestSessionHandshakeAndEcho(t *testing.T) {
 	go loopbackPeer(t, pc, done)
 
 	raddr := pc.LocalAddr().(*net.UDPAddr)
-	s, err := Dial("", raddr)
+	s, err := Dial("", raddr, 152776543)
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
@@ -98,7 +105,7 @@ func TestConcurrentSessions(t *testing.T) {
 			defer pc.Close()
 			done := make(chan struct{})
 			go loopbackPeer(t, pc, done)
-			s, err := Dial("", pc.LocalAddr().(*net.UDPAddr))
+			s, err := Dial("", pc.LocalAddr().(*net.UDPAddr), 152776543)
 			if err != nil {
 				t.Errorf("dial: %v", err)
 				return
