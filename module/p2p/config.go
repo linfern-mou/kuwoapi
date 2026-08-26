@@ -13,10 +13,12 @@
 package p2p
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,6 +34,18 @@ const (
 )
 
 var configHTTPClient = &http.Client{Timeout: 10 * time.Second}
+
+// SetConfigResolver injects a custom DNS resolver for the config endpoint.
+// Required on Android where the default resolver reads /etc/resolv.conf and
+// falls back to [::1]:53 (refused).
+func SetConfigResolver(r *net.Resolver) {
+	configHTTPClient.Transport = &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			d := &net.Dialer{Timeout: 5 * time.Second, Resolver: r}
+			return d.DialContext(ctx, network, addr)
+		},
+	}
+}
 
 func xorYeelion(b []byte) []byte {
 	out := make([]byte, len(b))

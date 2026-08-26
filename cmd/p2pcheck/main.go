@@ -65,6 +65,16 @@ func main() {
 	}
 
 	fmt.Println("\n== stage 0.5: pull live server list from config.kuwo.cn ==")
+	// Android has no /etc/resolv.conf so Go's resolver defaults to [::1]:53 and
+	// fails; query a public DNS explicitly instead.
+	resolver := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{Timeout: 3 * time.Second}
+			return d.DialContext(ctx, "udp", dnsServer)
+		},
+	}
+	p2p.SetConfigResolver(resolver)
 	hbAddrs := []*net.UDPAddr{}
 	trkAddrs := []*net.UDPAddr{}
 	if ini, err := p2p.FetchServerConfig(strconv.FormatUint(uint64(uid), 10)); err != nil {
@@ -87,15 +97,6 @@ func main() {
 	}
 
 	fmt.Println("\n== stage 1: heartbeat registration ==")
-	// Android has no /etc/resolv.conf so Go's resolver defaults to [::1]:53 and
-	// fails; query a public DNS explicitly instead.
-	resolver := &net.Resolver{
-		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			d := net.Dialer{Timeout: 3 * time.Second}
-			return d.DialContext(ctx, "udp", dnsServer)
-		},
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	// deliver.kuwo.cn DNS IPs stay first in the tracker list (act.log evidence)
@@ -137,15 +138,21 @@ func main() {
 	conn.Close()
 
 	targets := append(append([]*net.UDPAddr{}, hbAddrs...), trkAddrs...)
+	// Two payload variants: RE shows the client learns its external IP from
+	// the heartbeat REPLY ("获取到心跳服务器返回的外部IP地址"), so the first
+	// packets likely carry a zeroed IP (g_login+0x80 uninitialized). Send both.
+	hbZero := p2p.Heartbeat{UID: uid, NAT: 3, Port: uint16(uc.LocalAddr().(*net.UDPAddr).Port), IP: 0}
+	hbLocal := p2p.Heartbeat{UID: uid, NAT: 3, Port: uint16(uc.LocalAddr().(*net.UDPAddr).Port), IP: binary.BigEndian.Uint32(localIP)}
 	for i := 0; i < 5; i++ {
-		hb := p2p.Heartbeat{UID: uid, NAT: 3, Port: uint16(uc.LocalAddr().(*net.UDPAddr).Port), IP: binary.BigEndian.Uint32(localIP)}
-		pkt := hb.Marshal()
+		pkts := [][]byte{hbLocal.Marshal(), hbZero.Marshal()}
 		for _, a := range targets {
-			uc.WriteTo(pkt, a)
+			for _, pkt := range pkts {
+				uc.WriteTo(pkt, a)
+			}
 		}
-		fmt.Printf("heartbeat #%d -> %d targets (%v...)\n", i, len(targets), targets[0])
+		fmt.Printf("heartbeat #%d -> %d targets x2 variants\n", i, len(targets))
 		buf := make([]byte, 2048)
-		deadline := time.Now().Add(time.Duration(len(targets)) * 200 * time.Millisecond)
+		deadline := time.Now().Add(time.Duration(len(targets)) * 400 * time.Millisecond)
 		for time.Now().Before(deadline) {
 			uc.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
 			n, from, err := uc.ReadFrom(buf)
