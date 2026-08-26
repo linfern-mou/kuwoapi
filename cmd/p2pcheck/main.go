@@ -45,6 +45,16 @@ func main() {
 	}
 	if len(os.Args) >= 4 {
 		ridArg = strings.TrimPrefix(os.Args[3], "MUSIC_")
+	} else if len(os.Args) == 2 {
+		// single-arg form: ./p2pcheck MUSIC_<rid> walks the full DownTask chain
+		if _, err := strconv.ParseUint(os.Args[1], 10, 64); err == nil || strings.HasPrefix(os.Args[1], "MUSIC_") {
+			ridArg = strings.TrimPrefix(os.Args[1], "MUSIC_")
+			sig1, sig2 = 0, 0 // force musicinfo/sig.s path like a real client click
+		}
+	}
+	if sig1 == 0 && ridArg == "" {
+		fmt.Println("usage: p2pcheck [MUSIC_<rid>] | [sig1 sig2 [rid]]")
+		os.Exit(2)
 	}
 
 	fmt.Println("\n== stage 0: UDP egress sanity (standard DNS over UDP) ==")
@@ -286,9 +296,10 @@ func main() {
 			if len(qSigs) == 0 {
 				fmt.Println("  no embedded S1/S2 in reply")
 			} else if len(os.Args) < 3 {
-				// pd.dll DownTask: task.sig comes pre-filled from metadata
+				// pd.dll DownTask: task.sig comes pre-filled from metadata.
+				// Prefer the formats the PC client actually plays.
 				var pick [2]uint64
-				for _, q := range []string{"2000kflac", "1000kmp3", "320kmp3", "128kmp3"} {
+				for _, q := range []string{"MP3128", "ALFLAC", "MP3H", "AAC48", "OGG192", "WMA128"} {
 					if s, ok := qSigs[q]; ok {
 						pick = s
 						break
@@ -320,6 +331,10 @@ func main() {
 			}
 		}
 		fmt.Printf("[sig source] %s -> %d,%d\n", sigSrc, sig1, sig2)
+		if sig1 == 0 {
+			fmt.Println("no usable sig (musicinfo empty + sig.s unreachable) - cannot search")
+			return
+		}
 
 		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
 			Sig1: sig1, Sig2: sig2, UID: uid,
@@ -453,6 +468,7 @@ func fetchMusicInfo(rid string) (map[string][2]uint64, []string, error) {
 	}
 
 	var formats []string
+	sep := "|"
 	sigs := map[string][2]uint64{}
 	for _, line := range strings.Split(string(text), "\n") {
 		line = strings.TrimSpace(line)
@@ -463,7 +479,12 @@ func fetchMusicInfo(rid string) (map[string][2]uint64, []string, error) {
 		key, val := strings.TrimSpace(line[:eq]), line[eq+1:]
 		switch {
 		case key == "FORMATS":
-			formats = strings.Split(strings.TrimSpace(val), "$")
+			v := strings.TrimSpace(val)
+			sep = "|"
+			if strings.Contains(v, "$") {
+				sep = "$"
+			}
+			formats = strings.Split(v, sep)
 		case strings.Contains(val, "S1:"):
 			var s1, s2 uint64
 			for _, p := range strings.Split(val, "|") {
