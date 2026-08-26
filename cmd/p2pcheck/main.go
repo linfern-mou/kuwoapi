@@ -37,6 +37,13 @@ func main() {
 	// anonymous uid per KwMV.dll 0x10012b21: (FNV1a(machine) mod 1e8) + 1e8;
 	// act.log kid field confirms the live value is 15277654 (docs §10.65)
 	uid := uint32(15277654)
+	// U_QRY slot6/slot7: client version string and GetUserNameA() result.
+	// Server returns the 33B empty-result stub when these are blank.
+	pcVersion := "8.7.4.0_BDS1"
+	pcUserName := os.Getenv("USERNAME")
+	if pcUserName == "" {
+		pcUserName = "Admin"
+	}
 	var ridArg string
 	if len(os.Args) >= 3 {
 		a, _ := strconv.ParseUint(os.Args[1], 10, 32)
@@ -358,10 +365,13 @@ func main() {
 		}
 		// Original client sends the literal <rid> slot (sig pair is the key).
 		// Try that first; on 404 retry with the numeric rid as a fallback.
+		// slot6 = client version (config "version"), slot7 = GetUserNameA().
 		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
 			Sig1: sig1, Sig2: sig2, UID: uid,
 			NAT: 3, LocalIP: "192.168.1.8",
-			LoginID: strconv.FormatUint(uint64(uid), 10),
+			Version:  pcVersion,
+			Computer: pcUserName,
+			LoginID:  strconv.FormatUint(uint64(uid), 10),
 		})
 		fmt.Printf("U_QRY (%dB):\n%s\n", len(qry), qry)
 		plain, via, err := p2p.SearchResource(servers, qry, 6*time.Second)

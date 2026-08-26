@@ -276,6 +276,7 @@ type PCQueryParams struct {
 	LocalIP     string // dotted quad reported as uip
 	Computer    string // fmt slot 3b (PC host name; empty accepted)
 	User        string // fmt slot 3c (login user name; empty accepted)
+	Version     string // fmt slot 6 (config "version", e.g. 8.7.4.0_BDS1)
 	Flags       uint32 // flags field (observed 0)
 	RidOverride string // when set replaces the literal <rid> slot 5
 	LoginID     string // NetID/Setting login id (act.log K: field); empty accepted
@@ -291,7 +292,7 @@ func BuildPCUQRY(p PCQueryParams) string {
 	}
 	return fmt.Sprintf(
 		"<001><U_QRY>|<%d,%d>|<%d><%s><%s>|<%s>|<%s>|<uip:%s>|<new>|<nat:%d>|<flags:%d><speer>|<ipdeny:no>%s|<loginid:%s>\r\n",
-		p.Sig1, p.Sig2, p.UID, p.Computer, p.User,
+		p.Sig1, p.Sig2, p.UID, p.Version, p.User,
 		p.LocalIP, slot5, p.LocalIP, p.NAT, p.Flags, p.CDNReq, p.LoginID)
 }
 
