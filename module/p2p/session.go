@@ -3,6 +3,7 @@ package p2p
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net"
 	"sync"
@@ -33,6 +34,15 @@ const (
 func sameHost(from net.Addr, raddr *net.UDPAddr) bool {
 	ua, ok := from.(*net.UDPAddr)
 	return ok && ua.IP.Equal(raddr.IP)
+}
+
+// Verbose enables raw datagram tracing in Dial/Recv for field debugging.
+var Verbose bool
+
+func trace(from net.Addr, b []byte, dir string) {
+	if Verbose {
+		fmt.Printf("  [%s] %v %dB % x\n", dir, from, len(b), b)
+	}
 }
 
 // Session is one Swordfish conversation with a tracker or peer node.
@@ -67,7 +77,9 @@ func Dial(laddr string, raddr *net.UDPAddr, uid uint32) (*Session, error) {
 	isn := rand.Uint32()
 	s := &Session{sock: uc, addr: raddr, localSeq: isn}
 
-	if _, err := uc.WriteTo(SYN(isn, uid, defaultWin), raddr); err != nil {
+	syn := SYN(isn, uid, defaultWin)
+	trace(raddr, syn, "TX-SYN")
+	if _, err := uc.WriteTo(syn, raddr); err != nil {
 		uc.Close()
 		return nil, err
 	}
@@ -80,6 +92,7 @@ func Dial(laddr string, raddr *net.UDPAddr, uid uint32) (*Session, error) {
 			uc.Close()
 			return nil, ErrTimeout
 		}
+		trace(from, buf[:n], "RX")
 		if !sameHost(from, raddr) || n < HeadLen {
 			continue
 		}

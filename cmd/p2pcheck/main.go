@@ -122,12 +122,18 @@ func main() {
 		trkAddrs = append(trkAddrs, &net.UDPAddr{IP: net.ParseIP("39.156.121.53"), Port: 25607})
 	}
 
-	uc, err := net.ListenUDP("udp", &net.UDPAddr{Port: 0})
+	uc, err := net.ListenUDP("udp", &net.UDPAddr{Port: 6000})
 	if err != nil {
-		fmt.Println("bind:", err)
-		return
+		fmt.Printf("bind :6000 failed (%v), using ephemeral port\n", err)
+		uc, err = net.ListenUDP("udp", &net.UDPAddr{Port: 0})
+		if err != nil {
+			fmt.Println("bind:", err)
+			return
+		}
 	}
 	defer uc.Close()
+	fmt.Printf("local udp port: %d (server-pushed P2P port is 6000)\n", uc.LocalAddr().(*net.UDPAddr).Port)
+	p2p.Verbose = true
 
 	// outbound IP for the probe packet
 	conn, err := net.DialTimeout("udp", dnsServer, 3*time.Second)
@@ -234,7 +240,11 @@ func main() {
 outer:
 	for _, trk := range trkAddrs {
 		for attempt := 1; attempt <= 3; attempt++ {
-			s, err := p2p.Dial("", trk, uid)
+			src := ""
+			if uc.LocalAddr().(*net.UDPAddr).Port == 6000 {
+				src = ":6000"
+			}
+			s, err := p2p.Dial(src, trk, uid)
 			if err == nil {
 				sess = s
 				fmt.Printf("handshake OK via %v on attempt %d (lport=%d)\n", trk, attempt, s.LocalPort())

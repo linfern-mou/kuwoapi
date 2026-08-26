@@ -1332,3 +1332,46 @@ pkt->data[0] (int8):
 3. PC版(cmd=0xE2103,23B)与Android版(cmd=0x29/0x0a,19B)是两代协议; tracker同时兼容或按客户端区分
 4. 服务器→客户端被动连接指令(0x13)证明: 打洞由tracker协调, 双方都收到对方ip:port后互发
 
+
+## 10.63 【协议闭环】 Swordfish/CSF 握手权威还原 (libp2p.so 符号级)
+
+### Packet 结构 (@0xcd974 ctor, 0x410+ 字节)
+```
+[0x000] u32 seq     本端包号 (SYN=ISN); packACK空包时0x80000000
+[0x004] u32 ack     确认的对端包号
+[0x008] u8  ver     (old&0xF0)|0x0C; 初始0x80 → 实际0x8C
+[0x009] u8  flags   bit0=FIN bit1=SYN bit3=RST bit4=有ACK
+[0x00A] u16 win     接收窗口 (sndBuf[0x38]-sndBuf[0x60])
+[0x00C] payload     载荷区
+[0x40C] u32 len     载荷长; getLength() = len+12 (头恒12B)
+[0x410] u32         发送时刻毫秒(RTT计算)
+getType(): bit3→9; bit1→1|ack(1=SYN,2=SYNACK); bit0→4|ack(FIN/FINACK);
+           else→ack?0:3 (数据)
+序号按"包"递增 (SACK位图按包索引, recvACKE d8260)
+```
+
+### 三次握手
+1. **connect @0xd7978** 构造 SYN: `CSYNPacket{u32 ver=1@+0, u32 isn=getSeq()@+4, u16 windiff@+8(packed), u32 uid@+A(packed)}` → packSYN:
+   `[isn][0][0x8C][0x02][windiff]` + payload `{u32 1, u32 GetUID}` = **20字节**
+   state(0x1e8)=1; sndBuf[0xb8]=getSeq()-1 记录SYN号; sendPacket
+2. **服务器→SYNACK** type=2 (flags=0x12); recvSYNACKE @0xd8b10:
+   peerISN(0x1c4)=pkt->[0x10]=payload[4..8]; 校验 state∈{1,2}; 确认 seq<=srvISN-1 的在途包;
+   更新 RTT/win(sndBuf[0x218]); state→3 或 Event.set 唤醒 connect
+3. **客户端→ACK**: packACKE 在收到的包上原地改造:
+   `[0]=srvISN(不变), [4]=srvISN+1, hdr1|=0x10(已是), [A]=win` + 原载荷回显(SACK空时length不变)
+
+### recvACKE @0xd7f3c (连接后 ACK/确认处理)
+- 按跳转表 state 0-6 分派 (表@0x2282a4)
+- 校验 ack∈[sndBuf[0x21c], sndBuf[0xb8]+1]
+- SACK 位图: payload 从+0xC起, `bitmap[(seq-ack)>>3] & 1<<((seq-ack)&7)` 标记乱序确认
+- 重传: 连续3次重复ACK → reSendPacket
+
+### 对 Go 实现的修正 (commit 9a52132)
+- 旧 csf.go 全错: 大端seq/headLen@8/TCP风格flags → 全部重写为 LE + 0x8C + bit flags
+- Session.Dial 第三步改为"回显服务器ISN与载荷"
+- Send 序号按包+1; Data 包 flags=0x10(type 0); 收数据回 ack=srvSeq+1
+
+### 阶段结论
+uh1/uh2.kuwo.cn 已从 DNS 摘除且 config INI 无 HelpSvr 键 — Android help-server 通道废弃。
+真实入口 = tracker:25607 UDP 的 Swordfish 会话内发 U_QRY (act.log ressucway:2 seares:SUCC 佐证)。
+
