@@ -33,6 +33,167 @@ import (
 	"time"
 )
 
+// SigServer per pd.dll GetResourceSig @0x10009470 and config.ini
+// [SigServer]; the host vanished from public DNS — Kuwo's private
+// resolver [KwDNS] Address=60.28.201.45 knows it.
+const (
+	sigServerHost = "rid.kuwo.cn"
+	kwDNSAddr     = "60.28.201.45:53"
+)
+
+// FetchSig reproduces pd.dll GetResourceSig: resolve rid.kuwo.cn (system
+// resolver first, then the private KwDNS), then GET /sig.s?w=<rid>&c=mbox
+// and parse the "sig1=%u\nsig2=%u" text reply.
+func FetchSig(rid string, timeout time.Duration) (uint32, uint32, error) {
+	ips := []string{}
+	if addrs, err := net.LookupHost(sigServerHost); err == nil {
+		ips = append(ips, addrs...)
+	}
+	if len(ips) == 0 {
+		if ip, err := resolveViaUDPDNS(kwDNSAddr, sigServerHost, timeout); err == nil {
+			ips = append(ips, ip)
+		}
+	}
+	if len(ips) == 0 {
+		return 0, 0, errors.New("cannot resolve " + sigServerHost)
+	}
+
+	var lastErr error = errors.New("no sig server reachable")
+	for _, ip := range ips {
+		conn, err := net.DialTimeout("tcp", ip+":80", timeout)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		conn.SetDeadline(time.Now().Add(timeout))
+		req := fmt.Sprintf("GET /sig.s?w=%s&c=mbox HTTP/1.0\r\n"+
+			"Host: %s\r\nAccept: */*\r\nUser-Agent: %s\r\n\r\n",
+			rid, sigServerHost, resSearchUA)
+		if _, err := conn.Write([]byte(req)); err != nil {
+			conn.Close()
+			lastErr = err
+			continue
+		}
+		raw, _ := io.ReadAll(conn)
+		conn.Close()
+		hdr, body, err := splitHTTP(raw)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		if !strings.Contains(strings.SplitN(string(hdr), "\r\n", 2)[0], " 200 ") {
+			lastErr = fmt.Errorf("sig.s status: %s", strings.SplitN(string(hdr), "\r\n", 2)[0])
+			continue
+		}
+		txt := string(body)
+		s1 := uint32(parseSigField(txt, "sig1="))
+		s2 := uint32(parseSigField(txt, "sig2="))
+		if s1 == 0 && s2 == 0 {
+			lastErr = fmt.Errorf("no sig fields in reply %q", txt[:min(len(txt), 60)])
+			continue
+		}
+		return s1, s2, nil
+	}
+	return 0, 0, lastErr
+}
+
+func parseSigField(txt, key string) uint64 {
+	i := strings.Index(txt, key)
+	if i < 0 {
+		return 0
+	}
+	rest := txt[i+len(key):]
+	j := 0
+	for j < len(rest) && rest[j] >= '0' && rest[j] <= '9' {
+		j++
+	}
+	v, _ := strconv.ParseUint(rest[:j], 10, 32)
+	return v
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// resolveViaUDPDNS issues a plain A query over UDP (Android has no
+// /etc/resolv.conf so the Go default resolver fails there).
+func resolveViaUDPDNS(server, name string, timeout time.Duration) (string, error) {
+	q := makeDNSQuery(name)
+	conn, err := net.DialTimeout("udp", server, timeout)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(timeout))
+	if _, err := conn.Write(q); err != nil {
+		return "", err
+	}
+	buf := make([]byte, 512)
+	n, err := conn.Read(buf)
+	if err != nil {
+		return "", err
+	}
+	return parseDNSA(buf[:n])
+}
+
+func makeDNSQuery(name string) []byte {
+	var q []byte
+	for _, part := range strings.Split(name, ".") {
+		q = append(q, byte(len(part)))
+		q = append(q, part...)
+	}
+	q = append(q, 0)
+	msg := []byte{0x12, 0x34, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	msg = append(msg, q...)
+	msg = append(msg, 0x00, 0x01, 0x00, 0x01)
+	return msg
+}
+
+func parseDNSA(resp []byte) (string, error) {
+	if len(resp) < 12 {
+		return "", errors.New("short dns reply")
+	}
+	an := int(resp[6])<<8 | int(resp[7])
+	if an == 0 {
+		return "", errors.New("no answer")
+	}
+	i := 12
+	for resp[i] != 0 {
+		if resp[i]&0xc0 != 0 {
+			i += 2
+			goto answers
+		}
+		i += int(resp[i]) + 1
+	}
+	i++
+answers:
+	i += 4
+	for k := 0; k < an; k++ {
+		for {
+			l := int(resp[i])
+			if l&0xc0 != 0 {
+				i += 2
+				break
+			}
+			i += l + 1
+			if l == 0 {
+				break
+			}
+		}
+		typ := int(resp[i])<<8 | int(resp[i+1])
+		rdlen := int(resp[i+8])<<8 | int(resp[i+9])
+		i += 10
+		if typ == 1 && rdlen == 4 {
+			return net.IPv4(resp[i], resp[i+1], resp[i+2], resp[i+3]).String(), nil
+		}
+		i += rdlen
+	}
+	return "", errors.New("no A record")
+}
+
 const (
 	resSearchPath = "/yl_res_manage.search"
 	resSearchHost = "deliver.kuwo.cn"

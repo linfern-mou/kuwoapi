@@ -18,6 +18,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"kuwoapi/module/p2p"
@@ -28,16 +29,20 @@ const dnsServer = "8.8.8.8:53"
 
 func main() {
 	sig1, sig2 := uint32(3264614461), uint32(1651339078)
+	// anonymous uid per KwMV.dll 0x10012b21: (FNV1a(machine) mod 1e8) + 1e8;
+	// act.log kid field confirms the live value is 15277654 (docs §10.65)
+	uid := uint32(15277654)
+	var ridArg string
 	if len(os.Args) >= 3 {
 		a, _ := strconv.ParseUint(os.Args[1], 10, 32)
 		b, _ := strconv.ParseUint(os.Args[2], 10, 32)
 		sig1, sig2 = uint32(a), uint32(b)
 	}
-	// anonymous uid per KwMV.dll 0x10012b21: (FNV1a(machine) mod 1e8) + 1e8;
-	// act.log kid field confirms the live value is 15277654 (docs §10.65)
-	uid := uint32(15277654)
+	if len(os.Args) >= 4 {
+		ridArg = strings.TrimPrefix(os.Args[3], "MUSIC_")
+	}
 
-	fmt.Println("== stage 0: UDP egress sanity (standard DNS over UDP) ==")
+	fmt.Println("\n== stage 0: UDP egress sanity (standard DNS over UDP) ==")
 	stage0OK := false
 	for _, dns := range []string{"223.5.5.5:53", "8.8.8.8:53"} {
 		dc, err := net.DialTimeout("udp", dns, 3*time.Second)
@@ -253,6 +258,17 @@ func main() {
 			servers = append(servers, a.IP.String())
 		}
 		servers = append(servers, p2p.ResSearchServers...)
+
+		// Full pd.dll chain: rid -> SigServer fresh sig -> U_QRY search.
+		if ridArg != "" {
+			fmt.Printf("signing rid %s via %s ...\n", ridArg, "rid.kuwo.cn")
+			if a, b, err := p2p.FetchSig(ridArg, 8*time.Second); err != nil {
+				fmt.Println("sig fetch failed:", err)
+			} else {
+				sig1, sig2 = a, b
+				fmt.Printf("fresh sig: %d,%d\n", sig1, sig2)
+			}
+		}
 		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
 			Sig1: sig1, Sig2: sig2, UID: uid,
 			NAT: 3, LocalIP: "192.168.1.8",
