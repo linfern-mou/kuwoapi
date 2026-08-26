@@ -1946,3 +1946,17 @@ ZIP 时间戳: 18011 个条目全部重写为 1980-01-01 → 整包重写后重�
 - 沙箱验证: musicinfo 对无cookie IP 返回空zlib体 → 回退argv sig → 404
 - 手机真机命令:
     ./p2pcheck MUSIC_228720849        # 全自动: musicinfo→sig→search
+
+### §10.70 补充2: 被patch字段确认为 VTYPE (2026-08-26)
+反汇编 BAK @VA 0x102647c0-0x10264838 还原出完整配置对象:
+```
+SetA(v) { this->f8=v; NotifyConfig("PWWndConf", "VTYPE", v) }   ; 0x102647e0
+GetA()  { return this->f8 }                                     ; 0x10264810
+IsA()   { return this->f8 == 1 }        ← patched -> return true ; 0x10264820
+IsAGt(x){ return this->f8 >= x }        ← patched -> return true ; 0x10264830
+```
+- setter 引用串: "VTYPE"@0x103a270c / "PWWndConf"@0x1038c7e0 /
+  L"ModuleData\\ModMusicPackInfo\\MusicPackTim..."
+- 结论: [ecx+8] 即 VTYPE(VIP类型等级), 两处 patch 将
+  "==1(普通VIP)" 和 ">=N(豪华VIP门槛)" 全部短路为 true
+- 补丁功能等价于: 客户端本地所有 VIP 等级判断永远通过
