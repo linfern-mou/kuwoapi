@@ -1889,3 +1889,33 @@ Sign类完整RTTI: Sign(K)/Sign(string)/operator==/</>;
 
 ### 结论
 sig 三大消费场景闭环: ①搜索(U_QRY) ②云盘上传(c.s op=upload) ③本地发布(lidx yl_res_manage.up)
+
+## 10.73 手机版 APK 篡改检查 (2026-08-26)
+样本: /tmp/opencode/default.apk (219MB, 8-24从手机拉取), 解包于 apk/extracted/
+
+### 签名层 — 确凿非官方签名
+```
+META-INF/CERT.RSA: subject=C=US (无O/CN组织字段, 自签风格)
+有效期: 2024-06-14 ~ 2124-05-21 (100年)
+对比 assets/cn.kuwo.player.cert.pem: C=CN/Beijing/O=kwyy/CN=cn.kuwo.player
+  (MSA签发, tencentmusic.com邮箱) — 包内容为官方构建
+签名工具: Signflinger / Android Gradle 8.0.2; X-Android-APK-Signed: 2,3
+Sig Block: 单一 ID=0x526 pair 内嵌 0x7109871a(v2) 数据 — 结构非标准发布产物
+ZIP 时间戳: 18011 个条目全部重写为 1980-01-01 → 整包重写后重签实锤
+版本: 13.10.5 (另有 lib 内嵌 12.1.8.1 等)
+```
+
+### 代码层 — 未发现功能性修改
+- dex 全量扫描 (classes1-14): dup2/Mrack/Xposed/LSPosed/hook 特征零注入命中;
+  LSPosed/LSPHooker 串为官方内置 SandHook 热修复框架自带
+- lib/arm64-v8a 144个so: 全部官方命名, 无 patch/vip/hack 类异常模块
+- AndroidManifest: 包名 cn.kuwo.player 正常
+
+### 结论
+| | PC 版 | 手机版 |
+|--|------|--------|
+| 篡改性 | **确认**: dUP2 字节补丁 16B 改 VIP 校验 | **未发现**功能修改 |
+| 非官方证据 | kuwovip-patch.exe 存在 | 自签证书+整包重写时间戳 |
+| 性质判定 | 第三方破解补丁 | 第三方渠道市场重签版 (APKPure类模式) |
+手机版与 PC 版性质不同: 前者是渠道重签(常见于第三方应用商店),
+后者是明确的功能破解。P2P 协议分析不受影响(代码未被改)。
