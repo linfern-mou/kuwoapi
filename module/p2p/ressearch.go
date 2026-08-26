@@ -93,6 +93,11 @@ func SearchResource(servers []string, qry string, timeout time.Duration) ([]byte
 	return nil, "", lastErr
 }
 
+// ResSearchDebug, when set, receives every raw 200 response (header and
+// body) before decoding — used to compare placeholder replies across
+// networks.
+var ResSearchDebug func(server string, hdr, body []byte)
+
 func searchOne(addr, qry string, timeout time.Duration) ([]byte, error) {
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
@@ -127,6 +132,9 @@ func searchOne(addr, qry string, timeout time.Duration) ([]byte, error) {
 	if !statusOK {
 		line := strings.SplitN(string(hdr), "\r\n", 2)[0]
 		return nil, fmt.Errorf("bad status: %s", line)
+	}
+	if ResSearchDebug != nil {
+		ResSearchDebug(addr, hdr, body)
 	}
 	return DecodeResBody(hdr, body)
 }

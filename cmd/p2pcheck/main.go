@@ -10,6 +10,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/hex"
@@ -239,6 +240,14 @@ func main() {
 
 	fmt.Println("\n== stage 1c: PC-style HTTP resource search (TCP:80, ressucway=2) ==")
 	{
+		p2p.ResSearchDebug = func(server string, hdr, body []byte) {
+			i := bytes.Index(hdr, []byte("\r\n\r\n"))
+			if i >= 0 {
+				hdr = hdr[:i]
+			}
+			fmt.Printf("RAW from %s\n--- header ---\n%s\n--- body (%dB) ---\n%s\n",
+				server, hdr, len(body), hex.Dump(body))
+		}
 		servers := make([]string, 0, len(trkAddrs)+len(p2p.ResSearchServers))
 		for _, a := range trkAddrs {
 			servers = append(servers, a.IP.String())
