@@ -1980,3 +1980,31 @@ IsAGt(x){ return this->f8 >= x }        ← patched -> return true ; 0x10264830
 - 假说: 404 = 该签名在P2P索引中无记录(无人分享过此资源), 属正常业务应答;
   占位包 = 有索引时的标准空/默认应答
 - 验证: 手机真机跑 MUSIC_228908 全链, 观察 literal-rid 与 numeric-rid 两分支
+
+## 10.76 终局判定: P2P 后端已整体下线 (2026-08-26)
+真机全链路证据 (手机 Termux, 家庭网络, DNS/HTTP 全通):
+```
+1. HTTP 搜索: 全部 14 台 ResSearch 节点
+   - 老机房 60.28.205.36/211.100.49.14/60.29.226.173/221.238.29.151:
+     TCP 80 i/o timeout (端口未开放)
+   - 其余 10 台: HTTP/1.1 404 Not Found [nginx/1.20.1]
+     → P2P 搜索路由已从 web 集群删除, nginx 兜底回答
+   - POST(literal rid)/POST(numeric rid)/GET raw/GET encoded 四形态全 404
+2. deliver.kuwo.cn DNS = [39.156.121.53, 39.156.123.34] = 同一批 nginx 节点
+3. CSF/UDP: SYN(packSYN 逆向版) 至全部 tracker :25607 无 SYNACK
+4. PC 旁证: KwService_P2PDll.txt 仅 "PlayChannel:Restart" 循环无成功记录;
+   act.log P2P_DOWN_FILE 行 seares:SUCC + peernum:0 + sip:0.0.0.0 +
+   resserver:39.156.123.34(CDN边缘) → 名义"P2P下载"实际全程CDN直连
+5. musicinfo 元数据通道活着(r.s 正常返回), sig.s 死(域名无DNS记录)
+```
+
+### 结论
+酷我已在某时点将 8.x 时代 P2P 网络(deliver/tracker/lidx/sig.s)整体退役:
+- 协议兼容层保留(musicinfo 仍发 S1/S2), 引擎空转
+- 全部流量回落 CDN; 占位包200为历史索引时代残迹
+- 8.7.4 客户端 P2P 功能实质死亡
+
+### 项目方向调整 (待用户决策)
+A. CDN 直连路线: 完善 r.s/nmobi 取链路, 放弃 P2P
+B. 新版协议路线: 分析 APK 13.10.5 libDownloadProxy.so (6.4MB 新引擎)
+C. 存档路线: 8.x P2P 协议还原已完备(§10.55-10.75), 归档收尾
