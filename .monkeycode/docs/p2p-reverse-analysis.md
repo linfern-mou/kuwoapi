@@ -1751,7 +1751,7 @@ GetDataByCmd/SetOpenChargeSong; 键: DNS2CONF / SearchServerDNS1/2/3
 | bin/lidx.dll | 78K | P2P资源发布端 /yl_res_manage.up | DONE §10.69 |
 | bin/KwDataDef.dll | 200K | 数据模型 Sign类/CNetResource/CCloudResource | DONE §10.67 |
 | bin/KwShareMemMgr.dll | 36K | 跨进程配置共享内存 | DONE §10.69 |
-| bin/KwMusicDLL.dll(+BAK) | 5M | 主业务DLL, 含 dns2conf/mbox 引用 | TODO深挖 |
+| bin/KwMusicDLL.dll(+BAK) | 5M | 主业务DLL: CP2PProxy/SpreadManager/CLocalResource/云盘CUploadMusic; cldserver.kuwo.cn/c.s 上传通道; KwLib!Sig::CalcSign 调用方 | DONE §10.72 |
 | bin/KwLog.dll | 146K | 埋点上报: log.kuwo.cn + log.deliver.kuwo.cn; 导出 LogP2PLWActMsg/LogABActMsg/MakeHttpParam; 格式 "|PROD:MUSIC\|VER:%s\|PLAT:WIN32..." — **act.log 各行即本模块生成** (ACT:P2P_DOWN_FILE 等来自 LogP2PLWActMsg) | DONE |
 | KWMUSIC/ModuleData/ModMusicTool/conf.txt | 2K | **UI工具栏预签发sig对**: 12条目含7组真实(rid,sig1,sig2) — 证实客户端批量预取sig.s并持久化 | DONE §10.71 |
 | KWMUSIC/Res,cache / ModuleData其余 / Skin / html / res | ~20M | UI资源: XML布局(Skin/base)/皮肤包(serverskin编号)/歌手列表NetSong-artists.pl(r.s?ft=music)/下载图标/歌词主题 | DONE归类 |
@@ -1862,3 +1862,30 @@ id=123 广播电台     sig1=3163641641 sig2=1424104331
    客户端无需对每个 rid 单独请求 sig.s
 2. 提供新的真机测试向量: p2pcheck 可用这些配对测试 U_QRY 搜索
    (如 `./p2pcheck 2028208185 116804145 MUSIC_126`)
+
+## 10.72 KwMusicDLL.dll P2P 面深挖 (2026-08-26)
+
+### 云盘通道 http://cldserver.kuwo.cn/c.s
+```
+/c.s?op=upload&uid=%u&key=%s&sig=%u,%u&fsize=%u&offset=%u&fmt=%s   # 带sig对上传
+/c.s?op=getfstatus&                                                 # 文件状态
+...type=gettoken&sign=%s -> "Token is %s bucket is %s zone is %s"   # 对象存储token
+...type=geturl&sign=%s                                              # 取下载URL
+```
+- CUploadMusic::_GetToken/_OnGetToken; CUpLoadDataImpl::AsynGetTokenUrl
+- sig 对在此处作为文件内容标识参与云盘去重/定位
+
+### CP2PSpreadManager — 官方做种调度器
+- 标志: applyspreadnewflag / spreadurl / kwspread / mod_p2p_spread_1 / spread.log
+- "CheckServerTaskList"/"ExecuteNextTask": 服务端下发任务列表, 客户端定时执行
+- "not in spread time area": 时段窗口控制
+- 订阅事件: P2POb_DownStart/Finish/Failed/Progress + HttpRequestOb_* 
+- 语义: 官方通过该模块指挥客户端在指定时段对指定资源做种(热门预热/冷门保活)
+
+### 本地资源模型 CLocalResource
+GetAACSign/SetPath/SetFileSize/SetSampleRate/SetLength/SetFormat/SetBps;
+Sign类完整RTTI: Sign(K)/Sign(string)/operator==/</>; 
+日志串 ": rid=%s, sign1=%s, sign2=%s" / ",Sig:%u,%u,Path:%s"
+
+### 结论
+sig 三大消费场景闭环: ①搜索(U_QRY) ②云盘上传(c.s op=upload) ③本地发布(lidx yl_res_manage.up)
