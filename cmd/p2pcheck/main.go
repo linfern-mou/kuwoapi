@@ -112,7 +112,7 @@ func main() {
 			}
 		}
 		for _, ipStr := range p2p.SearchServersFromConfig(ini) {
-			trkAddrs = append(trkAddrs, &net.UDPAddr{IP: net.ParseIP(ipStr), Port: 25607})
+			trkAddrs = append(trkAddrs, trackerAddrs(ipStr)...)
 		}
 		fmt.Println("heartbeat servers:", hbAddrs)
 		fmt.Println("search/tracker servers:", trkAddrs)
@@ -137,21 +137,23 @@ func main() {
 	ips, err := resolver.LookupNetIP(ctx, "ip4", "deliver.kuwo.cn")
 	if err == nil && len(ips) > 0 {
 		for _, ip := range ips {
-			a := &net.UDPAddr{IP: net.IP(ip.AsSlice()), Port: 25607}
-			dup := false
-			for _, t := range trkAddrs {
-				if t.IP.String() == a.IP.String() {
-					dup = true
-					break
+			for _, a := range trackerAddrs(net.IP(ip.AsSlice()).String()) {
+				dup := false
+				for _, t := range trkAddrs {
+					if t.IP.String() == a.IP.String() && t.Port == a.Port {
+						dup = true
+						break
+					}
 				}
-			}
-			if !dup {
-				trkAddrs = append([]*net.UDPAddr{a}, trkAddrs...)
+				if !dup {
+					trkAddrs = append([]*net.UDPAddr{a}, trkAddrs...)
+				}
 			}
 		}
 		fmt.Println("tracker resolves to", ips)
 	}
 	if len(trkAddrs) == 0 {
+		trkAddrs = append(trkAddrs, trackerAddrs("39.156.121.20")...)
 		trkAddrs = append(trkAddrs, &net.UDPAddr{IP: net.ParseIP("39.156.121.53"), Port: 25607})
 	}
 
@@ -571,4 +573,20 @@ func mustAtoi(s string) int {
 		panic(err)
 	}
 	return n
+}
+
+// trackerPorts: 25607 is the classic CSF port; 7788 was observed live on
+// 2026-08-26 via netstat on a real client (KwMusic.exe <-> 39.156.121.20:7788).
+var trackerPorts = []int{25607, 7788}
+
+func trackerAddrs(ipStr string) []*net.UDPAddr {
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return nil
+	}
+	out := make([]*net.UDPAddr, 0, len(trackerPorts))
+	for _, p := range trackerPorts {
+		out = append(out, &net.UDPAddr{IP: ip, Port: p})
+	}
+	return out
 }
