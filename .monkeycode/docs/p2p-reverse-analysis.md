@@ -1829,3 +1829,15 @@ dup2patcher.dll (57KB) = diablo2oo2's Universal Patcher (dUP2) 引擎
 - 改动全部集中于 VIP 权限判断, P2P/网络协议代码零触碰
 - → 此前基于该 DLL 的协议分析结论全部有效
 - KwMusicDLL.dll.BAK 为纯净原版备份, 后续分析可用它做基线
+
+### §10.70 补充: 补丁逻辑重放验证 (2026-08-26)
+从 dup2patcher.dll RCDATA id=2 还原 dUP2 动作表, 对 .BAK 原版模拟执行:
+```
+op1: search "837908010f94c0"(cmp [ecx+8],1; sete al) @0x263c22 -> "40c39090909090"
+op2: search "3941080f9dc0"  (cmp [ecx+8],eax;setge al) @0x263c32 -> "40c390909090"
+op3: search "84db741a"      (test bl,bl; je +1A)        @0x1cb574 -> "84db9090"
+op4: 标志位 @0x19093b: 01 -> 00
+```
+**重放结果与现场 KwMusicDLL.dll 5,010,928 字节完全一致 — 零残差。**
+结论: 安装包内 KwMusicDLL.dll 即该补丁产物, 无其他未知篡改;
+解密算法/脚本解析/执行语义三层全部逆向正确。
