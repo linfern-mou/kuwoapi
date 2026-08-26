@@ -278,6 +278,8 @@ type PCQueryParams struct {
 	User        string // fmt slot 3c (login user name; empty accepted)
 	Flags       uint32 // flags field (observed 0)
 	RidOverride string // when set replaces the literal <rid> slot 5
+	LoginID     string // NetID/Setting login id (act.log K: field); empty accepted
+	CDNReq      string // optional "<cdnreq>" when CdnSpeedPolicy enabled
 }
 
 // BuildPCUQRY renders the exact sprintf layout including the trailing CRLF
@@ -290,7 +292,7 @@ func BuildPCUQRY(p PCQueryParams) string {
 	return fmt.Sprintf(
 		"<001><U_QRY>|<%d,%d>|<%d><%s><%s>|<%s>|<%s>|<uip:%s>|<new>|<nat:%d>|<flags:%d><speer>|<ipdeny:no>%s|<loginid:%s>\r\n",
 		p.Sig1, p.Sig2, p.UID, p.Computer, p.User,
-		p.LocalIP, slot5, p.LocalIP, p.NAT, p.Flags, "", "")
+		p.LocalIP, slot5, p.LocalIP, p.NAT, p.Flags, p.CDNReq, p.LoginID)
 }
 
 // SearchResource posts the U_QRY text to each search server in turn and

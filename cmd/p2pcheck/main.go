@@ -361,6 +361,7 @@ func main() {
 		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
 			Sig1: sig1, Sig2: sig2, UID: uid,
 			NAT: 3, LocalIP: "192.168.1.8",
+			LoginID: strconv.FormatUint(uint64(uid), 10),
 		})
 		fmt.Printf("U_QRY (%dB):\n%s\n", len(qry), qry)
 		plain, via, err := p2p.SearchResource(servers, qry, 6*time.Second)
@@ -391,6 +392,51 @@ func main() {
 				}
 				for _, pp := range r.Peers {
 					fmt.Printf("  PEER kid=%d %s:%d flags=%d,%d,%d idx=%d\n",
+						pp.Kid, pp.IP, pp.Port, pp.Flag1, pp.Flag2, pp.Flag3, pp.Index)
+				}
+			}
+		}
+
+		// Stage 1d: bare connected-UDP U_QRY. The real client's tracker
+		// session (netstat 2026-08-26: KwMusic.exe <-> 39.156.121.20:7788)
+		// is a plain UDP socket with the U_QRY text sent via send(); no
+		// HTTP and no CSF handshake involved (KwMV.dll 0x10012200 path).
+		fmt.Println("\n== stage 1d: bare-UDP PC-style U_QRY (connected send, no handshake) ==")
+		for _, trk := range trkAddrs {
+			c, err := net.DialUDP("udp", nil, trk)
+			if err != nil {
+				fmt.Printf("  [%v] dial: %v\n", trk, err)
+				continue
+			}
+			c.SetDeadline(time.Now().Add(4 * time.Second))
+			if _, err := c.Write([]byte(qry)); err != nil {
+				fmt.Printf("  [%v] write: %v\n", trk, err)
+				c.Close()
+				continue
+			}
+			buf := make([]byte, 8192)
+			n, err := c.Read(buf)
+			c.Close()
+			if err != nil {
+				fmt.Printf("  [%v] no reply (%v)\n", trk, err)
+				continue
+			}
+			respTxt := string(buf[:n])
+			fmt.Printf("  [%v] REPLY %dB:\n%s\n", trk, n, respTxt)
+			r := p2p.ParseResponse(respTxt)
+			switch {
+			case r.Denied:
+				fmt.Println("  result: DENY_IP")
+			case r.ResourceDel:
+				fmt.Println("  result: RES_DEL")
+			default:
+				fmt.Printf("  result: ver=%s searchtm=%d filelen=%d peers=%d urls=%d\n",
+					r.FormatVer, r.SearchTM, r.FileLen, len(r.Peers), len(r.URLs))
+				for _, u := range r.URLs {
+					fmt.Println("    URL:", u)
+				}
+				for _, pp := range r.Peers {
+					fmt.Printf("    PEER kid=%d %s:%d flags=%d,%d,%d idx=%d\n",
 						pp.Kid, pp.IP, pp.Port, pp.Flag1, pp.Flag2, pp.Flag3, pp.Index)
 				}
 			}
