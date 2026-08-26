@@ -1919,3 +1919,30 @@ ZIP 时间戳: 18011 个条目全部重写为 1980-01-01 → 整包重写后重�
 | 性质判定 | 第三方破解补丁 | 第三方渠道市场重签版 (APKPure类模式) |
 手机版与 PC 版性质不同: 前者是渠道重签(常见于第三方应用商店),
 后者是明确的功能破解。P2P 协议分析不受影响(代码未被改)。
+
+## 10.74 端到端播放流程演示 (2026-08-26)
+
+### kuwovip-patch.exe 与播放链路无关
+一次性手动工具: 双击运行 → patch KwMusicDLL.dll 16字节 → 自删退出。
+现场 .BAK + 已patch文件即其全部痕迹, 不参与任何运行时流程。
+
+### PC 点击歌曲→播放 完整链 (pd.dll DownTask 决策树)
+```
+[点击] KwMusic.exe UI
+  └─ KwModDownload: P2PStartDown(rid, quality)
+       ├─ A. r.s musicinfo 元数据 (KwSongCache.dll):
+       │     search.kuwo.cn/r.s?stype=musicinfo&ids=MUSIC_<rid>
+       │     返回 FORMATS + 各音质 S1/S2/SIZE/BT
+       ├─ B. sig 决策 (DownTask@0x10008110):
+       │     元数据自带S1/S2? 用之 : GetResourceSig → rid.kuwo.cn/sig.s?w=<rid>&c=mbox
+       ├─ C. U_QRY 搜索 (ressucway=2 HTTP优先):
+       │     deliver.kuwo.cn/yl_res_manage.search + BuildPCUQRY(sig1,sig2,rid,...)
+       └─ D. 有peer → CSF/UDP 数据交换; 无peer(peernum=0) → CDN直连回退
+```
+
+### p2pcheck 新增 stage 1c 完整实现
+- fetchMusicInfo(): 复刻 r.s 解析 (8B头+zlib, 音质行 S1/S2 提取)
+- sig 三级来源打印: musicinfo内嵌 / sig.s新签 / argv回退
+- 沙箱验证: musicinfo 对无cookie IP 返回空zlib体 → 回退argv sig → 404
+- 手机真机命令:
+    ./p2pcheck MUSIC_228720849        # 全自动: musicinfo→sig→search
