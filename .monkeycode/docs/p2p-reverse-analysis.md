@@ -1236,3 +1236,99 @@ sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NS
 - 测试: TestXorYeelion/TestBuildConfigURL/TestINIGetAndServers + TestFetchServerConfigLive(KUWO_CONFIG_LIVE=1) PASS; go build/vet PASS
 
 **下一步**: p2pcheck 用新 IP 重发 UDP 心跳(真机) → 等 ACK 拿外部 IP → U_QRY 查询 → tracker 会话
+
+## §10.61 【协议闭环】Android libp2p.so 完整还原 HTTP 搜索通道 U_QRY 文本格式（2026-08-26）
+
+**方法突破**: 字节级 ADRP/ADD 扫描器(掩码 0x9F000000 任意 Rd + ADD imm 配对)替代 capstone 迭代器(大段中遇无效指令会静默中断), 一举定位全部字符串引用。PLT stub 解析(GOT->RELA->符号名)打通调用语义。
+
+**U_QRY 查询文本权威模板(SearchPeer::run @0xd27c8)**:
+```
+line1 = format("<001><U_QRY>|<%u,%u>|<%u><%s><%s>|<%s>",
+               Sign+0x10, Sign+0x14,            # 签名对(w21/w22, [this+0x10/+0x14])
+               GetP2PCenter()->vt38(),          # int = GetUID()
+               GetP2PCenter()->vt48(),          # string = GetVersion() (MUSIC_8.7.4.0_BDS1)
+               GetP2PCenter()->vt58(),          # string = GetInstallSource()
+               localIP_str)                     # UDPServer::GetLocalHost()->host().toString()
+line2 = format("|<rid>|<uip:%s>|<new>|<nat:%u>|<flags:%u>\r\n",
+               localIP_str, UDPServer::GetNatType(), 0)
+body  = line1 + line2      # 注意 <rid> 为字面量占位
+```
+- `<001><U_QRY>` 与 PC 版 cmd 字一致; `<uid>ver|src` 无分隔拼接与 PC 版 KwModConfig payload 同构
+- vtable 运行时重定位无法静态读槽位; vt48/vt58=仅有的两个无参 string getter (GetVersion/GetInstallSource), 顺序待真实样本定
+
+**HTTP 报文模板(SearchPeer::Search @0xd18b0 +0xdc 引用 0x227fbb, TcpConnection::write 直发)**:
+```
+POST /yl_res_manage.search HTTP/1.1\r\n
+Host: deliver.kuwo.cn\r\n
+User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)\r\n
+Cache-Control: no-cache\r\n
+Accept-Encoding: zlib\r\n
+Content-Length: %d\r\n
+Connection: Close\r\n
+\r\n%s            <- body 明文(非压缩)
+```
+响应解析: readline 循环 + StringTokenizer; 第2 token 匹配 '200'(0x2280b0); 解析 Content-Length(NumberParser); Content-Encoding==zlib(0x2280d4) 则解压。响应标记集(0x2281c2区): <DENY_IP> <RES_DEL> FILE_LEN <URL> <USR_ID> & p2sp:// <CHECK
+
+**搜索服务器来源**: GetConfigItem("P2P_SearchServer", 默认 "deliver.kuwo.cn:80;103.235.253.203:80;60.29.226.173:80;60.28.205.36:80") — config.kuwo.cn 下发配置中无此键 ⇒ 走内置默认。
+**CResourceReport**(资源上报): POST /yl_res_manage.up, 键 ReportServer, 同 Host 固定 deliver.kuwo.cn:80。
+
+**连通性终判(2026-08-26 沙箱实测)**:
+- Netsong DNS 机(43.144.129.208/101.42.130.145):80 → 精确模板 POST 回 200 Content-Length:0(nginx+X-Cache linux245 兜底, 非业务应答)
+- deliver.kuwo.cn/39.156.x:80 → Apache 404
+- 103.235.253.203 / 60.29.226.173 / 60.28.205.36:80 → TCP accept 后 0 字节静默
+- 结论: HTTP 搜索通道已下线(config [p2p] closehttp=1 互证; act.log httpmode:0 ressucway:2 = 真实流量走 UDP CSF)
+
+**新攻击面(下一阶段主攻)**: libp2p.so 全套带符号 UDP 协议栈:
+- UDPServer::HandleClientData(UDPPacket*) — 服务器消息总分发(消息类型全集入口!)
+- UDPServer::PassiveConnect(ReqCNatPunchStruct*) — NAT 打洞
+- UDPServer::GetMsgNo/AcceptUpload/GetNatType/GetLocalHost
+- Swordfish(recvACK/recvSYNACK/getRemoteAddr)/SwordFishConnect::connect — peer TCP 化传输
+- TaskCount::Log/CUploadTask/CResourceReport — 统计与上报
+⇒ 用 Android 侧符号反推 PC KwMV.dll CSF serpack/OpenSession 未竟协议
+
+## 10.62 【协议还原】 libp2p.so UDP 控制通道全解密 (Android 新版协议)
+
+### 线程架构 (UDPServer::Start @0xe0018)
+- msgNo(0xa8)=rand()%0x40000000+1; natType(0xc0)=3 初始
+- 本地 bind: SocketAddress("0.0.0.0", GetConfigUInt("P2P_ServerPort", **6000**)) 失败重试6次(rand%10000ms退避)
+- ThreadPool×3: run(分发)/OnRecv(recvfrom)/CheckNATE; Poco::Thread×3(GOT 0x2ea218=OnRecv@0xe05bc, 0x2ea660=CheckNATE@0xe0840, 0x2ea6c0=HeartBeat@0xe1294)
+- run(): 队列消费→HandleClientData; 返回1时 recycle Packet
+
+### HandleClientData 消息分发 (@0xe1e4c) —— 权威路由表
+```
+pkt->data[0] (int8):
+  b0<0 (bit31=1): Swordfish 数据流; rev32(data[0..3]) 字节序转换后
+      Swordfishs::find(sa,true) → onRecvPacket; 未找到且 Packet::getType()==1(SYN) → newSocket
+  (b0|2)==3 即 b0∈{1,3}: 控制通道, 子命令=data[1], 载荷=data+9 (包头9字节):
+      0x13: 被动连接请求(服务器指令) → ReqCNatPunchStruct{u64@0=[data+9] ip:port打包, u16 port@8=[data+0x11]}
+            BigIPToString(u64>>32) → PassiveConnect(p)
+      0x27: 心跳ACK → OnAckHeartBeat(sa, ACK_HEARTBEAT_INFO*)(data+9)
+      0x30: NAT探测ACK → OnACKNATProbe(sa, TNATProbeMsg*)(data+9)
+```
+**包头 9B**: [0]=大类(1/3控制, 其他Swordfish), [1]=cmd, [2..3]=payload_len LE16
+
+### ACK_HEARTBEAT_INFO (OnAckHeartBeat @0xe22a4)
+`{u32 ip_bigendian; u16 port}` 6字节 —— 服务器告知客户端外部映射地址
+处理: externalAddr(this+0xb8)=该地址; 若 == localSockAddr(this+0xb0).host → natType(0xc0)=0(无NAT)
+
+### CheckNATE (@0xe0840) — NAT探测包 (兼注册心跳)
+- 配置: HelpSvr1="P2P_HelpSvr1"/uh1.kuwo.cn:**6702** → this+0x90; HelpSvr2="P2P_HelpSvr2"/uh2.kuwo.cn:**6721** → this+0x98
+- 19字节包: `[0]=1 [1]=0x29 [2..3]=10(LE16) [4]=(u8)++msgNo [5..8]=u32 vt38()(GetUID?) [9..12]=u32 vt38()再次 [13..16]=u32 ToBigIP(localIP) [17..18]=u16 localPort`
+- 发送: SafeSend(buf,**19全长**,uh1,-1) ×1 + SafeSend(buf,len字段+9,uh1,-1) ×2 + 同样×3 发 uh2
+- ToBigIP@0xae560: IP字符串转大端u32
+
+### natPunch(PEERINFO&) (@0xe2cb8) — 打洞编排
+- PEERINFO: [0x00]=u32 uid, [0x08]=SocketAddress peer, [0x10]=u32 flags
+- flags∈{0,2}: Swordfishs::newSocket → connect(timeout=20000ms,false) 直接主动连
+- 否则 addOnePassiveConnect(uid); 构造19B包 cmd=**0x0a**: `[0]=1 [1]=0x0a [2..3]=9(LE) [4]=++msgNo [5..8]=myuid [9..12]=u32 vt38() [13..16]=u32 ToBigIP(externalAddr.host) [17..18]=u16 externalAddr.port`
+- 再包装 newReqRelayMsg(RELAYMSG_INFO{u32 vt38(), u32 target_uid, u16 len+9, char* buf}) 
+- SafeSend(&msgno,4,peerAddr,2)×3 直发对端 + SafeSend(relay,len+9,tracker(this+0x88),-1) 经tracker中转
+- 循环40次×50ms sleep 等 Swordfishs::findbyuid(uid) 出现
+- 日志串: "found"(0x22875d) "connect ok?"(0x228768) "connect fail"(0x228772) "relay?"(0x22877c/0x228785)
+
+### 关键推论
+1. **Android 无独立 tracker 心跳请求**: HeartBeat线程仅刷新tracker地址(this+0x88); 保活=NAT探测包(cmd 0x29)周期发往uh1/uh2; tracker侧响应走0x27/0x30
+2. vtbl+0x38 三处调用值一致 → GetUID (与 SearchPeer U_QRY <uid> 同源)
+3. PC版(cmd=0xE2103,23B)与Android版(cmd=0x29/0x0a,19B)是两代协议; tracker同时兼容或按客户端区分
+4. 服务器→客户端被动连接指令(0x13)证明: 打洞由tracker协调, 双方都收到对方ip:port后互发
+

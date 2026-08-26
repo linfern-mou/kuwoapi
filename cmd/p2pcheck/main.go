@@ -77,6 +77,7 @@ func main() {
 	p2p.SetConfigResolver(resolver)
 	hbAddrs := []*net.UDPAddr{}
 	trkAddrs := []*net.UDPAddr{}
+	helpAddrs := []*net.UDPAddr{}
 	if ini, err := p2p.FetchServerConfig(strconv.FormatUint(uint64(uid), 10)); err != nil {
 		fmt.Println("config fetch failed:", err)
 	} else {
@@ -128,7 +129,7 @@ func main() {
 	}
 	defer uc.Close()
 
-	// outbound IP for the heartbeat packet (g_login+0x80 equivalent)
+	// outbound IP for the probe packet
 	conn, err := net.DialTimeout("udp", dnsServer, 3*time.Second)
 	if err != nil {
 		fmt.Println("local ip probe:", err)
@@ -136,21 +137,32 @@ func main() {
 	}
 	localIP := net.ParseIP(conn.LocalAddr().(*net.UDPAddr).IP.String()).To4()
 	conn.Close()
+	lport := uint16(uc.LocalAddr().(*net.UDPAddr).Port)
 
-	targets := append(append([]*net.UDPAddr{}, hbAddrs...), trkAddrs...)
-	// Two payload variants: RE shows the client learns its external IP from
-	// the heartbeat REPLY ("获取到心跳服务器返回的外部IP地址"), so the first
-	// packets likely carry a zeroed IP (g_login+0x80 uninitialized). Send both.
-	hbZero := p2p.Heartbeat{UID: uid, NAT: 3, Port: uint16(uc.LocalAddr().(*net.UDPAddr).Port), IP: 0}
-	hbLocal := p2p.Heartbeat{UID: uid, NAT: 3, Port: uint16(uc.LocalAddr().(*net.UDPAddr).Port), IP: binary.BigEndian.Uint32(localIP)}
-	for i := 0; i < 5; i++ {
-		pkts := [][]byte{hbLocal.Marshal(), hbZero.Marshal()}
-		for _, a := range targets {
-			for _, pkt := range pkts {
-				uc.WriteTo(pkt, a)
-			}
+	// help servers from libp2p.so defaults (P2P_HelpSvr1/2, docs §10.62)
+	for _, h := range p2p.DefaultHelpServers {
+		host, port, _ := net.SplitHostPort(h)
+		ha, err := resolver.LookupNetIP(ctx, "ip4", host)
+		if err != nil {
+			fmt.Printf("resolve %s: %v\n", host, err)
+			continue
 		}
-		fmt.Printf("heartbeat #%d -> %d targets x2 variants\n", i, len(targets))
+		helpAddrs = append(helpAddrs, &net.UDPAddr{IP: net.IP(ha[0].AsSlice()), Port: mustAtoi(port)})
+	}
+	targets := append(append([]*net.UDPAddr{}, helpAddrs...), hbAddrs...)
+	targets = append(targets, trkAddrs...)
+
+	seq := uint8(1)
+	probe := p2p.NATProbe(seq, uid, binary.BigEndian.Uint32(localIP), lport)
+	fmt.Println("== stage 1a: Android-protocol NAT probe (cmd 0x29, keepalive) ==")
+	fmt.Printf("probe %dB -> %d targets\n", len(probe), len(targets))
+	sawReply := false
+	var extIP uint32
+	var extPort uint16
+	for i := 0; i < 5; i++ {
+		for _, a := range targets {
+			uc.WriteTo(probe, a)
+		}
 		buf := make([]byte, 2048)
 		deadline := time.Now().Add(time.Duration(len(targets)) * 400 * time.Millisecond)
 		for time.Now().Before(deadline) {
@@ -159,7 +171,60 @@ func main() {
 			if err != nil {
 				break
 			}
-			fmt.Printf("REPLY from %v (%dB): %s\n", from, n, hex.Dump(buf[:n]))
+			sawReply = true
+			class, cmd, payload, ok := p2p.Classify(buf[:n])
+			fmt.Printf("REPLY from %v (%dB) class=%d cmd=0x%02x\n", from, n, class, cmd)
+			fmt.Print(hex.Dump(buf[:n]))
+			if !ok {
+				continue
+			}
+			switch cmd {
+			case p2p.CmdNATProbeACK:
+				if ip, port, ok := p2p.NATProbeACK(payload, uid); ok {
+					extIP, extPort = ip, port
+					fmt.Printf("  -> TNATProbeMsg ext=%d.%d.%d.%d:%d nat=0/2/4 tree applies\n",
+						byte(ip>>24), byte(ip>>16), byte(ip>>8), byte(ip), port)
+				}
+			case p2p.CmdHeartbeatACK:
+				if ip, port, ok := p2p.HeartbeatACK(payload); ok {
+					extIP, extPort = ip, port
+					fmt.Printf("  -> ACK_HEARTBEAT_INFO ext=%d.%d.%d.%d:%d\n",
+						byte(ip>>24), byte(ip>>16), byte(ip>>8), byte(ip), port)
+				}
+			case p2p.CmdPassiveConnect:
+				if ip, port, ok := p2p.PassiveConnectReq(payload); ok {
+					fmt.Printf("  -> PASSIVE CONNECT to %d.%d.%d.%d:%d\n",
+						byte(ip>>24), byte(ip>>16), byte(ip>>8), byte(ip), port)
+				}
+			}
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	if sawReply && extIP != 0 {
+		ip := localIP
+		fmt.Printf("registered! external endpoint %d.%d.%d.%d:%d (local %s:%d)\n",
+			byte(extIP>>24), byte(extIP>>16), byte(extIP>>8), byte(extIP), extPort, ip, lport)
+	} else if sawReply {
+		fmt.Println("replies seen but no external endpoint extracted yet")
+	} else if stage0OK {
+		fmt.Println("(no reply to cmd 0x29 while DNS-over-UDP works -> format or target mismatch)")
+	}
+
+	fmt.Println("\n== stage 1b: legacy PC heartbeat (KwMV 0xE2103) as control ==")
+	hbZero := p2p.Heartbeat{UID: uid, NAT: 3, Port: lport, IP: 0}
+	for i := 0; i < 2; i++ {
+		for _, a := range targets {
+			uc.WriteTo(hbZero.Marshal(), a)
+		}
+		buf := make([]byte, 2048)
+		deadline := time.Now().Add(time.Duration(len(targets)) * 400 * time.Millisecond)
+		for time.Now().Before(deadline) {
+			uc.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+			n, from, err := uc.ReadFrom(buf)
+			if err != nil {
+				break
+			}
+			fmt.Printf("REPLY from %v (%dB): % x\n", from, n, buf[:n])
 		}
 		time.Sleep(300 * time.Millisecond)
 	}
