@@ -1960,3 +1960,23 @@ IsAGt(x){ return this->f8 >= x }        ← patched -> return true ; 0x10264830
 - 结论: [ecx+8] 即 VTYPE(VIP类型等级), 两处 patch 将
   "==1(普通VIP)" 和 ">=N(豪华VIP门槛)" 全部短路为 true
 - 补丁功能等价于: 客户端本地所有 VIP 等级判断永远通过
+
+## 10.75 U_QRY 格式串原文修正 (2026-08-26)
+从 KwMV.dll 0x5a520 直接提取 sprintf 原文 (此前为转述偏差):
+```
+<%s><%s>|<%u,%u>|<%u><%s><%s>|<%s>|<rid>|<uip:%s>|<new>|<nat:%u>|
+<flags:%u><speer>|<ipdeny:no>%s|<loginid:%s>\r\n
+```
+三处修正:
+1. slot5 是字面量 <rid>: 资源定位完全靠 sig 对(内容寻址), rid 槽是死串
+   → 731eefc "真实rid修复"方向错误, 已回退为默认字面量(RidOverride可选)
+2. slot3 三槽 <%u><%s><%s>: uid+计算机名+用户名, 此前少发一个 <>
+3. 结尾 \r\n; HTTP 头 Connection: Keep-Alive (0x5a298 POST模板原文)
+
+### 404 语义新假说
+- act.log旧sig(2872976053,860573832) → 200 占位包33B (该资源PC下载过,
+  lidx有索引 → 正常应答路径)
+- musicinfo新鲜MP3128 sig(640604884,960750357) @228908 → 404
+- 假说: 404 = 该签名在P2P索引中无记录(无人分享过此资源), 属正常业务应答;
+  占位包 = 有索引时的标准空/默认应答
+- 验证: 手机真机跑 MUSIC_228908 全链, 观察 literal-rid 与 numeric-rid 两分支
