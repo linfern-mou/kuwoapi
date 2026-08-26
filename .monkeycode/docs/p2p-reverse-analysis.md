@@ -1600,3 +1600,48 @@ body: <001><U_QRY>|<2872976053,860573832>|<15277654><>|<192.168.1.8>|<rid>|<uip:
 2. 响应双编码处理: Content-Encoding: zlib → {u32 A,u32 B,B字节} inflate; 否则 base64 文本
 3. p2pcheck 新增 stage3: 遍历 8 个 SearchServer IP 打真实请求, 输出原始应答
 4. 用户真机运行: 真实网络环境下观察是否拿到 1467B 级别的真数据
+
+## 10.67 系统目录分析: SigServer 签发链路发现 (2026-08-26)
+
+按用户指令放弃猜测, 从启动文件开始系统分析整个安装目录 (~60 PE 文件)。
+
+### 模块盘点 (8.7.4.0_BDS1/bin)
+| 文件 | 角色 | 证据 |
+|------|------|------|
+| KwMV.dll | P2P 核心引擎 | 仅 4 导出: StartP2P/StartP2P_V1/StopP2P/StopUpload; 无静态导入方 → 动态加载 |
+| **KwService.exe** | **P2P 宿主进程** | 静态导入 KwMV.dll 三函数 (StartP2P_V1/StopP2P/StopUpload) |
+| **pd.dll** | 资源调度中枢 | 14 导出: StartDown/GetResInfo/DelRes/StopDown/StartKWMV/AttachP2PListener 等; KwService.exe 主调 |
+| KwDataDef.dll | 数据模型 | Sign 类: `Sign(u32,u32)`@0x1001cd00 / `Sign(std::string)`@0x1001cbe0; CNetResource::GetSign / CCloudResource::GetSig |
+| libcef.dll 36MB | UI 壳 (CEF) | — |
+
+### pd.dll!GetResourceSig @0x10009470 — sig 真正来源
+1. 读配置键 `SigServer` (串@0x10011ad4, 经 AfxGetConfigManager vtbl+[edx+0x10])
+2. 拼 URL: `<配置值>` + rid + `&c=mbox`
+3. `GET %s HTTP/1.0\r\nHost: %s\r\nAccept: */*\r\nUser-Agent: Mozilla...` 明文 HTTP
+4. 解析响应文本 `sig1=`@0x10011c00 / `sig2=`@0x10011c08 (sscanf "sig1=%u")
+5. 日志: "getressig url=%s"@0x10011ae8; "GetResourceSig: RID = %s, old_sig=<%u,%u> new_sig=<%u,%u> Ret=%d"@0x10011c50; 统计名 P2P_RID2SIG@0x10011cd4
+6. HTTP 404(0x194) 判定@0x1000984c
+
+### config.ini 关键节选 (实锤)
+```ini
+[SigServer]
+SigServer=http://rid.kuwo.cn/sig.s?w=
+```
+→ **sig 由 SigServer 按 rid 实时签发**, 与 r.s musicinfo 的 S1/S2 无关 (后者实测打 search 全 404)。
+其余签名值均属其他功能: signature1=1247937909/signature2=4090781399, KwTTSig1/2, KwSig=1941184310,1124120813, [Yiguan] sig1/sig2。
+
+### rid.kuwo.cn 解析问题
+- 公共 DNS (DoH): NXDOMAIN Status=3 — 已从公网撤下
+- 私有解析通道候选: `[KwDNS] Address=60.28.201.45 Port=53`; `[DNS2CONF] host=103.79.26.13 port=443`
+- 沙箱 UDP/TCP 出站全堵无法验证; 用户机器今日仍成功签发 → ISP DNS 缓存或 KwDNS 可达
+
+### Go 实现 (commit b1f61dd)
+- `p2p.FetchSig(rid, timeout)`: 系统解析失败回退显式 UDP DNS 查询 60.28.201.45 (Android 无 resolv.conf 必需), TCP:80 GET `/sig.s?w=<rid>&c=mbox`, 解析 sig1=/sig2= 文本
+- p2pcheck 用法升级: `./p2pcheck [sig1 sig2 [MUSIC_rid]]` — 给第3参则先签发新鲜 sig 再搜索
+- dist/p2pcheck_android_arm64 已重建 (b1f61dd)
+
+### 下一步
+1. 用户真机: `./p2pcheck 2872976053 860573832 MUSIC_228720849` 观察签发+搜索全链
+2. 若 rid.kuwo.cn 在用户网络可解析 → 预期拿到非占位包 (1467B 级)
+3. 继续反汇编 pd.dll StartDown/InsertDownload ("InsertDownload RID:%s, Sign:%u,%u"@0x100114e0, "PlayChannel Sig : %u, %u"@0x100117a4) 补全播放链细节
+4. 链路通后改 download.go: getSongMeta 的 sig 改走 sig.s 签发流程
