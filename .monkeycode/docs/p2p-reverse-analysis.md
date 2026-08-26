@@ -1773,3 +1773,27 @@ GetDataByCmd/SetOpenChargeSong; 键: DNS2CONF / SearchServerDNS1/2/3
 | bin/kwAdb.exe | 757K | Android ADB (设备管理 KwModAndroidMgr 用) | DONE |
 | bin/kuwovip-patch.exe | 63K | **非官方文件**: dup2patcher.dll 加载器, 第三方VIP破解补丁 — 安装包已被改动 | DONE |
 | bin/DumpReport.exe | 87K | 崩溃转储上报 | DONE |
+
+| bin/KwLib.dll | 463K | 基础库(547导出): **CalcSign(data,&s1,&s2)=本地内容签名计算**; UserId/XmlNode/Thread; 配置路径 Conf\P2PConf\ | DONE |
+| bin/KwModDownload.dll | 478K | UI层下载模块: "p2p StartDown"/"rid: %s quality: %d"/"P2PStartDown (%u, %u) id:%s"/"sig(%lu, %lu) err:%d"; Sign类+IP2PPrivateObserver+P2P_DOWN_FAILED_REASON — rid+quality → pd.dll!StartDown 完整桥接 | DONE |
+| bin/KwSongCache.dll | 65K | 歌曲缓存: 调 search.kuwo.cn/r.s?stype=musicinfo&itemset=music_2014&alflac=1&pcmp4=1&id=MUSICRID | DONE |
+| bin/KwMusicCore.dll | 63K | 数据/消息管理器工厂 (AfxGetDataManager等) | DONE浅 |
+| bin/ccenter.dll | 177K | RS_*调用中心 (RS_InitializeCallCenter等5导出) | DONE浅 |
+| bin/KwHttpRequestMgr.dll | 153K | HTTP请求/文件缓存管理器工厂 | DONE浅 |
+| bin/KwHttp.dll | 39K | GetKwHttpMgr/InitKwHttpMgr HTTP管理器 | DONE浅 |
+| bin/KwModConfig.dll | 99K | AfxGetConfigManager 配置中心 (pd.dll读SigServer经它) | DONE浅 |
+| bin/PPHelper.dll | 445K | PlayPPLink/RunLaunchHelper 外链拉起助手 | DONE浅 |
+
+### P2P 全调用链终版 (PC)
+```
+用户点播(rid,quality)
+  └─ KwMusic.exe: KwModDownload.dll  "P2PStartDown(%u,%u) id:%s"
+       └─ KwService.exe: pd.dll!StartDown → DownTask
+            ├─ sig为空? → pd.dll!GetResourceSig → GET rid.kuwo.cn/sig.s?w=<rid>&c=mbox
+            │     (域名解析走系统DNS; dns2.dll白名单不含它)
+            └─ InsertDownload(sign) → KwMV.dll 引擎
+                 ├─ SearchPeer: POST deliver.kuwo.cn/yl_res_manage.search + U_QRY(sig1,sig2,...)
+                 └─ 数据交换 (UDP CSF / TCP)
+
+分享侧: lidx.dll StartLocalIndexer → CalcSign(本地文件) → POST yl_res_manage.up 注册
+```
