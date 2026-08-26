@@ -317,6 +317,10 @@ func SearchResource(servers []string, qry string, timeout time.Duration) ([]byte
 // networks.
 var ResSearchDebug func(server string, hdr, body []byte)
 
+// SearchAttemptLog, when set, receives one line per POST attempt with the
+// HTTP status line — makes "which mirror answers what" visible.
+var SearchAttemptLog func(addr, status string)
+
 func searchOne(addr, qry string, timeout time.Duration) ([]byte, error) {
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
@@ -348,6 +352,10 @@ func searchOne(addr, qry string, timeout time.Duration) ([]byte, error) {
 	}
 	statusOK := strings.HasPrefix(string(hdr), "HTTP/") &&
 		strings.Contains(strings.SplitN(string(hdr), "\r\n", 2)[0], " 200 ")
+	if SearchAttemptLog != nil {
+		line := strings.SplitN(string(hdr), "\r\n", 2)[0]
+		SearchAttemptLog(addr, line)
+	}
 	if !statusOK {
 		line := strings.SplitN(string(hdr), "\r\n", 2)[0]
 		return nil, fmt.Errorf("bad status: %s", line)

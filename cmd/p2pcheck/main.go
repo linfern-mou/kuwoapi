@@ -100,9 +100,11 @@ func main() {
 	hbAddrs := []*net.UDPAddr{}
 	trkAddrs := []*net.UDPAddr{}
 	helpAddrs := []*net.UDPAddr{}
+	liveINI := ""
 	if ini, err := p2p.FetchServerConfig(strconv.FormatUint(uint64(uid), 10)); err != nil {
 		fmt.Println("config fetch failed:", err)
 	} else {
+		liveINI = ini
 		fmt.Printf("config INI %d bytes\n", len(ini))
 		for _, s := range p2p.HeartbeatServersFromConfig(ini) {
 			if ip, port, err := net.SplitHostPort(s); err == nil {
@@ -114,6 +116,15 @@ func main() {
 		}
 		fmt.Println("heartbeat servers:", hbAddrs)
 		fmt.Println("search/tracker servers:", trkAddrs)
+		// dump the live [ResSearch] section verbatim: these are the HTTP
+		// search endpoints the current client generation actually uses
+		if i := strings.Index(ini, "[ResSearch]"); i >= 0 {
+			sec := ini[i:]
+			if j := strings.Index(sec[1:], "\n["); j >= 0 {
+				sec = sec[:j+1]
+			}
+			fmt.Printf("--- live [ResSearch] section ---\n%s-------------------------------\n", sec)
+		}
 	}
 	if len(hbAddrs) == 0 {
 		hbAddrs = append(hbAddrs, &net.UDPAddr{IP: net.ParseIP("175.102.178.96"), Port: 25607})
@@ -269,6 +280,10 @@ func main() {
 				server, hdr, len(body), hex.Dump(body))
 		}
 		servers := make([]string, 0, len(trkAddrs)+len(p2p.ResSearchServers))
+		if live := p2p.ParseSearchServers(liveINI); len(live) > 0 {
+			fmt.Println("live [ResSearch] SearchServer list:", live)
+			servers = append(servers, live...)
+		}
 		for _, a := range trkAddrs {
 			servers = append(servers, a.IP.String())
 		}
@@ -336,6 +351,9 @@ func main() {
 			return
 		}
 
+		p2p.SearchAttemptLog = func(addr, status string) {
+			fmt.Printf("  [%s] %s\n", addr, status)
+		}
 		// Original client sends the literal <rid> slot (sig pair is the key).
 		// Try that first; on 404 retry with the numeric rid as a fallback.
 		qry := p2p.BuildPCUQRY(p2p.PCQueryParams{
