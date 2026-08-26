@@ -64,9 +64,29 @@ func main() {
 		dc.Close()
 	}
 
+	fmt.Println("\n== stage 0.5: pull live server list from config.kuwo.cn ==")
+	hbAddrs := []*net.UDPAddr{}
+	trkAddrs := []*net.UDPAddr{}
+	if ini, err := p2p.FetchServerConfig(strconv.FormatUint(uint64(uid), 10)); err != nil {
+		fmt.Println("config fetch failed:", err)
+	} else {
+		fmt.Printf("config INI %d bytes\n", len(ini))
+		for _, s := range p2p.HeartbeatServersFromConfig(ini) {
+			if ip, port, err := net.SplitHostPort(s); err == nil {
+				hbAddrs = append(hbAddrs, &net.UDPAddr{IP: net.ParseIP(ip), Port: mustAtoi(port)})
+			}
+		}
+		for _, ipStr := range p2p.SearchServersFromConfig(ini) {
+			trkAddrs = append(trkAddrs, &net.UDPAddr{IP: net.ParseIP(ipStr), Port: 25607})
+		}
+		fmt.Println("heartbeat servers:", hbAddrs)
+		fmt.Println("search/tracker servers:", trkAddrs)
+	}
+	if len(hbAddrs) == 0 {
+		hbAddrs = append(hbAddrs, &net.UDPAddr{IP: net.ParseIP("175.102.178.96"), Port: 25607})
+	}
+
 	fmt.Println("\n== stage 1: heartbeat registration ==")
-	hbAddr := &net.UDPAddr{IP: net.ParseIP("211.100.49.14"), Port: 25607}
-	trkAddr := &net.UDPAddr{IP: net.ParseIP("175.102.178.96"), Port: 25607} // act.log fallback
 	// Android has no /etc/resolv.conf so Go's resolver defaults to [::1]:53 and
 	// fails; query a public DNS explicitly instead.
 	resolver := &net.Resolver{
@@ -78,10 +98,26 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	// deliver.kuwo.cn DNS IPs stay first in the tracker list (act.log evidence)
 	ips, err := resolver.LookupNetIP(ctx, "ip4", "deliver.kuwo.cn")
 	if err == nil && len(ips) > 0 {
-		trkAddr = &net.UDPAddr{IP: net.IP(ips[0].AsSlice()), Port: 25607}
-		fmt.Println("tracker resolves to", trkAddr)
+		for _, ip := range ips {
+			a := &net.UDPAddr{IP: net.IP(ip.AsSlice()), Port: 25607}
+			dup := false
+			for _, t := range trkAddrs {
+				if t.IP.String() == a.IP.String() {
+					dup = true
+					break
+				}
+			}
+			if !dup {
+				trkAddrs = append([]*net.UDPAddr{a}, trkAddrs...)
+			}
+		}
+		fmt.Println("tracker resolves to", ips)
+	}
+	if len(trkAddrs) == 0 {
+		trkAddrs = append(trkAddrs, &net.UDPAddr{IP: net.ParseIP("39.156.121.53"), Port: 25607})
 	}
 
 	uc, err := net.ListenUDP("udp", &net.UDPAddr{Port: 0})
@@ -100,31 +136,41 @@ func main() {
 	localIP := net.ParseIP(conn.LocalAddr().(*net.UDPAddr).IP.String()).To4()
 	conn.Close()
 
+	targets := append(append([]*net.UDPAddr{}, hbAddrs...), trkAddrs...)
 	for i := 0; i < 5; i++ {
 		hb := p2p.Heartbeat{UID: uid, NAT: 3, Port: uint16(uc.LocalAddr().(*net.UDPAddr).Port), IP: binary.BigEndian.Uint32(localIP)}
 		pkt := hb.Marshal()
-		uc.WriteTo(pkt, hbAddr)
-		uc.WriteTo(pkt, trkAddr)
-		fmt.Printf("heartbeat #%d -> %v / %v\n", i, hbAddr, trkAddr)
+		for _, a := range targets {
+			uc.WriteTo(pkt, a)
+		}
+		fmt.Printf("heartbeat #%d -> %d targets (%v...)\n", i, len(targets), targets[0])
 		buf := make([]byte, 2048)
-		uc.SetReadDeadline(time.Now().Add(1500 * time.Millisecond))
-		if n, from, err := uc.ReadFrom(buf); err == nil {
+		deadline := time.Now().Add(time.Duration(len(targets)) * 200 * time.Millisecond)
+		for time.Now().Before(deadline) {
+			uc.SetReadDeadline(time.Now().Add(300 * time.Millisecond))
+			n, from, err := uc.ReadFrom(buf)
+			if err != nil {
+				break
+			}
 			fmt.Printf("REPLY from %v (%dB): %s\n", from, n, hex.Dump(buf[:n]))
 		}
 		time.Sleep(300 * time.Millisecond)
 	}
 
-	fmt.Println("\n== stage 2: CSF session + U_QRY (3 attempts) ==")
+	fmt.Println("\n== stage 2: CSF session + U_QRY (3 attempts per tracker) ==")
 	var sess *p2p.Session
-	for attempt := 1; attempt <= 3; attempt++ {
-		s, err := p2p.Dial("", trkAddr)
-		if err == nil {
-			sess = s
-			fmt.Printf("handshake OK on attempt %d (lport=%d)\n", attempt, s.LocalPort())
-			break
+outer:
+	for _, trk := range trkAddrs {
+		for attempt := 1; attempt <= 3; attempt++ {
+			s, err := p2p.Dial("", trk)
+			if err == nil {
+				sess = s
+				fmt.Printf("handshake OK via %v on attempt %d (lport=%d)\n", trk, attempt, s.LocalPort())
+				break outer
+			}
+			fmt.Printf("%v attempt %d: %v\n", trk, attempt, err)
+			time.Sleep(500 * time.Millisecond)
 		}
-		fmt.Printf("attempt %d: %v\n", attempt, err)
-		time.Sleep(500 * time.Millisecond)
 	}
 	if sess == nil {
 		if stage0OK {
@@ -173,4 +219,12 @@ func main() {
 				p.Kid, p.IP, p.Port, p.Flag1, p.Flag2, p.Flag3, p.Index)
 		}
 	}
+}
+
+func mustAtoi(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
+	}
+	return n
 }

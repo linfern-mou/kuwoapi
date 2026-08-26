@@ -59,10 +59,11 @@ func ParseHeartbeat(b []byte) (Heartbeat, bool) {
 	}, true
 }
 
-// DefaultHeartbeatServers mirrors the built-in "HeartbeatServer" config value:
-// host:port entries joined by commas (KwMV.dll .rdata @0x1004a638 area).
+// DefaultHeartbeatServers mirrors the server-pushed "HeartbeatServer" config
+// value from http://config.kuwo.cn/uc/s?m= ([p2p] section, see docs §10.60).
+// The DLL built-in list (211.100.49.14 etc.) is dead; live servers as of
+// 2026-08: 175.102.178.96/.97 (TCP 25607 verified reachable).
 var DefaultHeartbeatServers = []string{
-	"211.100.49.14:25607",
-	"60.29.226.173:25607",
-	"60.28.205.36:25607",
+	"175.102.178.96:25607",
+	"175.102.178.97:25607",
 }

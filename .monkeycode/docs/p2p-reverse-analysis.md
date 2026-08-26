@@ -1206,3 +1206,33 @@ sig 对 = 结构头 fid1/fid2。sig 的**源头是服务器元数据接口的 NS
 - 实测真实配置: version=MUSIC_8.7.4.0_BDS1, channel=kwmusic_web_1_bds_20171206 (Conf/default/config.ini)
 - 候选 payload 编码后请求全回 FAIL —— 明文 payload 精确格式仍需真实抓包样例
 - ResSeaSvr 备信道扫径: deliver.kuwo.cn:80 /yl_res_manage.search GET/POST→404; /res/yl.s→403; HelpSvr(uh1/uh2.kuwo.cn:6718/6721) TCP 不可达(ICE慕)。
+
+## §10.60 【闭环】方案3成功：config.kuwo.cn 配置通道完全还原 + 新服务器列表到手（2026-08-26）
+
+**协议格式（实测验证，非猜测）**
+- URL: `http://config.kuwo.cn/uc/s?m=<len(plain)>;<b64>` —— m= 后数字 = **明文字节长度**（0x1000f126 mov edx,[esp+0xc8]=T5.size → 0x10007590 "%u"），分号后 = 编码串
+- 明文: `<uid>;<version>,<installsrc>,config`（拼接序 0x10002b50=append(pushed)→out=A+pushed 定序完成；尾部字段服务器不校验，uid 可空）
+- 编码: std_b64(XOR循环"yeelion ")（§10.59 算法不变）
+- **响应: 纯 std_base64 的 INI 明文（无 XOR 层）**, ~8-10KB 全量客户端配置；格式错回 `RkFJTAA9`(FAIL)
+- 拼接链完整定序(0x1000ed30): T1=uid+";" → T2=T1+version_cfg → T3=T2+"," → T4=T3+install_src → T5=T4+",config" → MakeHttpParam(ecx=ptr,edx=len,eax_out=b64)
+
+**服务器下发的关键内容（HeartbeatServer 谜底）**
+- `[p2p] HeartbeatServer=175.102.178.96:25607,175.102.178.97:25607` ← 内置旧 IP 全死、真实客户端却活着的解释=启动时从本接口拿新列表
+- `[ResSearch] SearchServer1..8`(uint32 **大端**→IPv4, SS7=664566069→39.156.121.53 与 act.log resserver 一致即证):
+  首轮样本: 101.42.130.234 / 101.42.128.167(腾讯云) | 111.206.97.45 / 111.206.98.106 | 49.7.250.69 / 49.7.249.154 | 39.156.121.53 / 39.156.123.34
+  ⚠ 列表动态轮换: 二次拉取变为 60.28.205.36/211.100.49.14/60.29.226.173/... (旧内置心跳IP入池) ⇒ 客户端每次启动都可能拿不同池
+- `[Netsong] SearchServerDNS=http://43.144.129.208|101.42.130.145`(HTTP 200 可达, /yl_res_manage.search 空200), pcIndexServerDNS=http://175.102.178.77
+- `[DNS2CONF] host=103.79.26.13 port=443 webproxyip=175.102.178.77`; `[p2p] httpmode=1 closehttp=1 tasknum=7 peak=16777216-1`
+- FW 探测主机 CheckHost: 1008520484→60.28.205.36, 3546558734→211.100.49.14 —— §10.58 "官方typo"IP 其实是防火墙探测主机列表成员, 心跳串里的逗号仍是 split bug
+
+**连通性实测（沙箱）**
+- TCP 25607 OPEN: 175.102.178.96/.97 ✓ 39.156.121.53 ✓（此前 deliver 域名 TCP 超时结论被新 IP 推翻）
+- TCP 上发 23B 心跳(cmd=0xE2103, ip=1.2.3.4 占位) → 连接成功但 0 字节回包; RE 依据心跳走 UDP sendto(TimeProc), 且 ip 字段须为真实外网 IP ⇒ 待真机 UDP 验证
+- 43.144.129.208 / 101.42.130.145 HTTP 200; 175.102.178.x:80 超时(仅开 25607)
+
+**代码落地**
+- module/p2p/config.go: BuildConfigURL/FetchServerConfig/INIGet/HeartbeatServersFromConfig/SearchServersFromConfig(uint32 BE)
+- heartbeat.go DefaultHeartbeatServers 更新为 175.102.178.96/.97:25607
+- 测试: TestXorYeelion/TestBuildConfigURL/TestINIGetAndServers + TestFetchServerConfigLive(KUWO_CONFIG_LIVE=1) PASS; go build/vet PASS
+
+**下一步**: p2pcheck 用新 IP 重发 UDP 心跳(真机) → 等 ACK 拿外部 IP → U_QRY 查询 → tracker 会话
