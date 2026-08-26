@@ -434,6 +434,34 @@ outer:
 	}
 }
 
+// httpClientWithUDPResolver builds an HTTP client whose dialer resolves
+// hostnames via public UDP DNS instead of the broken Android/Termux
+// system resolver ([::1]:53 -> connection refused).
+func httpClientWithUDPResolver() *http.Client {
+	return &http.Client{
+		Timeout: 15 * time.Second,
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				host, port, err := net.SplitHostPort(addr)
+				if err != nil {
+					return nil, err
+				}
+				if net.ParseIP(host) != nil {
+					return (&net.Dialer{}).DialContext(ctx, network, addr)
+				}
+				for _, dns := range []string{"192.168.1.1:53", "223.5.5.5:53", "114.114.114.114:53", "8.8.8.8:53"} {
+					ip, err := p2p.ResolveViaUDP(dns, host, 3*time.Second)
+					if err == nil && ip != "" {
+						return (&net.Dialer{}).DialContext(ctx, network, net.JoinHostPort(ip, port))
+					}
+				}
+				// fall back to whatever the OS resolver can do
+				return (&net.Dialer{}).DialContext(ctx, network, addr)
+			},
+		},
+	}
+}
+
 // fetchMusicInfo mirrors KwSongCache.dll / song.go: GET r.s?stype=musicinfo,
 // body is an 8-byte header followed by a zlib stream of key=value lines.
 // Quality lines look like "<qname>=S1:<n>|S2:<n>|SIZE:<n>|BT:<n>".
@@ -446,7 +474,7 @@ func fetchMusicInfo(rid string) (map[string][2]uint64, []string, error) {
 		return nil, nil, err
 	}
 	req.Header.Set("User-Agent", "Kuwo_Music_Box")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClientWithUDPResolver().Do(req)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -138,6 +138,14 @@ func min(a, b int) int {
 
 // resolveViaUDPDNS issues a plain A query over UDP (Android has no
 // /etc/resolv.conf so the Go default resolver fails there).
+// ResolveViaUDP queries one UDP DNS server directly for an A record.
+// Exported so the HTTP clients can work around Termux/Android where Go's
+// built-in resolver reads /etc/resolv.conf, finds nothing and falls back
+// to [::1]:53 (connection refused).
+func ResolveViaUDP(server, name string, timeout time.Duration) (string, error) {
+	return resolveViaUDPDNS(server, name, timeout)
+}
+
 func resolveViaUDPDNS(server, name string, timeout time.Duration) (string, error) {
 	q := makeDNSQuery(name)
 	conn, err := net.DialTimeout("udp", server, timeout)
