@@ -79,3 +79,46 @@ func getExtFromFmt(fmtStr string) string {
 		return "mp3"
 	}
 }
+
+// BuildDownloadURL 构建下载URL（需要有效hash）
+// hash1和hash2需要从服务器动态获取或通过加密算法计算
+func BuildDownloadURL(p2pSourceID, token string) string {
+	// 解析p2p_audiosourceid
+	// 格式: {fixed}{res_id}trackmedia{filename}{ext}
+	const prefixLen = 9
+	
+	if !strings.Contains(p2pSourceID, "trackmedia") {
+		return ""
+	}
+	
+	idx := strings.Index(p2pSourceID, "trackmedia")
+	if idx < prefixLen {
+		return ""
+	}
+	
+	resID := p2pSourceID[prefixLen:idx]
+	filename := p2pSourceID[idx+len("trackmedia"):]
+	
+	// 提取扩展名
+	ext := getExtFromFilename(filename)
+	
+	// 使用token作为hash1，取前8位作为hash2
+	hash1 := token
+	hash2 := token[:min(8, len(token))]
+	
+	cdn := "kw-lw.kuwo.cn"
+	
+	return fmt.Sprintf("http://%s/%s/%s/resource/%s/trackmedia/%s?source=pc_player.%s",
+		cdn, hash1, hash2, resID, filename+ext, ext)
+}
+
+func getExtFromFilename(filename string) string {
+	ext := ""
+	for i := len(filename) - 1; i >= 0; i-- {
+		if filename[i] == '.' {
+			ext = filename[i+1:]
+			break
+		}
+	}
+	return ext
+}
