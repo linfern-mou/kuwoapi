@@ -2611,3 +2611,49 @@ CDN下载URL的hash生成算法无法通过静态分析完全还原：
 1. 在真实环境中动态调试KwLib.dll
 2. 获取有效的CDN访问权限
 3. 联系酷我官方API文档
+
+### §10.94 CDN URL生成方式结论 (2026-08-27)
+
+#### 问题：这些链接是同一个接口返回的吗？
+
+**答案：不是。CDN URL是客户端本地生成的。**
+
+#### 证据
+
+1. **music.pay响应分析**
+   - 返回字段：MINFO, audio[p2p_audiosourceid], token, nsig1, nsig2
+   - 不包含任何CDN URL
+   - 只包含p2p_audiosourceid（如`49364071230106trackmediaF000000bYDlc2XxKLsflac`）
+
+2. **datacenter响应分析**
+   - 返回tag字段，但指向第三方域名（wmq.cn, gemboo.com等）
+   - 不是kw-lw/kw-bj/kw-er CDN
+
+3. **CDN请求特征**
+   - 独立HTTP流，无关联API请求
+   - 简单UA：`Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; .NET CLR 1.1.4322)`
+   - 无cookie，无referer
+
+4. **URL结构分析**
+   ```
+   http://kw-lw.kuwo.cn/{hash1}/{hash2}/resource/{res_id}/trackmedia/{filename}.flac
+   ```
+   - hash1: 32位hex（可能是MD5）
+   - hash2: 8位hex
+   - res_id: 从p2p_audiosourceid提取
+   - filename: 从p2p_audiosourceid提取
+
+#### 结论
+
+CDN URL生成流程：
+```
+1. music.pay → 获取p2p_audiosourceid + token
+2. 客户端本地计算hash（使用KwLib.dll中的算法）
+3. 构造CDN URL
+4. 发起下载请求
+```
+
+**阻塞点：hash生成算法未还原**
+- KwLib.dll中`Entrypt::GenerateMD5`函数需要动态调试
+- 简单MD5/SHA1无法匹配已知样本
+- 可能包含服务器端session信息或时间戳
