@@ -2586,3 +2586,28 @@ Hash2: 6a8feb03
 
 #### HTTP API层完全可用
 所有接口均可正常调用，无需登录（部分接口需有效uid/sid）
+
+### §10.93 Hash算法逆向结论 (2026-08-27)
+
+#### 分析结果
+CDN下载URL的hash生成算法无法通过静态分析完全还原：
+1. 简单MD5/SHA1无法匹配已知样本
+2. HMAC-MD5尝试失败
+3. KwLib.dll中`GenerateMD5@Entrypt`函数实现需要动态调试
+
+#### 关键发现
+- hash1/hash2可能与服务器端session相关
+- fixed前缀似乎是时间戳（1978-1985年范围）
+- token字段（32位hex）是每种音质的独立认证token
+- CDN URL有时效性，旧URL会返回410 Gone
+
+#### 可用替代方案
+1. **datacenter API**: 返回第三方域名URL（但沙箱中不可达）
+2. **music.pay API**: 返回完整音质信息和token（可用）
+3. **搜索API**: 完全可用，无需认证
+
+#### 建议
+需要以下条件之一才能继续：
+1. 在真实环境中动态调试KwLib.dll
+2. 获取有效的CDN访问权限
+3. 联系酷我官方API文档
