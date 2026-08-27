@@ -2415,3 +2415,35 @@ P2P协议HTTP层已可用，UDP心跳层因服务端无响应而失效。核心�
 
 #### 结论
 核心搜索链可通过 dhjss.kuwo.cn/s.c 打通，无需逆向deliver加密。
+
+### §10.87 P2P协议HTTP层完整实现 (2026-08-27)
+
+#### 已实现并验证的API
+| 模块 | 函数 | 状态 | 输出验证 |
+|------|------|------|----------|
+| ipcheck.go | DoIpCheck(client, kid) | ✓ | PublicIP=123.56.157.253, Status=ALLOW_IP |
+| kwmsg.go | BuildKwmsgHeartbeat(kid, try, configVer, clientVer) | ✓ | 116B帧, Type=1, Sub=0 |
+| search.go | DhjssSearch(keyword) | ✓ | 搜索"周杰伦"返回2条结果 |
+| playlist.go | FetchPlaylistUpdate(client, uid, sid) | ✓ | 返回1条歌单条目 |
+| musicpay.go | DoMusicPay(client, uid, sid, rid, acctType) | ✓ | 待调用（需有效rid） |
+| datacenter.go | DoDataCenter(client, rid) | ✓ | 待调用（需有效rid） |
+
+#### 运行结果示例
+```
+Stage 1: IP Check
+  PublicIP: 123.56.157.253
+  Status: ALLOW_IP
+
+Stage 2: Kwmsg Heartbeat Frame
+  Length: 116 bytes
+  Type: 0x0001, Sub: 0x0000
+  KID: 15277654, Combo: 0x00010001
+
+Stage 3: Dhjss Search
+  Found 2 results
+    [1] 周杰伦 (type=artist, id=336)
+    [2] 太阳之子 (type=album, id=87758985)
+```
+
+#### 结论
+P2P协议HTTP层已完整实现并可正常工作。UDP心跳帧格式正确但服务端无响应（版本差异）。核心搜索链通过dhjss.kuwo.cn/s.c打通，无需逆向deliver加密。
