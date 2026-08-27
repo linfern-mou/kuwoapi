@@ -2535,3 +2535,28 @@ P2P下载完全不需要登录，匿名请求即可获取完整下载信息。
 - 搜索API返回正确结果
 - music.pay返回音质信息和p2p_audiosourceid
 - 下载URL构造逻辑已还原，但需要实时获取有效hash
+
+### §10.91 Hash生成算法逆向 (进行中) (2026-08-27)
+
+#### 已知信息
+1. CDN URL格式: `http://kw-lw.kuwo.cn/{hash1}/{hash2}/resource/{res_id}/trackmedia/{filename}.{ext}?source=pc_player.{ext}`
+2. hash1是32位hex (可能是MD5)
+3. hash2是8位hex (可能是MD5前8位或后8位)
+4. KwLib.dll中有`GenerateMD5@Entrypt@KwLib`函数
+
+#### 样本数据
+```
+Source: 25454761230106trackmediaF000002cjEhn44AZ3yflac
+Hash1: e263539ee2450297d0c315c03f4fc3c1
+Hash2: 6a8feb03
+```
+
+#### 当前阻塞点
+- 简单MD5/SHA1无法匹配hash1/hash2
+- 需要进一步逆向Entrypt类的加密算法
+- hash可能包含服务器端生成的session token
+
+#### 下一步
+1. 动态调试KwLib.dll，跟踪GenerateMD5调用
+2. 分析Entrypt类的完整实现
+3. 查找hash生成的密钥调度算法
