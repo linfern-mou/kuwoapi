@@ -2303,3 +2303,31 @@ Payload:
 4. **newlyric** 响应格式：文本头(`tp=path/score/lrc_length/...`) + `\r\n\r\n` + 压缩歌词体
 5. **deliver/yl_res_manage.search** 是最核心的资源搜索接口，但请求体加密(0x37魔数)，需要DLL逆向才能构造
 6. **登录响应和config响应** 都是加密binary，解密需要KwMusicDLL.dll中的密钥
+
+### §10.83 deliver.kuwo.cn 搜索加密协议 (2026-08-27)
+
+**接口**: POST http://deliver.kuwo.cn/yl_res_manage.search
+**Content-Type**: 未识别 (二进制, base64编码后发送)
+**请求体**: 172-184 bytes, 以 0x37 开头
+
+#### 请求体结构 (从5个样本对比得出)
+```
+[0:15]   固定头部: 37 41 10 5d 4f 01 6c 59 63 6c 29 47 39 6b 79 (magic + 版本)
+[15:21]  可变字段A (6B) - 可能是时间戳或会话ID
+[21:76]  固定数据区 (55B)
+[76:]    可变数据区 - 含搜索查询参数 (RID/关键词等)
+```
+
+#### 加密分析
+- KwLib.dll 导出 `Entrypt::Encrypt(char* buf, int key, int len)` (VA 0x100180e0)
+- 密钥调度: 20字节全局数组 `_Y8g2E6n0E1i7L5t2IoO` (KwLib.dll @ 0x10052988)
+- 算法包含多阶段: MD5哈希 → 字节排列(sub_100131d6) → 字节shuffle(sub_1004d5ac) → XOR
+- sub_100131d6 和 sub_1004d5ac 涉及C++虚表调用, 完整逆向需更多时间
+- **当前状态**: 已知加密格式但未能完全还原解密算法
+
+#### 应对策略
+- 从抓包中提取完整请求体直接重放 (不构造)
+- 或等待进一步逆向 sub_100131d6/sub_1004d5ac
+
+#### 响应
+- 本次抓包中该接口无响应 (可能请求未被服务端处理, 或响应在其他流中)
