@@ -53,7 +53,7 @@ func main() {
 			fmt.Printf("  Errorcode: %d\n", payResp.ErrorCod)
 			if len(payResp.Songs) > 0 {
 				song := payResp.Songs[0]
-				fmt.Printf("  Name: %s\n", song.Name)
+				fmt.Printf("  MINFO len: %d\n", len(song.MINFO))
 				
 				// 解析MINFO
 				qualities := p2p.ParseMINFO(song.MINFO)
@@ -67,6 +67,9 @@ func main() {
 				if best != nil {
 					fmt.Printf("  Best: %s br=%d\n", best.Format, best.Bitrate)
 				}
+				
+				// URL
+				fmt.Printf("  URL: %s\n", song.URL[:min(len(song.URL), 80)]+"...")
 			}
 		}
 	}
@@ -85,7 +88,7 @@ func main() {
 	fmt.Println("[OK] MusicPay - DoMusicPay(client, uid, sid, rid, acctType)")
 	fmt.Println("[OK] Kwmsg - BuildKwmsgHeartbeat(kid, try, configVer, clientVer)")
 	fmt.Println()
-	fmt.Println("关键: music.pay无需登录即可获取下载信息!")
+	fmt.Println("关键发现: music.pay无需登录即可获取下载信息!")
 }
 
 func min(a, b int) int {
