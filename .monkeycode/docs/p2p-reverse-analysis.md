@@ -2331,3 +2331,38 @@ Payload:
 
 #### 响应
 - 本次抓包中该接口无响应 (可能请求未被服务端处理, 或响应在其他流中)
+
+### §10.84 deliver.kuwo.cn 加密协议逆向进展 (2026-08-27)
+
+**接口**: POST http://deliver.kuwo.cn/yl_res_manage.search
+**Content-Type**: 自定义二进制 (base64编码后POST)
+
+#### 加密函数定位
+- `KwLib.dll !Entrypt::Encrypt(char* buf, int len)` VA 0x100180e0
+- `KwLib.dll !Entrypt::Decrypt(char* buf, int len, int key)` VA 0x10017f60
+- 密钥调度 20字节: `_Y8g2E6n0E1i7L5t2IoO` (@KwLib.dll+0x52988)
+
+#### 算法结构
+```
+Encrypt(buf, len):
+  1. perm = 0x85 % len
+  2. new_len = sub_100131d6(perm)    // C++虚表dispatch, 缺失实现
+  3. sub_1004d5ac(buf, buf+perm, new_len)  // 字节shuffle, 缺失实现
+  4. XOR循环: buf[i] ^= KS[enc_idx(i)]
+     enc_idx(i) = ((high32(0x4ec4ec4f, i) >> 2) * 0xd) % 20
+```
+
+#### 请求体结构 (从5个样本分析)
+- 大小: 172-184 bytes (取决于查询词)
+- [0:15] 固定头部 (magic + 版本)
+- [15] 请求类型标识 (0x0f/0x0e/0x0c)
+- [76:] 加密的查询内容区 (含GBK编码的搜索词)
+
+#### 当前状态
+- ✅ 加密函数位置、密钥调度、XOR循环已还原
+- ❌ sub_100131d6 (perm计算) 和 sub_1004d5ac (字节shuffle) 因C++虚表dispatch复杂，未完全还原
+- ✅ 请求体结构已分析，样本已保存 (assets/deliver_search_bodies.txt)
+- 🔧 下一步: 逆向 sub_100131d6/sub_1004d5ac 或寻找更高层封装函数
+
+#### 临时方案
+使用抓包提取的请求体作为模板，替换可变字节区域来构造新请求。
