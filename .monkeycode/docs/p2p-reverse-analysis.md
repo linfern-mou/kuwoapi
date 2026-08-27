@@ -2447,3 +2447,31 @@ Stage 3: Dhjss Search
 
 #### 结论
 P2P协议HTTP层已完整实现并可正常工作。UDP心跳帧格式正确但服务端无响应（版本差异）。核心搜索链通过dhjss.kuwo.cn/s.c打通，无需逆向deliver加密。
+
+### §10.88 P2P下载链路分析 (2026-08-27)
+
+#### 关键发现
+**music.pay 无需登录即可获取下载URL！**
+
+#### 完整下载链路
+```
+1. 搜索: GET dhjss.kuwo.cn/s.c?all=关键词&tset=artist,album,playlist
+   → 返回 artist/album/song ID列表
+
+2. 播放结算: GET musicpay.kuwo.cn/music.pay?ids={rid}&accttype=1
+   → 返回 MINFO(音质列表) + audio[p2p_audiosourceid] + token
+   
+3. 解析URL: 从p2p_audiosourceid提取资源ID和文件名
+   格式: 254547612 + {resID} + trackmedia + {filename} + {ext}
+   → 构造: http://kw-lw.kuwo.cn/resource/{resID}/trackmedia/{filename}.{ext}?source=pc_player.{ext}
+```
+
+#### 无需登录的API
+| API | 方法 | 参数 | 返回 |
+|-----|------|------|------|
+| dhjss.kuwo.cn/s.c | GET | all=关键词 | 搜索结果 |
+| musicpay.kuwo.cn/music.pay | GET | ids=rid&accttype=1 | 音质+token+URL |
+| datacenter.kuwo.cn/d.c | GET | ids=rid | CDN tag URL |
+
+#### 结论
+P2P下载完全不需要登录，匿名请求即可获取完整下载信息。
