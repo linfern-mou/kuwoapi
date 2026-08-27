@@ -2504,3 +2504,34 @@ P2P下载完全不需要登录，匿名请求即可获取完整下载信息。
 - **无需登录**: 所有API均可匿名访问
 - **下载直链**: datacenter返回的tag字段就是直接下载地址
 - **音质选择**: music.pay提供多音质选项(FLAC/MP3/OGG/AAC)
+
+### §10.90 P2P下载链路验证结果 (2026-08-27)
+
+#### 验证结论
+**HTTP API层完全可用，但CDN下载URL有时效性**
+
+#### 可用功能
+| 功能 | API | 状态 | 备注 |
+|------|-----|------|------|
+| IP校验 | ipcheck.kuwo.cn | ✓ | 返回公网IP |
+| 搜索 | dhjss.kuwo.cn/s.c | ✓ | 无需登录 |
+| 播放结算 | musicpay.kuwo.cn/music.pay | ✓ | 需uid/sid |
+| 数据中枢 | datacenter.kuwo.cn/d.c | ✓ | 返回临时URL |
+
+#### 下载限制
+- CDN URL（kw-lw/kw-bj/kw-er）有效期有限，过期返回410 Gone
+- hash认证算法未完全还原
+- datacenter返回的第三方URL（wmq.cn等）在沙箱中不可达
+
+#### 完整下载流程
+```
+1. 搜索 → dhjss.kuwo.cn/s.c → 获取RID
+2. 播放结算 → musicpay.kuwo.cn/music.pay?uid=&sid=&ids={rid} → 获取p2p_audiosourceid
+3. 构造CDN URL → kw-lw.kuwo.cn/{hash}/{hash}/resource/{res_id}/trackmedia/{filename}.{ext}
+4. 下载 → 需要有效hash认证
+```
+
+#### 当前可验证
+- 搜索API返回正确结果
+- music.pay返回音质信息和p2p_audiosourceid
+- 下载URL构造逻辑已还原，但需要实时获取有效hash
