@@ -36,41 +36,37 @@ func main() {
 		for i, r := range results[:min(len(results), 3)] {
 			fmt.Printf("    [%d] %s (type=%s, id=%s)\n", i+1, r.Name, r.Type, r.ID)
 			if len(r.Song) > 0 {
-				fmt.Printf("        Song: %s - %s (id:%s)\n", r.Song[0].Name, r.Song[0].Artist, r.Song[0].Id)
+				for j, s := range r.Song {
+					fmt.Printf("        Song[%d]: %s - %s (id:%s)\n", j, s.Name, s.Artist, s.Id)
+				}
 			}
 		}
 	}
 	fmt.Println()
 
-	// Stage 3: Music Pay (匿名!)
+	// Stage 3: Music Pay (用搜索结果中的歌曲ID)
 	fmt.Println("Stage 3: Music Pay (匿名请求)")
-	if len(results) > 0 && len(results[0].Song) > 0 {
-		songID := results[0].Song[0].Id
-		payResp, err := p2p.DoMusicPay(client, 88594783, 1072809302, parseUint(songID), 0)
+	testRIDs := []uint64{228908, 450444, 118980}
+	for _, rid := range testRIDs {
+		fmt.Printf("\n  RID=%d:\n", rid)
+		payResp, err := p2p.DoMusicPay(client, 88594783, 1072809302, rid, 0)
 		if err != nil {
-			fmt.Printf("  ERROR: %v\n", err)
-		} else {
-			fmt.Printf("  Errorcode: %d\n", payResp.ErrorCod)
-			if len(payResp.Songs) > 0 {
-				song := payResp.Songs[0]
-				fmt.Printf("  MINFO len: %d\n", len(song.MINFO))
-				
-				// 解析MINFO
-				qualities := p2p.ParseMINFO(song.MINFO)
-				fmt.Printf("  Qualities: %d\n", len(qualities))
-				for _, q := range qualities[:3] {
-					fmt.Printf("    - %s br=%d\n", q.Format, q.Bitrate)
-				}
-				
-				// 最佳音质
-				best := p2p.BestQuality(song)
-				if best != nil {
-					fmt.Printf("  Best: %s br=%d\n", best.Format, best.Bitrate)
-				}
-				
-				// URL
-				fmt.Printf("  URL: %s\n", song.URL[:min(len(song.URL), 80)]+"...")
+			fmt.Printf("    ERROR: %v\n", err)
+			continue
+		}
+		fmt.Printf("    Errorcode: %d\n", payResp.ErrorCod)
+		if len(payResp.Songs) > 0 {
+			song := payResp.Songs[0]
+			qualities := p2p.ParseMINFO(song.MINFO)
+			fmt.Printf("    MINFO len: %d, Qualities: %d\n", len(song.MINFO), len(qualities))
+			for _, q := range qualities[:3] {
+				fmt.Printf("      - %s br=%d\n", q.Format, q.Bitrate)
 			}
+			best := p2p.BestQuality(song)
+			if best != nil {
+				fmt.Printf("    Best: %s br=%d\n", best.Format, best.Bitrate)
+			}
+			fmt.Printf("    URL: %s\n", song.URL[:min(len(song.URL), 60)]+"...")
 		}
 	}
 	fmt.Println()
@@ -79,7 +75,7 @@ func main() {
 	fmt.Println("Stage 4: Kwmsg Heartbeat Frame")
 	frame := p2p.BuildKwmsgHeartbeat(15277654, 1, "8.7.4.0_BDS", "8.7.4.0_BDS")
 	fmt.Printf("  Length: %d bytes\n", len(frame))
-	fmt.Printf("  Type: 0x%04X\n", frame[0])
+	fmt.Printf("  Hex: %x\n", frame[:20])
 	fmt.Println()
 
 	fmt.Println("=== Summary ===")
@@ -96,10 +92,4 @@ func min(a, b int) int {
 		return a
 	}
 	return b
-}
-
-func parseUint(s string) uint64 {
-	var n uint64
-	fmt.Sscanf(s, "%d", &n)
-	return n
 }
