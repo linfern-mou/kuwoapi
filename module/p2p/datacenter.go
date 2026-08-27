@@ -91,3 +91,15 @@ func ParseDataCenterBody(body []byte) (*DataCenterResponse, error) {
 
 	return nil, fmt.Errorf("cannot parse datacenter JSON: %s", jsonStr[:min(len(jsonStr), 200)])
 }
+// GetDownloadURL 从datacenter获取下载URL
+func GetDownloadURL(client *http.Client, rid uint64) (string, error) {
+	resp, err := DoDataCenter(client, rid)
+	if err != nil {
+		return "", err
+	}
+	
+	if len(resp.Entries) > 0 {
+		return resp.Entries[0].Tag, nil
+	}
+	return "", fmt.Errorf("no tag found for rid=%d", rid)
+}

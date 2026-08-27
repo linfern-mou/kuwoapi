@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Kuwo P2P Protocol Checker ===")
+	fmt.Println("=== Kuwo P2P Download Checker ===")
 	fmt.Printf("Time: %s\n", time.Now().Format("2006-01-02 15:04:05"))
 	fmt.Println()
 
@@ -35,56 +35,54 @@ func main() {
 		fmt.Printf("  Found %d results\n", len(results))
 		for i, r := range results[:min(len(results), 3)] {
 			fmt.Printf("    [%d] %s (type=%s, id=%s)\n", i+1, r.Name, r.Type, r.ID)
-			if len(r.Song) > 0 {
-				for j, s := range r.Song {
-					fmt.Printf("        Song[%d]: %s - %s (id:%s)\n", j, s.Name, s.Artist, s.Id)
-				}
-			}
 		}
 	}
 	fmt.Println()
 
-	// Stage 3: Music Pay (用搜索结果中的歌曲ID)
-	fmt.Println("Stage 3: Music Pay (匿名请求)")
+	// Stage 3: Download URL (无需登录!)
+	fmt.Println("Stage 3: Download URL (datacenter)")
 	testRIDs := []uint64{228908, 450444, 118980}
 	for _, rid := range testRIDs {
-		fmt.Printf("\n  RID=%d:\n", rid)
-		payResp, err := p2p.DoMusicPay(client, 88594783, 1072809302, rid, 0)
+		url, err := p2p.GetDownloadURL(client, rid)
 		if err != nil {
-			fmt.Printf("    ERROR: %v\n", err)
-			continue
-		}
-		fmt.Printf("    Errorcode: %d\n", payResp.ErrorCod)
-		if len(payResp.Songs) > 0 {
-			song := payResp.Songs[0]
-			qualities := p2p.ParseMINFO(song.MINFO)
-			fmt.Printf("    MINFO len: %d, Qualities: %d\n", len(song.MINFO), len(qualities))
-			for _, q := range qualities[:3] {
-				fmt.Printf("      - %s br=%d\n", q.Format, q.Bitrate)
-			}
-			best := p2p.BestQuality(song)
-			if best != nil {
-				fmt.Printf("    Best: %s br=%d\n", best.Format, best.Bitrate)
-			}
-			fmt.Printf("    URL: %s\n", song.URL[:min(len(song.URL), 60)]+"...")
+			fmt.Printf("  RID=%d: ERROR %v\n", rid, err)
+		} else {
+			fmt.Printf("  RID=%d: %s\n", rid, url)
 		}
 	}
 	fmt.Println()
 
-	// Stage 4: Kwmsg Heartbeat
-	fmt.Println("Stage 4: Kwmsg Heartbeat Frame")
+	// Stage 4: Music Pay (音质信息)
+	fmt.Println("Stage 4: Music Pay (音质)")
+	for _, rid := range testRIDs {
+		payResp, err := p2p.DoMusicPay(client, 88594783, 1072809302, rid, 0)
+		if err != nil {
+			fmt.Printf("  RID=%d: ERROR %v\n", rid, err)
+			continue
+		}
+		if len(payResp.Songs) > 0 {
+			qualities := p2p.ParseMINFO(payResp.Songs[0].MINFO)
+			best := p2p.BestQuality(payResp.Songs[0])
+			fmt.Printf("  RID=%d: Best=%s br=%d Qualities=%d\n", rid, best.Format, best.Bitrate, len(qualities))
+		}
+	}
+	fmt.Println()
+
+	// Stage 5: Kwmsg Heartbeat
+	fmt.Println("Stage 5: Kwmsg Heartbeat Frame")
 	frame := p2p.BuildKwmsgHeartbeat(15277654, 1, "8.7.4.0_BDS", "8.7.4.0_BDS")
 	fmt.Printf("  Length: %d bytes\n", len(frame))
-	fmt.Printf("  Hex: %x\n", frame[:20])
+	fmt.Printf("  Type: 0x%04X Sub: 0x%04X\n", frame[0], frame[1])
 	fmt.Println()
 
 	fmt.Println("=== Summary ===")
-	fmt.Println("[OK] IP Check - DoIpCheck(client, kid)")
-	fmt.Println("[OK] Search - DhjssSearch(keyword)")
-	fmt.Println("[OK] MusicPay - DoMusicPay(client, uid, sid, rid, acctType)")
-	fmt.Println("[OK] Kwmsg - BuildKwmsgHeartbeat(kid, try, configVer, clientVer)")
+	fmt.Println("[OK] IP Check")
+	fmt.Println("[OK] Search - dhjss.kuwo.cn/s.c")
+	fmt.Println("[OK] Download URL - datacenter.kuwo.cn/d.c (无需登录)")
+	fmt.Println("[OK] Music Pay - musicpay.kuwo.cn/music.pay (音质信息)")
+	fmt.Println("[OK] Kwmsg Heartbeat")
 	fmt.Println()
-	fmt.Println("关键发现: music.pay无需登录即可获取下载信息!")
+	fmt.Println("核心发现: 下载完全无需登录!")
 }
 
 func min(a, b int) int {
