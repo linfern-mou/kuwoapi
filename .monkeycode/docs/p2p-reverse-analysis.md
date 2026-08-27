@@ -2261,3 +2261,45 @@ Payload:
 5. **服务器零响应**：6 帧全部无回包，无 RST，无 SYN-ACK
 
 代码已实现：`module/p2p/kwmsg.go` 中 `BuildKwmsgHeartbeat()` 已精确还原帧格式，生成帧与抓包逐字节匹配。
+
+### §10.82 全接口梳理与实现状态 (2026-08-27)
+
+从 `assets/1111_new.pcapng` (88MB, 完整会话) 提取 93 个 kuwo 域名 API，分类如下：
+
+#### 已实现 (module/p2p/)
+
+| 文件 | 接口 | 状态 |
+|------|------|------|
+| login.go | `pc.i.kuwo.cn/US_NEW/kuwo/login_kw` | ✓ GET, base64url q参数, 1240B加密响应 |
+| playlist.go | `nplserver.kuwo.cn/pl.svc?op=ucheck` | ✓ POST, GBK歌单名, UPDATE/CHECK解析 |
+| kwmsg.go | UDP 39.156.x.x:7788 心跳 | ✓ 116B大端帧, 服务端无响应 |
+| csf.go | UDP :25607 CSF握手 | ✓ cmd 0x2103 心跳, 服务端无响应 |
+| ressearch.go | `r.s?stype=musicinfo` / `sig.s` / `U_QRY` | ✓ HTTP搜索链 |
+| config.go | `config.kuwo.cn/uc/s` (m=56/60/90) | ✓ POST加密, INI解析 |
+| session.go | CSF Session管理 | ✓ TCP/UDP session |
+| udpv2.go | UDPv2协议 | ✓ |
+| heartbeat.go | 旧版心跳 | ✓ |
+| musicpay.go | `musicpay.kuwo.cn/music.pay` | ✓ JSON, MINFO格式解析 |
+| datacenter.go | `datacenter.kuwo.cn/d.c` | ✓ jQuery回调JSON |
+| ipcheck.go | `ipcheck.kuwo.cn/ip_check.kuwo` | ✓ 返回公网IP+ALLOW_IP |
+| newlyric.go | `newlyric.kuwo.cn/newlyric.lrc` | ✓ 二进制歌词(头+压缩体) |
+| pan.go | `pan.kuwo.cn/pan?type=get` | ✓ JSON云盘列表 |
+
+#### 未实现 / 待逆向
+
+| 接口 | 说明 |
+|------|------|
+| `deliver.kuwo.cn/yl_res_manage.search` | POST + base64加密172B二进制体(0x37开头), 无响应捕获 |
+| `config.kuwo.cn/uc/s` 响应解密 | m=90 响应是加密binary, 需DLL密钥 |
+| `login_kw` 响应解密 | 1240B加密blob, 需DLL密钥 |
+| `newlyric.lrc` 歌词解压 | 9708B压缩体, 压缩算法待确认 |
+| `deliver.kuwo.cn` 加密协议 | 可能是RC4/AES加密, 需KwMusicDLL.dll逆向 |
+
+#### 关键发现
+
+1. **music.pay** 返回JSON含 `MINFO` 字段(多音质描述)和 `url`(播放URL)，是获取下载链接的关键接口
+2. **datacenter/d.c** 是 r.s musicinfo 的替代接口，返回 `{rid, tag(URL), ...}` 格式
+3. **ipcheck** 返回 `<公网IP>, ALLOW_IP` 明文，用于NAT检测
+4. **newlyric** 响应格式：文本头(`tp=path/score/lrc_length/...`) + `\r\n\r\n` + 压缩歌词体
+5. **deliver/yl_res_manage.search** 是最核心的资源搜索接口，但请求体加密(0x37魔数)，需要DLL逆向才能构造
+6. **登录响应和config响应** 都是加密binary，解密需要KwMusicDLL.dll中的密钥
