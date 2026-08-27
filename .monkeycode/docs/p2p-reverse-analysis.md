@@ -2657,3 +2657,33 @@ CDN URL生成流程：
 - KwLib.dll中`Entrypt::GenerateMD5`函数需要动态调试
 - 简单MD5/SHA1无法匹配已知样本
 - 可能包含服务器端session信息或时间戳
+
+### §10.95 CDN URL生成方式最终结论 (2026-08-27)
+
+#### 问题回答
+**Q: 这些链接是同一个接口返回的吗？**
+A: 不是。Hash是客户端本地计算的，不出现在任何API响应中。
+
+#### 证据
+1. 搜索所有API响应，hash值（如`e263539ee2450297d0c315c03f4fc3c1`）均未出现
+2. music.pay返回p2p_audiosourceid和token，但不包含hash
+3. datacenter返回第三方域名URL，不是kw-前缀
+4. Config API返回FAIL
+
+#### 播放流程
+```
+用户点击播放
+    ↓
+music.pay API → 返回p2p_audiosourceid + token
+    ↓
+客户端本地计算hash（使用KwLib.dll中的算法）
+    ↓
+构造CDN URL: http://kw-lw.kuwo.cn/{hash1}/{hash2}/resource/{res_id}/trackmedia/{filename}.flac
+    ↓
+发起下载请求
+```
+
+#### 阻塞点
+- Hash生成算法需要动态调试KwLib.dll中的`Entrypt::GenerateMD5`函数
+- 简单MD5/SHA1无法匹配
+- 可能包含服务器端session或时间戳
