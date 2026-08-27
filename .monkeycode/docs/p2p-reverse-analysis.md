@@ -2736,3 +2736,44 @@ music.pay API → 返回p2p_audiosourceid + token
 - DLL高度混淆，静态分析困难
 - hash算法输入可能包含服务器端数据（如session token）
 - 需要动态调试才能完全还原
+
+### §10.97 KwLib.dll hash算法逆向进展 (2026-08-27)
+
+#### 关键发现
+
+1. **hash2前缀规律**
+   - 所有已知样本的hash2都以`6a8f`开头
+   - 可能是固定前缀或基于某些常量计算
+
+2. **DLL结构**
+   - 高度混淆，使用JMP表跳转
+   - 包含完整MD5实现（CMD5类）
+   - 导入ADVAPI32.dll（可能使用Windows加密API）
+
+3. **密钥字符串**
+   ```
+   yeelion-kuwo-tme      (偏移 0x50fa8)
+   KoOtOiTvINGwd         (偏移 0x50f78)
+   _Y8g2E6n0E1i7L5t2IoOoNk (偏移 0x50f88)
+   ```
+
+4. **函数签名**
+   ```cpp
+   // Entrypt类
+   string Entrypt::GenerateMD5(string* input, int* len1, int* len2);
+   void Entrypt::Encrypt(char* data, int len);
+   void Entrypt::Decrypt(char* data, int len);
+   
+   // Sig类
+   bool Sig::CalcSign(char const* data, int* out1, int* out2);
+   ```
+
+#### 阻塞原因
+- DLL使用JMP表混淆，无法直接定位函数实现
+- hash算法可能依赖服务器端数据（session token、时间戳等）
+- 需要动态调试才能完整还原
+
+#### 下一步建议
+1. 在Windows环境下使用动态调试器（x64dbg/IDA）调试
+2. 拦截Entrypt::GenerateMD5调用，记录输入输出
+3. 分析调用上下文，找出所有参与hash计算的变量
