@@ -2777,3 +2777,32 @@ music.pay API → 返回p2p_audiosourceid + token
 1. 在Windows环境下使用动态调试器（x64dbg/IDA）调试
 2. 拦截Entrypt::GenerateMD5调用，记录输入输出
 3. 分析调用上下文，找出所有参与hash计算的变量
+
+### §10.98 KwLib.dll分析最终结论 (2026-08-27)
+
+#### 分析结果
+**静态分析无法完全还原hash生成算法**
+
+#### 关键发现
+1. **DLL混淆**: 使用JMP表跳转，无导出符号
+2. **MD5实现**: CMD5类包含完整MD5算法（32个K常量）
+3. **密钥字符串**: 
+   - `yeelion-kuwo-tme`
+   - `KoOtOiTvINGwd`
+   - `_Y8g2E6n0E1i7L5t2IoOoNk`
+4. **关键函数**:
+   - `Entrypt::GenerateMD5(string*, int*, int*)` - 生成MD5
+   - `Sig::CalcSign(char const*, int*, int*)` - 计算签名
+   - `RSHash` - 可能的哈希函数
+
+#### 阻塞原因
+- hash算法可能包含：
+  1. 多种哈希组合（MD5 + 自定义算法）
+  2. 服务器端数据（session token、时间戳）
+  3. 密钥调度（从密钥字符串派生）
+- 需要动态调试才能追踪完整调用链
+
+#### 可行方案
+1. **动态调试**: 在Windows环境使用x64dbg拦截函数调用
+2. **fuzz测试**: 通过大量输入输出对反推算法
+3. **API替代**: 使用已有的music.pay返回的token字段构造URL（需验证）
