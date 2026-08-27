@@ -2475,3 +2475,32 @@ P2P协议HTTP层已完整实现并可正常工作。UDP心跳帧格式正确但�
 
 #### 结论
 P2P下载完全不需要登录，匿名请求即可获取完整下载信息。
+
+### §10.89 完整下载链路 (无需登录) (2026-08-27)
+
+#### 核心发现
+**酷我PC客户端的音乐下载完全不需要登录！**
+
+#### 完整流程
+```
+1. 搜索: GET dhjss.kuwo.cn/s.c?all=关键词&tset=artist,album,playlist
+   → 返回 artist/album/song ID列表
+
+2. 获取下载URL: GET datacenter.kuwo.cn/d.c?cmd=query&ft=music&cmkey=mbox_minfo&ids={rid}
+   → 返回 tag: http://wmq.cn/1570435395.wma (直接可下载)
+
+3. 获取音质: GET musicpay.kuwo.cn/music.pay?ids={rid}&accttype=1
+   → 返回 MINFO(音质列表) + audio[p2p_audiosourceid]
+```
+
+#### 验证结果
+| RID | 下载URL | 最佳音质 |
+|-----|---------|----------|
+| 228908 | http://wmq.cn/1570435395.wma | FLAC 2000kbps |
+| 450444 | http://211.154.190.66/webcaster/phb/music/1425617639.wma | FLAC 2000kbps |
+| 118980 | http://1000297.gemboo.com/music/1736757192.wma | FLAC 2000kbps |
+
+#### 结论
+- **无需登录**: 所有API均可匿名访问
+- **下载直链**: datacenter返回的tag字段就是直接下载地址
+- **音质选择**: music.pay提供多音质选项(FLAC/MP3/OGG/AAC)
