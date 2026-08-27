@@ -2560,3 +2560,29 @@ Hash2: 6a8feb03
 1. 动态调试KwLib.dll，跟踪GenerateMD5调用
 2. 分析Entrypt类的完整实现
 3. 查找hash生成的密钥调度算法
+
+### §10.92 P2P下载协议实现总结 (2026-08-27)
+
+#### 已完成
+1. **搜索API**: dhjss.kuwo.cn/s.c - 返回歌手/专辑/歌曲列表
+2. **播放结算**: musicpay.kuwo.cn/music.pay - 返回音质选项和token
+3. **数据中枢**: datacenter.kuwo.cn/d.c - 返回临时下载URL（但已过期）
+4. **IP校验**: ipcheck.kuwo.cn - 返回公网IP
+5. **UDP心跳帧**: 116B帧格式正确，但服务端无响应
+
+#### 阻塞点
+**CDN下载URL生成算法未完全还原**
+- URL格式: `http://kw-lw.kuwo.cn/{hash1}/{hash2}/resource/{res_id}/trackmedia/{filename}.{ext}`
+- hash1是32位hex，hash2是8位hex
+- KwLib.dll中有`GenerateMD5@Entrypt`函数，但简单MD5无法匹配
+- 抓包中的旧URL已全部过期（410 Gone）
+- 新构造的URL返回403（认证失败）
+
+#### 关键发现
+- music.pay响应中的token字段（32位hex）可能是hash的组成部分
+- p2p_audiosourceid包含资源ID和文件名信息
+- fixed前缀似乎是时间戳格式（1978-1985年）
+- 需要动态调试KwLib.dll找出完整hash算法
+
+#### HTTP API层完全可用
+所有接口均可正常调用，无需登录（部分接口需有效uid/sid）
