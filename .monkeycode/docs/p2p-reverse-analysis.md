@@ -2395,3 +2395,23 @@ Encrypt(buf, len):
 
 #### 结论
 P2P协议HTTP层已可用，UDP心跳层因服务端无响应而失效。核心搜索链阻塞于deliver加密算法。
+
+### §10.86 搜索API可用清单 (2026-08-27)
+
+#### 可直接使用的搜索API
+| API | 方法 | 参数 | 编码 | 备注 |
+|-----|------|------|------|------|
+| dhjss.kuwo.cn/s.c | GET | all=关键词&tset=artist,album,playlist&multires=1 | GBK JSON | **主搜索入口** |
+| jiucuo.search.kuwo.cn/correct.s | GET | key=关键词 | UTF-8 | 搜索纠错 |
+| skeylist.kuwo.cn/searchkey.txt | GET | - | UTF-8 | 热搜词列表 |
+| rcm.kuwo.cn/rec.s | GET | cmd=rcm_discover&uid&devid&platform&pn&rn | JSON | 个性化推荐 |
+| mgxhtj.kuwo.cn/mgxh.s | GET | f=kuhao&q=关键词&type=rcm_keyword_playlist&uid&devid | JSON | 关键词推荐 |
+
+#### 阻塞的搜索API
+| API | 方法 | 阻塞原因 |
+|-----|------|----------|
+| deliver.kuwo.cn/yl_res_manage.search | POST | 请求体加密(KwLib.dll)，未完全还原 |
+| search.kuwo.cn/r.s | GET | 需MUSIC_前缀ID，非关键词搜索 |
+
+#### 结论
+核心搜索链可通过 dhjss.kuwo.cn/s.c 打通，无需逆向deliver加密。
