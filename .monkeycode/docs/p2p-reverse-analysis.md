@@ -2110,3 +2110,154 @@ pcmp4=1&ids=` —— alflac=1 使响应含 ALFLAC sig 对;查询带 cookie 字�
 - Accept-Encoding: zlib 为客户端原生请求头(file 0x5a092/0x5a160/0x5a27a/0x5a348 四份模板)
 - 响应读取走虚表 [0x100583f0]/[0x100583b8](对象布局 @0x1002d838 起),
   解密逻辑在其实现内,未还原
+
+## 10.78 【2026-08-26】39.156.121.20:7788 地址来源=DNS, 非配置下发 (2026-08-26)
+
+### 回答待办: nmobi 池地址来源确认
+沙箱多轮解析 (python socket.getaddrinfo, ns=223.5.5.5/119.29.29.29/系统):
+```
+nmobi.kuwo.cn  -> 39.156.121.20 / 39.156.121.65 / 39.156.123.46   (稳定池)
+kuwonmobiserver.kuwo.cn -> 无A记录
+```
+- 39.156.121.20 后两段 "121.20" 与历史 nmobi 池 121.20~121.25 同网段 → 同一 DNS 池
+- **结论: 用户 PC 上的 39.156.121.20 来自 nmobi.kuwo.cn A 记录 + 硬编码端口 7788**
+  (启动即解析, 非"某个服务启动时拉取的配置"; config.kuwo.cn 只下发 CDN/服务器列表)
+
+### KwMV.dll 心跳面反汇编
+- 字符串 BoardcastHeartbeat + 默认列表 `211.100.49.14:25607,60.29.226.173:25607,
+  60.28.205,36:25607`(原文含逗号笔误, 列表解析按 ',' 与 ':' 切分容忍)
+- 配置键 [p2p]HeartbeatServer 覆盖默认列表; 解析函数 @file 0x234f0/VA 0x100240f0:
+  读配置→按','分割→每项按':'分割→inet_addr+htons→vector(16B/项)
+- 列表最终消费: 供 BoardcastHeartbeat 发包(向 25607 广播心跳, 应答下发 tracker)
+- 排除: KwMV.dll 内 0x1e6c(7788) 常量误报 → 实为 0x1e=30s 超时字段填充
+
+### 修正
+- nmobi.kuwo.cn 不返回端口, 7788 为客户端硬编码(KwMV.dll 未检出, 疑在 pd.dll/KwService)
+- nmobi 池与 deliver(39.156.121.53/.34) 同属移动云段 39.156.121/123
+
+### 未闭环
+- nmobi 探测包格式未知: 沙箱向 39.156.121.20:7788 发 UDP(多形态) 无应答
+  (真客户端 connected-UDP 会话证明 7788 是活 tracker, 但包格式/应答仅在其客户端内)
+- 最有效闭环: 用户 PC 跑最新 p2pcheck, 采集 stage1d 各 tracker 原始 UDP 响应
+
+## 10.79 【2026-08-26】根因闭合: 39.156.121.20:7788 = kwmsg 消息服务器 (2026-08-26)
+
+### 定位过程 (KwMusicDLL.dll 反汇编)
+- 主 DLL @VA 0x25c916 命中 `push 0x1e6c`(=7788) + 配置调用:
+  `config->GetDword("Setting.", "msgsvrport", ...default 0x1e6c)`
+- 相邻字符串区 (file 0x3a04ac/0x3a04b8): `msgsvrip` / `msgsvrport` /
+  **`kwmsg.kuwo.cn`** (消息服务器域名)
+- 常量属硬编码默认端口, 配置可覆盖 (Setting.msgsvrport)
+
+### DNS 验证 (沙箱, 多轮)
+```
+kwmsg.kuwo.cn -> 39.156.121.20 / 39.156.121.65 / 39.156.123.32
+nmobi.kuwo.cn -> 39.156.121.20 / 39.156.121.65 / 39.156.123.46
+```
+- **39.156.121.20 同时位于两个域名解析池** → 用户 PC 连接对象 = kwmsg 消息服务器
+- 端口 7788 = 配置键 Setting.msgsvrport 默认值 (硬编码 0x1e6c)
+
+### TCP 双栈实测 (沙箱, 非全堵)
+```
+39.156.121.20:7788 TCP CONNECT OK  (发1B无响应, 需正确协议首包)
+39.156.121.65:7788 TCP CONNECT OK
+39.156.123.46:7788 TCP CONNECT OK
+39.156.121.20:25607 TCP CONNECT OK
+```
+- 修正 §10.76 沙箱"UDP全堵"误判: TCP 通道可达, UDP 无应答=包格式未还原
+- 老机房 TCP:80 (60.28.x/211.100.x) 确认死亡与 TCP 可达不矛盾
+
+### 最终链路 (播放 → kwmsg 通道)
+```
+点击播放 → r.s musicinfo → sig → StartDown(sig1,sig2,path)
+→ kwmsg.kuwo.cn 解析{39.156.121.20,...} : 7788 UDP connected 会话
+   (消息/信令/P2P数据复用; 非独立 tracker, 端口由 Setting.msgsvrport 决定)
+→ FLAC 数据经该会话落盘
+```
+
+### 遗留
+- kwmsg 应用层协议未还原 (消息帧格式); TCP 可用作探测介质
+- 下一步: 还原 kwmsg 帧协议 或 用户 PC 抓包对比
+
+### §10.80 PC 抓包还原 — 登录与歌单协议 (2026-08-27)
+
+从用户 PC 抓包 `assets/1111_new.pcapng` (88MB) 提取到以下协议信息:
+
+#### 1. 登录接口
+```
+GET http://pc.i.kuwo.cn/US_NEW/kuwo/login_kw?type=login&f=pc&q=<base64url>
+Host: pc.i.kuwo.cn
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.215 Safari/534.10
+Cookie: t3kwid=<uid>; userid=<uid>; game_mbox_id=<kid>
+```
+
+- `q` = 172 字符 base64url 编码，解码后 128 字节 = RSA 加密凭证 blob
+- 响应: HTTP 200, Content-Type: application/json;charset=UTF-8
+- 响应体: base64url 编码 1240 字节加密 blob（非 zlib）
+- 两次登录捕获: SID=1072809302 和 SID=2105522348
+- 服务器地址轮换: 39.156.121.20 和 39.156.123.32
+
+#### 2. 歌单同步接口
+```
+GET http://nplserver.kuwo.cn/pl.svc?op=ucheck&fmt=km&client=kwmusic&compress=yes&bigid=1&pcmp4=1&encode=utf-8&uid=<uid>&sid=<sid>
+```
+
+响应格式（GBK 编码 name 字段，`\r\n` 分隔）:
+```
+name=<歌单名>;pid=<id>;ver=<版本>;type=<类型>;op=<UPDATE|CHECK>;tmpid=<id>;data=<歌曲ID列表>|sig=<签名>
+```
+
+类型: PC_DEFAULT(我的音乐), MOBI_DEFAULT, MYFAVORITE(收藏), GENERAL, RADIO
+- UPDATE: 有更新，data 字段为逗号分隔的RID列表
+- CHECK: 无更新，sig 字段为签名哈希
+
+捕获的歌单数据:
+- PC_DEFAULT pid=43815947 ver=465 UPDATE -> 27 首歌曲 (RID: 228908,440613,...)
+- MOBI_DEFAULT pid=43815949 ver=6 CHECK sig=0
+- MYFAVORITE pid=43815945 ver=30 CHECK sig=3861835964
+
+#### 3. UDP 25607 心跳 (CSF 老端口)
+```
+192.168.1.8:6000 -> 211.100.49.14:25607
+帧: 03 21 0e 00 [4字节ID] [4字节时间] 01 e4 a8 c0 70 17 03 00 00 00
+```
+客户端发送但服务端无响应（与之前结论一致）。
+
+#### 4. UDP 7788 (kwmsg) — 仍未捕获
+抓包中无 UDP 7788 流量，可能原因:
+- 客户端版本/配置未触发 kwmsg 路径
+- 或 kwmsg 仅在特定操作（如 P2P 下载）时启用
+- 需要抓 P2P 下载阶段的流量
+
+代码落地:
+- `module/p2p/login.go` — 登录接口实现
+- `module/p2p/playlist.go` — 歌单同步接口实现
+- `assets/login_samples.txt` — 原始抓包样本
+
+### §10.81 kwmsg 心跳帧实时验证 (2026-08-27)
+
+从 `assets/1111_new.pcapng` 成功捕获 **6 条 UDP 7788 帧**，全部发往 `39.156.121.20:7788`，间隔约 60s，服务器零响应。
+
+#### 帧格式（大端字节序，116B = 8B头 + 108B载荷）
+```
+Header:     type=1 sub=0 len=108 magic=0x4399
+Payload:
+  +0:  u32 mid       = 0
+  +4:  u32 kid       = 15277654 (game_mbox_id)
+  +8:  u32 combo     = 0x00010001
+  +12: u32 const_f   = 0x0000000f
+  +16: u32 try       = 21613533 (递增重试计数)
+  +20: [24B] reserved = 0
+  +44: [32B] config_ver  = "kwmusic_web_1_bds_20171206.exe\0\0"
+  +76: [16B] client_ver = "Win 6.2.9200\0\0\0\0"
+  +92: [16B] client_id  = "PC\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+```
+
+#### 关键发现
+1. **大端字节序**：与之前假设的小端相反，头+载荷全为大端
+2. **config_ver 无空格**："kwmusic_web_..."（非 "kw music_web_..."）
+3. **kid 字段**：payload+4 是 game_mbox_id（登录 cookie 中的 kid），非时间戳
+4. **try 字段**：值为 21613533，非简单计数器（可能含时间或其他熵）
+5. **服务器零响应**：6 帧全部无回包，无 RST，无 SYN-ACK
+
+代码已实现：`module/p2p/kwmsg.go` 中 `BuildKwmsgHeartbeat()` 已精确还原帧格式，生成帧与抓包逐字节匹配。

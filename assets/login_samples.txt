@@ -1,0 +1,20 @@
+# Kuwo PC Login Captures (from assets/1111_new.pcapng, 2026-08-27)
+# uid=88594783, kid=15277654, hostname=阳尘
+
+# Login #1 (frame 10319, tcp.stream=258, dst=39.156.121.20:80)
+# Response: HTTP 200, body=base64(1240 bytes encrypted blob)
+GET /US_NEW/kuwo/login_kw?type=login&f=pc&q=tKm7gRiP/DmpzX6THxNElivnLcO9y47B396WdUfG3j2NgwYEaodRiBlTnGY+nar4ABCM4/J5MUnPWL4oALAKjWePvVu4LHeGl0djrDUDKiF2xkzrRko3/DnYayov7va+TzekUx0qvOacGepkta5x0clnD+CVjvBgwxvkJPwBOHY=
+Host: pc.i.kuwo.cn
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.215 Safari/534.10
+Cookie: pic3=""; websid=380608606; __utma=18026403.597824208.1682480481.1727243766.1728619904.18; t3kwid=88594783; uname3=%u9633%u5C18; userid=88594783; game_mbox_id=15277654
+
+# Login #2 (frame 71902, tcp.stream=746, dst=39.156.123.32:80)
+GET /US_NEW/kuwo/login_kw?type=login&f=pc&q=tKm7gRiP/DmpzX6THxNElivnLcO9y47B396WdUfG3j2NgwYEaodRiBlTnGY+nar4ABCM4/J5MUnPWL4oALAKjWePvVu4LHeGl0djrDUDKiF2xkzrRko3/DnYayov7va+TzekUx0qvOacGepkta5x0eFVHT/A1bnHrl39C5UmWe8=
+Host: pc.i.kuwo.cn
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.215 Safari/534.10
+Cookie: [same as above]
+
+# Both responses: HTTP 200, Content-Type: application/json;charset=UTF-8
+# Response body: base64url-encoded, 1240 bytes decoded -> encrypted blob (NOT zlib)
+# Login #1 SID after login: 1072809302
+# Login #2 SID after login: 2105522348
