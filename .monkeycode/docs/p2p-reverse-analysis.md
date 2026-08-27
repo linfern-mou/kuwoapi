@@ -2687,3 +2687,52 @@ music.pay API → 返回p2p_audiosourceid + token
 - Hash生成算法需要动态调试KwLib.dll中的`Entrypt::GenerateMD5`函数
 - 简单MD5/SHA1无法匹配
 - 可能包含服务器端session或时间戳
+
+### §10.96 KwLib.dll深度分析 (2026-08-27)
+
+#### 关键发现
+
+1. **DLL结构**
+   - 编译时间: 2017-11-16
+   - 机器类型: i386 (32位)
+   - 入口点: 0x1001375d
+   - 导出目录: RVA 0x5fb90, 大小 0xa97b
+
+2. **导入库**
+   - ADVAPI32.dll (加密API)
+   - KERNEL32.dll
+   - MSVCP120.dll (C++运行时)
+   - MSVCR120.dll (C运行时)
+   - MediaInfo.dll (媒体信息)
+
+3. **关键类和方法**
+   ```
+   CMD5: MD5哈希实现
+     - GenerateMD5(string*, int*, int*) -> string
+     - FromString(string)
+     - ToInt(int*, int*)
+   
+   Entrypt: 加密类
+     - GenerateMD5(string*, int*, int*) -> string  [重载版本]
+     - Encrypt(char*, int) -> void
+     - Decrypt(char*, int) -> void
+   
+   Sig: 签名类
+     - CalcSign(char const*, int*, int*) -> bool
+   ```
+
+4. **密钥字符串**
+   - `yeelion-kuwo-tme` (偏移 0x50fa8)
+   - `KoOtOiTvINGwd` (偏移 0x50f78)
+   - `_Y8g2E6n0E1i7L5t2IoOoNk` (偏移 0x50f88)
+   - `MoOtOiTvINGwd2E6n0E1i7L5t2IoOoNk` (偏移 0x57238)
+
+5. **混淆技术**
+   - 函数入口使用JMP表混淆
+   - push + call + pop ecx 模式
+   - 无导出符号，所有函数通过偏移调用
+
+#### 阻塞点
+- DLL高度混淆，静态分析困难
+- hash算法输入可能包含服务器端数据（如session token）
+- 需要动态调试才能完全还原
